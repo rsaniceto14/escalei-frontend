@@ -1,4 +1,3 @@
-
 import { ReactNode } from "react";
 import { AppSidebar } from "../sidebar/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -24,9 +23,6 @@ export default function Layout({ children }: { children: ReactNode }) {
             </div>
           </header>
           <main className="flex-1 px-2 sm:px-4 lg:px-12 py-4 lg:py-8 bg-echurch-50">
-            <div className="hidden lg:block mb-6">
-              <Greeting />
-            </div>
             {children}
           </main>
         </div>
