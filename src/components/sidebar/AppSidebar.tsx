@@ -1,3 +1,4 @@
+
 import {
   Home,
   Calendar,
@@ -19,8 +20,8 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  useSidebar,
 } from "@/components/ui/sidebar";
-import { useSidebar } from "@/components/ui/use-sidebar";
 import { Logo } from "../common/Logo";
 
 export function AppSidebar() {
