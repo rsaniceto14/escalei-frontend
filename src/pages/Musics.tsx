@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Upload, ExternalLink, Music, Trash2 } from "lucide-react";
+import { Plus, Upload, ExternalLink, Music, Trash2, Search, Play } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -19,8 +19,10 @@ type Arquivo = {
 type Musica = {
   id: number;
   nome: string;
+  artista?: string;
   link: string;
-  spotify: string;
+  spotifyId: string;
+  spotifyUrl: string;
   arquivos: Arquivo[];
 };
 
@@ -29,8 +31,10 @@ export default function Musics() {
     { 
       id: 1, 
       nome: "A Ele a Glória", 
+      artista: "Diante do Trono",
       link: "https://www.cifras.com.br", 
-      spotify: "", 
+      spotifyId: "4iV5W9uYEdYUVa79Axb7Rh",
+      spotifyUrl: "https://open.spotify.com/track/4iV5W9uYEdYUVa79Axb7Rh", 
       arquivos: [
         { nome: "A_Ele_a_Gloria_Soprano.mp3", categoria: "Soprano" },
         { nome: "A_Ele_a_Gloria_Tenor.mp3", categoria: "Tenor" }
@@ -39,20 +43,65 @@ export default function Musics() {
     { 
       id: 2, 
       nome: "Tu És Soberano", 
+      artista: "Isaías Saad",
       link: "", 
-      spotify: "https://open.spotify.com/track/example", 
+      spotifyId: "1A2B3C4D5E6F7G8H9I0J",
+      spotifyUrl: "https://open.spotify.com/track/1A2B3C4D5E6F7G8H9I0J", 
       arquivos: [] 
     },
   ]);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [pesquisaMusica, setPesquisaMusica] = useState("");
+  const [pesquisaGeral, setPesquisaGeral] = useState("");
   const [novaMusica, setNovaMusica] = useState({
     nome: "",
+    artista: "",
     link: "",
-    spotify: ""
+    spotifyUrl: ""
   });
+  
+  const [resultadosSpotify, setResultadosSpotify] = useState<any[]>([]);
 
   const categorias = ["Soprano", "Contralto", "Tenor", "Baixo", "Partitura", "Playback", "Click"];
+
+  // Simulação de pesquisa no Spotify
+  const pesquisarSpotify = async () => {
+    if (!pesquisaMusica.trim()) return;
+    
+    // Simulação de resultados do Spotify
+    const resultadosSimulados = [
+      {
+        id: "4iV5W9uYEdYUVa79Axb7Rh",
+        name: pesquisaMusica,
+        artists: [{ name: "Diante do Trono" }],
+        external_urls: { spotify: "https://open.spotify.com/track/4iV5W9uYEdYUVa79Axb7Rh" },
+        preview_url: "https://p.scdn.co/mp3-preview/..."
+      },
+      {
+        id: "5jV6X0zFEdYUVa79Axb7Ri",
+        name: `${pesquisaMusica} (Ao Vivo)`,
+        artists: [{ name: "Ministério Zoe" }],
+        external_urls: { spotify: "https://open.spotify.com/track/5jV6X0zFEdYUVa79Axb7Ri" },
+        preview_url: "https://p.scdn.co/mp3-preview/..."
+      }
+    ];
+    
+    setResultadosSpotify(resultadosSimulados);
+    toast.success(`${resultadosSimulados.length} resultados encontrados`);
+  };
+
+  const selecionarMusicaSpotify = (musica: any) => {
+    setNovaMusica({
+      ...novaMusica,
+      nome: musica.name,
+      artista: musica.artists[0]?.name || "",
+      spotifyUrl: musica.external_urls.spotify
+    });
+    setResultadosSpotify([]);
+    setPesquisaMusica("");
+    toast.success("Música selecionada do Spotify");
+  };
 
   const handleAddMusic = () => {
     if (!novaMusica.nome) {
@@ -61,19 +110,21 @@ export default function Musics() {
     }
 
     const newId = Math.max(...musicas.map(m => m.id), 0) + 1;
+    const spotifyId = novaMusica.spotifyUrl.split('/').pop()?.split('?')[0] || "";
+    
     setMusicas([...musicas, {
       id: newId,
       ...novaMusica,
+      spotifyId,
       arquivos: []
     }]);
 
-    setNovaMusica({ nome: "", link: "", spotify: "" });
+    setNovaMusica({ nome: "", artista: "", link: "", spotifyUrl: "" });
     setIsDialogOpen(false);
     toast.success("Música adicionada com sucesso!");
   };
 
   const handleFileUpload = (musicaId: number, categoria: string, file: File) => {
-    // Simulação de upload
     const novoArquivo: Arquivo = {
       nome: file.name,
       categoria: categoria,
@@ -98,11 +149,19 @@ export default function Musics() {
     toast.success("Arquivo removido");
   };
 
+  const musicasFiltradas = musicas.filter(musica =>
+    musica.nome.toLowerCase().includes(pesquisaGeral.toLowerCase()) ||
+    musica.artista?.toLowerCase().includes(pesquisaGeral.toLowerCase())
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-echurch-700">Músicas</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold text-echurch-700 flex items-center gap-2">
+            <Music className="w-8 h-8" />
+            Músicas
+          </h1>
           <p className="text-echurch-600 mt-1">Gerencie o repertório musical</p>
         </div>
         
@@ -113,38 +172,91 @@ export default function Musics() {
               Nova Música
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Adicionar Nova Música</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
+              {/* Pesquisa no Spotify */}
               <div className="space-y-2">
-                <Label htmlFor="nome">Nome da Música *</Label>
-                <Input
-                  id="nome"
-                  value={novaMusica.nome}
-                  onChange={(e) => setNovaMusica({...novaMusica, nome: e.target.value})}
-                  placeholder="Digite o nome da música"
-                />
+                <Label>Pesquisar no Spotify</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={pesquisaMusica}
+                    onChange={(e) => setPesquisaMusica(e.target.value)}
+                    placeholder="Digite o nome da música..."
+                    className="flex-1"
+                  />
+                  <Button onClick={pesquisarSpotify} variant="outline">
+                    <Search className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="link">Link da Cifra</Label>
-                <Input
-                  id="link"
-                  value={novaMusica.link}
-                  onChange={(e) => setNovaMusica({...novaMusica, link: e.target.value})}
-                  placeholder="https://..."
-                />
+
+              {/* Resultados do Spotify */}
+              {resultadosSpotify.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Resultados do Spotify</Label>
+                  <div className="max-h-40 overflow-y-auto space-y-1">
+                    {resultadosSpotify.map((resultado) => (
+                      <div
+                        key={resultado.id}
+                        className="p-2 border rounded-lg cursor-pointer hover:bg-echurch-50 flex items-center justify-between"
+                        onClick={() => selecionarMusicaSpotify(resultado)}
+                      >
+                        <div>
+                          <div className="font-medium">{resultado.name}</div>
+                          <div className="text-sm text-echurch-600">{resultado.artists[0]?.name}</div>
+                        </div>
+                        <Button size="sm" variant="outline">
+                          Selecionar
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Formulário manual */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="nome">Nome da Música *</Label>
+                  <Input
+                    id="nome"
+                    value={novaMusica.nome}
+                    onChange={(e) => setNovaMusica({...novaMusica, nome: e.target.value})}
+                    placeholder="Digite o nome da música"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="artista">Artista</Label>
+                  <Input
+                    id="artista"
+                    value={novaMusica.artista}
+                    onChange={(e) => setNovaMusica({...novaMusica, artista: e.target.value})}
+                    placeholder="Nome do artista"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="link">Link da Cifra</Label>
+                  <Input
+                    id="link"
+                    value={novaMusica.link}
+                    onChange={(e) => setNovaMusica({...novaMusica, link: e.target.value})}
+                    placeholder="https://..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="spotify">Link do Spotify</Label>
+                  <Input
+                    id="spotify"
+                    value={novaMusica.spotifyUrl}
+                    onChange={(e) => setNovaMusica({...novaMusica, spotifyUrl: e.target.value})}
+                    placeholder="https://open.spotify.com/..."
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="spotify">Link do Spotify</Label>
-                <Input
-                  id="spotify"
-                  value={novaMusica.spotify}
-                  onChange={(e) => setNovaMusica({...novaMusica, spotify: e.target.value})}
-                  placeholder="https://open.spotify.com/..."
-                />
-              </div>
+              
               <div className="flex gap-2">
                 <Button onClick={handleAddMusic} className="bg-echurch-500 hover:bg-echurch-600 flex-1">
                   Adicionar
@@ -158,15 +270,33 @@ export default function Musics() {
         </Dialog>
       </div>
 
+      {/* Barra de pesquisa */}
+      <div className="flex gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-echurch-400" />
+          <Input
+            value={pesquisaGeral}
+            onChange={(e) => setPesquisaGeral(e.target.value)}
+            placeholder="Pesquisar músicas..."
+            className="pl-10"
+          />
+        </div>
+      </div>
+
       <div className="grid gap-6">
-        {musicas.map(musica => (
+        {musicasFiltradas.map(musica => (
           <Card key={musica.id}>
             <CardHeader>
               <div className="flex justify-between items-start">
-                <CardTitle className="text-lg text-echurch-700 flex items-center gap-2">
-                  <Music className="w-5 h-5" />
-                  {musica.nome}
-                </CardTitle>
+                <div className="space-y-1">
+                  <CardTitle className="text-lg text-echurch-700 flex items-center gap-2">
+                    <Music className="w-5 h-5" />
+                    {musica.nome}
+                  </CardTitle>
+                  {musica.artista && (
+                    <p className="text-sm text-echurch-600">por {musica.artista}</p>
+                  )}
+                </div>
                 <div className="flex gap-2">
                   {musica.link && (
                     <Button variant="outline" size="sm" asChild>
@@ -176,10 +306,10 @@ export default function Musics() {
                       </a>
                     </Button>
                   )}
-                  {musica.spotify && (
+                  {musica.spotifyUrl && (
                     <Button variant="outline" size="sm" asChild>
-                      <a href={musica.spotify} target="_blank" rel="noopener noreferrer" className="text-green-600">
-                        <ExternalLink className="w-4 h-4 mr-1" />
+                      <a href={musica.spotifyUrl} target="_blank" rel="noopener noreferrer" className="text-green-600">
+                        <Play className="w-4 h-4 mr-1" />
                         Spotify
                       </a>
                     </Button>
@@ -188,6 +318,25 @@ export default function Musics() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Player do Spotify */}
+              {musica.spotifyId && (
+                <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm font-medium text-green-800">Player do Spotify</span>
+                  </div>
+                  <iframe
+                    src={`https://open.spotify.com/embed/track/${musica.spotifyId}?utm_source=generator&theme=0`}
+                    width="100%"
+                    height="152"
+                    frameBorder="0"
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    loading="lazy"
+                    className="rounded-lg"
+                  ></iframe>
+                </div>
+              )}
+
               <div>
                 <h4 className="font-semibold text-echurch-600 mb-2">Arquivos de Áudio</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">

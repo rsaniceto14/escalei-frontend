@@ -16,9 +16,9 @@ export function Greeting() {
 
   const getGreeting = () => {
     const hour = currentTime.getHours();
-    if (hour < 12) return "Bom dia";
-    if (hour < 18) return "Boa tarde";
-    return "Boa noite";
+    if (hour < 12) return { text: "Bom dia", emoji: "🌅" };
+    if (hour < 18) return { text: "Boa tarde", emoji: "☀️" };
+    return { text: "Boa noite", emoji: "🌙" };
   };
 
   const formatDate = () => {
@@ -29,10 +29,13 @@ export function Greeting() {
     });
   };
 
+  const greeting = getGreeting();
+
   return (
     <div className="space-y-1">
-      <h1 className="text-xl lg:text-2xl font-bold text-echurch-700">
-        {getGreeting()}, {usuario.nome}!
+      <h1 className="text-xl lg:text-2xl font-bold text-echurch-700 flex items-center gap-2">
+        <span className="text-2xl">{greeting.emoji}</span>
+        {greeting.text}, {usuario.nome}!
       </h1>
       <p className="text-sm lg:text-base text-echurch-600 capitalize">
         {formatDate()}
