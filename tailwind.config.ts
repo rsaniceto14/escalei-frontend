@@ -39,16 +39,16 @@ export default {
 				input: "hsl(var(--input))",
 				ring: "hsl(var(--ring))",
 				"echurch": {
-					50:  "#eff6ff",
-					100: "#dbeafe",
-					200: "#bfdbfe",
-					300: "#93c5fd",
-					400: "#60a5fa",
-					500: "#2563eb", // principal
-					600: "#1d4ed8",
-					700: "#1e40af",
-					800: "#1e3a8a",
-					900: "#172554"
+					50:  "#f0f4f8",
+					100: "#d9e5f2",
+					200: "#b3cbe5",
+					300: "#8cadd4",
+					400: "#5a8ac4",
+					500: "#1e3a5f", // azul marinho principal
+					600: "#1a334f",
+					700: "#162b42",
+					800: "#122336",
+					900: "#0e1b29"
 				},
         // Optionally you can add sidebar colors if you want to use as utilities:
         "sidebar-background": "hsl(var(--sidebar-background))",
@@ -70,4 +70,3 @@ export default {
 	},
 	plugins: [require("tailwindcss-animate")],
 } satisfies Config;
-
