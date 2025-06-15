@@ -17,6 +17,8 @@ import Scales from "./pages/Scales";
 import Chats from "./pages/Chats";
 import Musics from "./pages/Musics";
 import ScaleCreate from "./pages/ScaleCreate";
+import Admin from "./pages/Admin";
+import ScaleDetails from "./pages/ScaleDetails";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +66,14 @@ const App = () => (
             }
           />
           <Route
+            path="/scales/:id"
+            element={
+              <Layout>
+                <ScaleDetails />
+              </Layout>
+            }
+          />
+          <Route
             path="/availability"
             element={
               <Layout>
@@ -92,6 +102,14 @@ const App = () => (
             element={
               <Layout>
                 <ScaleCreate />
+              </Layout>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <Layout>
+                <Admin />
               </Layout>
             }
           />

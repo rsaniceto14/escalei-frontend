@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -169,10 +168,12 @@ export default function Scales() {
                           Confirmar Participação
                         </Button>
                       )}
-                      <Button variant="outline" size="sm">
-                        <Eye className="w-4 h-4 mr-1" />
-                        Ver Detalhes
-                      </Button>
+                      <Link to={`/scales/${escala.id}`}>
+                        <Button variant="outline" size="sm">
+                          <Eye className="w-4 h-4 mr-1" />
+                          Ver Detalhes
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 </CardContent>
@@ -233,10 +234,12 @@ export default function Scales() {
                           Confirmar Participação
                         </Button>
                       )}
-                      <Button variant="outline" size="sm">
-                        <Eye className="w-4 h-4 mr-1" />
-                        Ver Detalhes
-                      </Button>
+                      <Link to={`/scales/${escala.id}`}>
+                        <Button variant="outline" size="sm">
+                          <Eye className="w-4 h-4 mr-1" />
+                          Ver Detalhes
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 </CardContent>

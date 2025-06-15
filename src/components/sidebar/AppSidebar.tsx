@@ -1,62 +1,79 @@
-
-import { NavLink } from "react-router-dom";
-import { User, CalendarCheck, Music, MessageCircle, Settings, Clock } from "lucide-react";
-import { 
-  Sidebar, 
-  SidebarContent, 
-  SidebarMenu, 
-  SidebarMenuItem, 
-  SidebarMenuButton,
-  SidebarHeader,
+import {
+  Home,
+  Calendar,
+  Clock,
+  MessageCircle,
+  Music,
+  User,
+  Settings,
+  Shield,
+} from "lucide-react";
+import { NavLink, useLocation } from "react-router-dom";
+import {
+  Sidebar,
+  SidebarContent,
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
 } from "@/components/ui/sidebar";
-
-const navItems = [
-  { label: "Início", to: "/", icon: CalendarCheck },
-  { label: "Escalas", to: "/scales", icon: CalendarCheck },
-  { label: "Disponibilidade", to: "/availability", icon: Clock },
-  { label: "Músicas", to: "/musics", icon: Music },
-  { label: "Chats", to: "/chats", icon: MessageCircle },
-];
-
-const configItems = [
-  { label: "Perfil", to: "/profile", icon: User },
-  { label: "Configurações", to: "/settings", icon: Settings },
-];
+import { useSidebar } from "@/components/ui/use-sidebar";
+import { Logo } from "../common/Logo";
 
 export function AppSidebar() {
-  return (
-    <Sidebar className="border-r border-echurch-200">
-      <SidebarHeader className="p-6">
-        <div className="text-white flex items-center justify-center font-bold text-2xl tracking-wide bg-echurch-500 rounded-lg py-3">
-          <span className="font-bold mr-2">e</span>
-          <span className="font-light">church</span>
-        </div>
-      </SidebarHeader>
+  const { collapsed } = useSidebar();
+  const location = useLocation();
+  const currentPath = location.pathname;
+  
+  // Verificar se é admin
+  const isAdmin = localStorage.getItem("userRole") === "admin";
 
-      <SidebarContent>
+  const mainItems = [
+    { title: "Início", url: "/", icon: Home },
+    { title: "Escalas", url: "/scales", icon: Calendar },
+    { title: "Disponibilidade", url: "/availability", icon: Clock },
+    { title: "Chats", url: "/chats", icon: MessageCircle },
+    { title: "Músicas", url: "/musics", icon: Music },
+  ];
+
+  const configItems = [
+    { title: "Perfil", url: "/profile", icon: User },
+    { title: "Configurações", url: "/settings", icon: Settings },
+    ...(isAdmin ? [{ title: "Administração", url: "/admin", icon: Shield }] : []),
+  ];
+
+  const getNavCls = ({ isActive }: { isActive: boolean }) => {
+    return `group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-echurch-100 hover:text-echurch-700 data-[active=true]:bg-echurch-100 data-[active=true]:text-echurch-700 ${
+      isActive ? "bg-echurch-100 text-echurch-700" : "text-echurch-500"
+    }`;
+  };
+
+  return (
+    <Sidebar className={collapsed ? "w-14" : "w-64"} collapsible>
+      <div className="p-4">
+        {!collapsed && <Logo />}
+        {collapsed && (
+          <div className="w-8 h-8 bg-gradient-to-br from-echurch-400 to-echurch-600 rounded-lg flex items-center justify-center">
+            <span className="text-white text-lg">⛪</span>
+          </div>
+        )}
+      </div>
+
+      <SidebarContent className="px-2">
+        {/* Menu Principal */}
         <SidebarGroup>
-          <SidebarGroupLabel className="text-echurch-600 font-semibold">
-            Principal
-          </SidebarGroupLabel>
+          {!collapsed && <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map(({ label, to, icon: Icon }) => (
-                <SidebarMenuItem key={to}>
+              {mainItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <NavLink
-                      to={to}
-                      end
-                      className={({ isActive }) =>
-                        `flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer
-                        ${isActive ? "bg-echurch-500 text-white" : "text-echurch-700 hover:bg-echurch-100"}`
-                      }
-                    >
-                      <Icon size={20} className="shrink-0" />
-                      <span>{label}</span>
+                    <NavLink to={item.url} end className={getNavCls}>
+                      <item.icon className="w-5 h-5" />
+                      {!collapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -65,24 +82,17 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {/* Configurações */}
         <SidebarGroup>
-          <SidebarGroupLabel className="text-echurch-600 font-semibold">
-            Conta
-          </SidebarGroupLabel>
+          {!collapsed && <SidebarGroupLabel>Configurações</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
-              {configItems.map(({ label, to, icon: Icon }) => (
-                <SidebarMenuItem key={to}>
+              {configItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <NavLink
-                      to={to}
-                      className={({ isActive }) =>
-                        `flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer
-                        ${isActive ? "bg-echurch-500 text-white" : "text-echurch-700 hover:bg-echurch-100"}`
-                      }
-                    >
-                      <Icon size={20} className="shrink-0" />
-                      <span>{label}</span>
+                    <NavLink to={item.url} end className={getNavCls}>
+                      <item.icon className="w-5 h-5" />
+                      {!collapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -91,12 +101,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-
-      <SidebarFooter className="p-4">
-        <div className="text-xs text-echurch-500 text-center font-light">
-          Sistema para igrejas
-        </div>
-      </SidebarFooter>
     </Sidebar>
   );
 }
