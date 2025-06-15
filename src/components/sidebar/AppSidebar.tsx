@@ -1,5 +1,4 @@
 
-
 import {
   Home,
   Calendar,
@@ -29,11 +28,8 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
-  
-  // Check if sidebar is collapsed
+
   const isCollapsed = state === "collapsed";
-  
-  // Verificar se é admin
   const isAdmin = localStorage.getItem("userRole") === "admin";
 
   const mainItems = [
@@ -57,17 +53,18 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className={isCollapsed ? "w-14" : "w-64"} collapsible="icon">
-      <div className="p-4">
+    <Sidebar
+      className={isCollapsed ? "w-14" : "w-64"}
+      collapsible="icon"
+    >
+      <div className="p-4 bg-gradient-to-br from-echurch-50 to-echurch-100 md:bg-transparent rounded-br-xl">
         {!isCollapsed && <Logo />}
         {isCollapsed && (
-          <div className="w-8 h-8 bg-gradient-to-br from-echurch-400 to-echurch-600 rounded-lg flex items-center justify-center">
-            <span className="text-white text-lg">⛪</span>
-          </div>
+          <div className="w-8 h-8 bg-gradient-to-br from-echurch-400 to-echurch-600 rounded-lg flex items-center justify-center" />
         )}
       </div>
 
-      <SidebarContent className="px-2">
+      <SidebarContent className="px-2 bg-white/95 md:bg-transparent shadow-2xl md:shadow-none rounded-br-xl">
         {/* Menu Principal */}
         <SidebarGroup>
           {!isCollapsed && <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>}
@@ -109,4 +106,3 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
-
