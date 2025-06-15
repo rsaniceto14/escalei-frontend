@@ -1,4 +1,5 @@
 
+
 import {
   Home,
   Calendar,
@@ -25,9 +26,12 @@ import {
 import { Logo } from "../common/Logo";
 
 export function AppSidebar() {
-  const { collapsed } = useSidebar();
+  const { state } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
+  
+  // Check if sidebar is collapsed
+  const isCollapsed = state === "collapsed";
   
   // Verificar se é admin
   const isAdmin = localStorage.getItem("userRole") === "admin";
@@ -53,10 +57,10 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className={collapsed ? "w-14" : "w-64"} collapsible>
+    <Sidebar className={isCollapsed ? "w-14" : "w-64"} collapsible="icon">
       <div className="p-4">
-        {!collapsed && <Logo />}
-        {collapsed && (
+        {!isCollapsed && <Logo />}
+        {isCollapsed && (
           <div className="w-8 h-8 bg-gradient-to-br from-echurch-400 to-echurch-600 rounded-lg flex items-center justify-center">
             <span className="text-white text-lg">⛪</span>
           </div>
@@ -66,7 +70,7 @@ export function AppSidebar() {
       <SidebarContent className="px-2">
         {/* Menu Principal */}
         <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>}
+          {!isCollapsed && <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.map((item) => (
@@ -74,7 +78,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end className={getNavCls}>
                       <item.icon className="w-5 h-5" />
-                      {!collapsed && <span>{item.title}</span>}
+                      {!isCollapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -85,7 +89,7 @@ export function AppSidebar() {
 
         {/* Configurações */}
         <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel>Configurações</SidebarGroupLabel>}
+          {!isCollapsed && <SidebarGroupLabel>Configurações</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
               {configItems.map((item) => (
@@ -93,7 +97,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end className={getNavCls}>
                       <item.icon className="w-5 h-5" />
-                      {!collapsed && <span>{item.title}</span>}
+                      {!isCollapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -105,3 +109,4 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+
