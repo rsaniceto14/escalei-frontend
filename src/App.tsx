@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,6 +11,8 @@ import PasswordRecover from "./pages/PasswordRecover";
 import PasswordCode from "./pages/PasswordCode";
 import PasswordReset from "./pages/PasswordReset";
 import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
+import Availability from "./pages/Availability";
 import Scales from "./pages/Scales";
 import Chats from "./pages/Chats";
 import Musics from "./pages/Musics";
@@ -47,10 +48,26 @@ const App = () => (
             }
           />
           <Route
+            path="/settings"
+            element={
+              <Layout>
+                <Settings />
+              </Layout>
+            }
+          />
+          <Route
             path="/scales"
             element={
               <Layout>
                 <Scales />
+              </Layout>
+            }
+          />
+          <Route
+            path="/availability"
+            element={
+              <Layout>
+                <Availability />
               </Layout>
             }
           />
