@@ -1,44 +1,39 @@
 
-import { useState, useEffect } from "react";
+import { ChevronDown } from "lucide-react";
 
 export function Greeting() {
-  const [currentTime, setCurrentTime] = useState(new Date());
+  // Simular dados do usuário com informação da igreja
+  const userChurch = localStorage.getItem("userRole") === "admin" 
+    ? "Igreja Batista Central - Administrador"
+    : "Igreja Batista Central";
   
-  // Simulação - em produção viria do contexto/estado global
-  const usuario = {
-    nome: "Maria Oliveira"
-  };
-
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const getGreeting = () => {
-    const hour = currentTime.getHours();
-    if (hour < 12) return { text: "Bom dia", emoji: "🌅" };
-    if (hour < 18) return { text: "Boa tarde", emoji: "☀️" };
-    return { text: "Boa noite", emoji: "🌙" };
-  };
-
-  const formatDate = () => {
-    return currentTime.toLocaleDateString('pt-BR', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long'
-    });
-  };
-
-  const greeting = getGreeting();
+  const currentHour = new Date().getHours();
+  let greeting = "Boa noite";
+  
+  if (currentHour < 12) {
+    greeting = "Bom dia";
+  } else if (currentHour < 18) {
+    greeting = "Boa tarde";
+  }
 
   return (
-    <div className="space-y-1">
-      <h1 className="text-xl lg:text-2xl font-bold text-echurch-700 flex items-center gap-2">
-        <span className="text-2xl">{greeting.emoji}</span>
-        {greeting.text}, {usuario.nome}!
-      </h1>
-      <p className="text-sm lg:text-base text-echurch-600 capitalize">
-        {formatDate()}
+    <div className="flex flex-col">
+      <div className="flex items-center gap-2">
+        <h1 className="text-xl lg:text-2xl font-bold text-echurch-700">
+          {greeting}, Maria! 
+        </h1>
+        <div className="flex items-center gap-1 px-3 py-1 bg-echurch-100 rounded-full">
+          <span className="text-xs font-medium text-echurch-600">⛪ {userChurch}</span>
+          <ChevronDown className="w-3 h-3 text-echurch-500" />
+        </div>
+      </div>
+      <p className="text-sm text-echurch-500 mt-1">
+        {new Date().toLocaleDateString('pt-BR', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        })}
       </p>
     </div>
   );

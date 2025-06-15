@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +16,9 @@ export default function Profile() {
     telefone: "(11) 99999-9999",
     area: "Louvor",
     instrumento: "Voz",
-    isAdmin: false,
+    igreja: "Igreja Batista Central",
+    enderecoIgreja: "Rua das Flores, 123 - São Paulo, SP",
+    isAdmin: localStorage.getItem("userRole") === "admin",
     foto: "https://randomuser.me/api/portraits/women/44.jpg",
   });
 
@@ -25,9 +26,9 @@ export default function Profile() {
     criarEscala: true,
     editarDisponibilidade: true,
     gerenciarMusicas: false,
-    aprovarEscalas: false,
-    gerenciarUsuarios: false,
-    acessarRelatorios: false
+    aprovarEscalas: usuario.isAdmin,
+    gerenciarUsuarios: usuario.isAdmin,
+    acessarRelatorios: usuario.isAdmin
   });
 
   const handlePermissaoChange = (permissao: keyof typeof permissoes, valor: boolean) => {
@@ -106,6 +107,31 @@ export default function Profile() {
                     <Edit className="w-4 h-4 mr-2" />
                     Editar Informações
                   </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Informações da Igreja */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="w-5 h-5" />
+                Igreja
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-echurch-600">Nome da Igreja</Label>
+                  <div className="p-3 bg-gradient-to-r from-echurch-50 to-echurch-100 rounded border flex items-center gap-2">
+                    <span className="text-lg">⛪</span>
+                    <span className="text-echurch-800 font-medium">{usuario.igreja}</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-echurch-600">Endereço</Label>
+                  <div className="p-2 bg-echurch-50 rounded border text-echurch-800">{usuario.enderecoIgreja}</div>
                 </div>
               </div>
             </CardContent>

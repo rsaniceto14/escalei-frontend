@@ -61,9 +61,6 @@ export default function Index() {
             </div>
           </div>
         </div>
-        <div className="absolute top-4 right-4 opacity-20">
-          <span className="text-6xl">⛪</span>
-        </div>
       </div>
 
       {/* Quick Actions */}
