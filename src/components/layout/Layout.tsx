@@ -18,9 +18,6 @@ export default function Layout({ children }: { children: ReactNode }) {
               <SidebarTrigger />
               <Logo className="scale-90" />
             </div>
-            <div>
-              <Greeting />
-            </div>
           </header>
           <main className="flex-1 px-2 sm:px-4 lg:px-12 py-4 lg:py-8 bg-echurch-50">
             {children}

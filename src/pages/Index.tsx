@@ -1,9 +1,9 @@
-
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, MapPin, CheckCircle, AlertCircle, Plus, Settings } from "lucide-react";
+import { Greeting } from "@/components/common/Greeting";
 
 export default function Index() {
   // Simulação de dados mockados do usuário
@@ -47,6 +47,10 @@ export default function Index() {
 
   return (
     <div className="space-y-8">
+      {/* Greeting apenas para esta página */}
+      <div className="mb-2">
+        <Greeting />
+      </div>
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-echurch-500 via-echurch-600 to-echurch-700 rounded-xl p-6 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
