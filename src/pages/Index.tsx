@@ -5,10 +5,10 @@ import { WelcomeSection } from "@/components/dashboard/WelcomeSection";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { ScaleCard } from "@/components/dashboard/ScaleCard";
 import { ActionButtons } from "@/components/dashboard/ActionButtons";
-import { useMockData } from "@/hooks/useMockData";
+import { useScalesData } from "@/hooks/useScalesData";
 
 export default function Index() {
-  const { escalasParticipa, escalasPendentes } = useMockData();
+  const { escalasParticipa, escalasPendentes, loading, error } = useScalesData();
 
   return (
     <div className="space-y-8">
