@@ -8,7 +8,7 @@ export function Greeting() {
     <div className="flex flex-col">
       <div className="flex items-center gap-2">
         <h1 className="text-xl lg:text-2xl font-bold text-echurch-700">
-          {greeting}, Maria!
+          {greeting}, {localStorage.getItem("user_name")}!
         </h1>
       </div>
       <p className="text-sm text-echurch-500 mt-1">

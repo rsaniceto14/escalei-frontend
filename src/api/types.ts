@@ -2,10 +2,10 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: string;
-  department?: string;
-  createdAt: string;
-  updatedAt: string;
+  photo_path: string;
+  birthday?: string;
+  status: string;
+  church_id: string;
 }
 
 export interface Scale {
@@ -44,7 +44,7 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  token: string;
+  access_token: string;
   user: User;
 }
 

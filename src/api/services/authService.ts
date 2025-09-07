@@ -2,9 +2,9 @@ import { apiClient } from '../config';
 import { LoginRequest, LoginResponse, User, ApiResponse } from '../types';
 
 export const authService = {
-  async login(credentials: LoginRequest): Promise<LoginResponse> {
-    const response = await apiClient.post<ApiResponse<LoginResponse>>('/auth/login', credentials);
-    return response.data.data;
+  async login(credentials: LoginRequest): Promise<any> {
+    const response = await apiClient.post<ApiResponse<LoginResponse>>('/v1/auth/login', credentials);
+    return response.data;
   },
 
   async logout(): Promise<void> {

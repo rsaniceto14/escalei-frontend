@@ -1,14 +1,14 @@
 import axios from 'axios';
 
 // Change this URL to your API endpoint
-export const API_BASE_URL = 'http://localhost:3001/api';
+export const API_BASE_URL = 'http://localhost:8000/api';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 20000,
 });
 
 // Request interceptor to add auth token if available

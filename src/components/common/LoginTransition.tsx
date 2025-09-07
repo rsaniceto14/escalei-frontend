@@ -4,24 +4,27 @@ import { CheckCircle } from "lucide-react";
 
 interface LoginTransitionProps {
   isVisible: boolean;
+  loginStatus: 'idle' | 'pending' | 'success' | 'error';
   onComplete: () => void;
 }
 
-export function LoginTransition({ isVisible, onComplete }: LoginTransitionProps) {
+
+export function LoginTransition({ isVisible, onComplete, loginStatus }: LoginTransitionProps) {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
     if (!isVisible) return;
 
-    const timeouts = [
-      setTimeout(() => setStep(1), 120),    // Carregando progress bar
-      setTimeout(() => setStep(2), 950),    // Sucesso
-      setTimeout(() => setStep(3), 1550),   // Fade out
-      setTimeout(() => onComplete(), 1770), // Completar
-    ];
+    if (loginStatus === 'pending') {
+      setStep(1)
+    }
 
-    return () => timeouts.forEach(clearTimeout);
-  }, [isVisible, onComplete]);
+    if (loginStatus === 'success') {
+      setStep(2)
+      onComplete()
+    }
+
+  }, [isVisible, loginStatus, onComplete]);
 
   if (!isVisible) return null;
 
