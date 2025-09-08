@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { authService  } from "@/api";
 
 export default function PasswordRecover() {
   const [email, setEmail] = useState("");
@@ -11,12 +12,19 @@ export default function PasswordRecover() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email) return;
+
     setSubmitting(true);
-    setTimeout(() => {
+    const res = authService.forgotPassword(email);
+
+    if (res) {
       setInfo("Email enviado! Confira sua caixa de entrada.");
       setSubmitting(false);
-      setTimeout(() => navigate("/codigo"), 1200);
-    }, 900);
+      setTimeout(() => navigate("/login"), 1200);
+    } else {
+      setInfo("Falha ao enviar email de recuperação!");
+      setSubmitting(false);
+    }
+  
   }
 
   return (

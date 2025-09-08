@@ -1,16 +1,23 @@
 
+import { authService } from "@/api";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 export default function PasswordReset() {
   const [senha, setSenha] = useState("");
   const [confsenha, setConfsenha] = useState("");
+  const [isRequesting, setIsRequesting] = useState(false);
   const [msg, setMsg] = useState("");
   const [erro, setErro] = useState("");
-  const navigate = useNavigate();
 
-  function handleReset(e: React.FormEvent) {
+  const navigate = useNavigate();
+  const { token } = useParams<{ token: string }>(); // pega /:token
+  const [searchParams] = useSearchParams();
+  const email = searchParams.get("email"); // pega ?email=...
+
+  async function handleReset(e: React.FormEvent) {
     e.preventDefault();
+
     if (senha.length < 6) {
       setErro("Use ao menos 6 caracteres.");
       return;
@@ -19,10 +26,20 @@ export default function PasswordReset() {
       setErro("Senhas não coincidem.");
       return;
     }
-    setMsg("Senha redefinida com sucesso!");
-    setTimeout(() => {
-      navigate("/login");
-    }, 1200);
+    setIsRequesting(true)
+    try {
+      const res = await authService.resetPassword(token, email, senha, confsenha)
+      setMsg("Senha redefinida com sucesso!");
+      setIsRequesting(false)
+      setTimeout(() => {
+        navigate("/login");
+      }, 1200);
+    } catch (e) {
+      setErro(e.message);
+    } finally {
+      setIsRequesting(false);
+    }
+
   }
 
   return (
@@ -50,7 +67,7 @@ export default function PasswordReset() {
           type="submit"
           className="bg-echurch-500 text-white py-2 rounded font-semibold shadow hover:bg-echurch-700 transition-colors"
         >
-          Redefinir senha
+          { !isRequesting ? "Redefinir senha" : "Redefinindo..."}
         </button>
         {msg && <div className="text-green-600 text-center">{msg}</div>}
         {erro && <div className="text-red-600 text-center">{erro}</div>}

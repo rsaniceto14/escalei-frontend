@@ -8,7 +8,6 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import PasswordRecover from "./pages/PasswordRecover";
-import PasswordCode from "./pages/PasswordCode";
 import PasswordReset from "./pages/PasswordReset";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
@@ -33,9 +32,8 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/recuperar" element={<PasswordRecover />} />
-            <Route path="/codigo" element={<PasswordCode />} />
-            <Route path="/redefinir" element={<PasswordReset />} />
+            <Route path="/request-reset" element={<PasswordRecover />} />
+            <Route path="/password-reset/:token" element={<PasswordReset />} />
             <Route
               path="/"
               element={

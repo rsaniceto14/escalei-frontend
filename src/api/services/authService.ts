@@ -18,15 +18,12 @@ export const authService = {
   },
 
   async forgotPassword(email: string): Promise<void> {
-    await apiClient.post<ApiResponse<void>>('/auth/forgot-password', { email });
+    await apiClient.post<ApiResponse<void>>('/v1/auth/forgot-password', { email });
   },
 
-  async resetPassword(token: string, newPassword: string): Promise<void> {
-    await apiClient.post<ApiResponse<void>>('/auth/reset-password', { token, newPassword });
-  },
-
-  async verifyCode(code: string): Promise<void> {
-    await apiClient.post<ApiResponse<void>>('/auth/verify-code', { code });
+  async resetPassword(token: string, email: string, password: string, confpass: string): Promise<any> {
+    const response = await apiClient.post<ApiResponse<void>>('/v1/auth/reset-password', { token, email, password, password_confirmation: confpass });
+    return response.data;
   },
 
   async refreshToken(): Promise<string> {

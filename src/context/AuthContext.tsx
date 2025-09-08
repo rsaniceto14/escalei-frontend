@@ -11,7 +11,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem("jwt"));
-
+  console.log(token)
   const login = (newToken: string) => {
     setToken(newToken);
     localStorage.setItem("jwt", newToken);

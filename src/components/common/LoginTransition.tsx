@@ -1,16 +1,16 @@
 
 import { useEffect, useState } from "react";
 import { CheckCircle } from "lucide-react";
+import { Navigate, useNavigate } from "react-router-dom";
 
 interface LoginTransitionProps {
   isVisible: boolean;
   loginStatus: 'idle' | 'pending' | 'success' | 'error';
-  onComplete: () => void;
 }
 
 
-export function LoginTransition({ isVisible, onComplete, loginStatus }: LoginTransitionProps) {
-  const [step, setStep] = useState(0);
+export function LoginTransition({ isVisible, loginStatus }: LoginTransitionProps) {
+  const [step, setStep] = useState(0);  
 
   useEffect(() => {
     if (!isVisible) return;
@@ -21,10 +21,9 @@ export function LoginTransition({ isVisible, onComplete, loginStatus }: LoginTra
 
     if (loginStatus === 'success') {
       setStep(2)
-      onComplete()
     }
 
-  }, [isVisible, loginStatus, onComplete]);
+  }, [isVisible, loginStatus]);
 
   if (!isVisible) return null;
 

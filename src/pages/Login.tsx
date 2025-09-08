@@ -43,9 +43,11 @@ export default function Login() {
 
       setLoginStep('success'); // animação de sucesso
 
+      navigate("/")
+
     } catch (error: any) {
       setErro(error.message || "Erro ao autenticar.");
-      setLoginStep('error'); // animação de erro (opcional)
+      setLoginStep('error');
     } finally {
       setLoading(false);
     }
@@ -126,7 +128,7 @@ export default function Login() {
 
               <div className="text-center">
                 <Link
-                  to="/recuperar"
+                  to="/request-reset"
                   className="text-sm text-echurch-500 hover:text-echurch-700 hover:underline"
                 >
                   Esqueceu a senha?
@@ -140,7 +142,6 @@ export default function Login() {
       <LoginTransition
         isVisible={loginStep !== 'idle'}
         loginStatus={loginStep}
-        onComplete={() => navigate("/")}
       />
 
     </>
