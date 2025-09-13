@@ -7,6 +7,9 @@ import Layout from "./components/layout/Layout";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+import Landing from "./pages/Landing";
+import RegisterMember from "./pages/RegisterMember";
+import RegisterChurch from "./pages/RegisterChurch";
 import PasswordRecover from "./pages/PasswordRecover";
 import PasswordReset from "./pages/PasswordReset";
 import Profile from "./pages/Profile";
@@ -31,11 +34,14 @@ const App = () => (
       <AuthProvider>
         <BrowserRouter>
           <Routes>
+            <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/register-member" element={<RegisterMember />} />
+            <Route path="/register-church" element={<RegisterChurch />} />
             <Route path="/request-reset" element={<PasswordRecover />} />
             <Route path="/password-reset/:token" element={<PasswordReset />} />
             <Route
-              path="/"
+              path="/home"
               element={
                 <PrivateRoute>
                   <Layout>

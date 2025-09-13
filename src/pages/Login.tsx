@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Logo } from "@/components/common/Logo";
 import { LoginTransition } from "@/components/common/LoginTransition";
 import { Eye, EyeOff, ArrowRight, MapPin } from "lucide-react";
-import { authService } from "../api/services/authService"
+import { authService } from "../api/services/authService";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -18,6 +19,7 @@ export default function Login() {
   const [loginStep, setLoginStep] = useState<'idle' | 'pending' | 'success' | 'error'>('idle');
 
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -33,17 +35,18 @@ export default function Login() {
     try {
       const res = await authService.login({ email, password: senha });
 
-      // salva dados no localStorage
-      localStorage.setItem("jwt", res.access_token);
-      localStorage.setItem("user_id", res.user.id);
-      localStorage.setItem("user_name", res.user.name);
-      localStorage.setItem("user_email", res.user.email);
-      localStorage.setItem("user_photo", res.user.photo_path);
-      localStorage.setItem("church_id", res.user.church_id);
+      // Use context login method
+      login(res.access_token, {
+        id: res.user.id,
+        name: res.user.name,
+        email: res.user.email,
+        photo_path: res.user.photo_path,
+        church_id: res.user.church_id,
+      });
 
       setLoginStep('success'); // animação de sucesso
 
-      navigate("/")
+      navigate("/home");
 
     } catch (error: any) {
       setErro(error.message || "Erro ao autenticar.");
@@ -126,12 +129,18 @@ export default function Login() {
                 )}
               </Button>
 
-              <div className="text-center">
+              <div className="text-center space-y-2">
                 <Link
                   to="/request-reset"
-                  className="text-sm text-echurch-500 hover:text-echurch-700 hover:underline"
+                  className="text-sm text-echurch-500 hover:text-echurch-700 hover:underline block"
                 >
                   Esqueceu a senha?
+                </Link>
+                <Link
+                  to="/"
+                  className="text-sm text-muted-foreground hover:text-foreground hover:underline"
+                >
+                  Voltar ao início
                 </Link>
               </div>
             </form>
