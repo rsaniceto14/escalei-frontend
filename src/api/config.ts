@@ -1,3 +1,4 @@
+import { toast } from '@/hooks/use-toast';
 import axios from 'axios';
 
 // Change this URL to your API endpoint
@@ -29,10 +30,11 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('jwt');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
+    toast({
+        title: "Erro",
+        description: error.response.data.message,
+        variant: "destructive",
+      });
+    return Promise.reject(error.response.data);
   }
 );

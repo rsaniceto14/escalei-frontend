@@ -61,3 +61,17 @@ export interface PaginatedResponse<T> {
   limit: number;
   totalPages: number;
 }
+
+export interface RegisterChurch {
+  name: string;
+  id: number;
+}
+
+export interface RegisterUser {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  churchId: string;
+  birthday: string;
+}

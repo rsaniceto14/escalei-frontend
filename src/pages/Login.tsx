@@ -50,7 +50,7 @@ export default function Login() {
 
     } catch (error: any) {
       setErro(error.message || "Erro ao autenticar.");
-      setLoginStep('error');
+      setLoginStep('idle');
     } finally {
       setLoading(false);
     }

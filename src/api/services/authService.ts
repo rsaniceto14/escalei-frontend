@@ -3,8 +3,12 @@ import { LoginRequest, LoginResponse, User, ApiResponse } from '../types';
 
 export const authService = {
   async login(credentials: LoginRequest): Promise<any> {
-    const response = await apiClient.post<ApiResponse<LoginResponse>>('/v1/auth/login', credentials);
-    return response.data;
+    try {
+      const response = await apiClient.post<ApiResponse<LoginResponse>>('/v1/auth/login', credentials);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   },
 
   async logout(): Promise<void> {
@@ -26,8 +30,13 @@ export const authService = {
     return response.data;
   },
 
-  async refreshToken(): Promise<string> {
+  async refreshToken(): Promise<any> {
     const response = await apiClient.post<ApiResponse<{ token: string }>>('/auth/refresh');
     return response.data.data.token;
-  }
+  },
+
+  async register(formData: { name: string; email: string; password: string; password_confirmation: string; church_id: string; birthday: string; }): Promise<any> {
+    const response = await apiClient.post<ApiResponse<LoginResponse>>('/v1/auth/register', formData);
+    return response.data;
+  },
 };

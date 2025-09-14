@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,33 +7,44 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Logo } from "@/components/common/Logo";
 import { Eye, EyeOff, ArrowRight, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { churchService } from "@/api/services/churchService";
+import { authService } from "@/api";
 
 export default function RegisterMember() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
-    confirmPassword: "",
-    churchId: "",
+    password_confirmation: "",
+    church_id: "",
+    birthday: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+  const [churches, setChurches] = useState([]);
+
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Mock churches - replace with actual API call
-  const churches = [
-    { id: "1", name: "Igreja Batista Central" },
-    { id: "2", name: "Igreja Presbiteriana da Paz" },
-    { id: "3", name: "Igreja Metodista Unida" },
-  ];
+  useEffect(() => {
+    const fetchChurches = async () => {
+      try {
+        const res = await churchService.getChurchesForRegister();
+        setChurches(res);
+      } catch (error) {
+        console.error("Erro ao carregar igrejas:", error);
+      }
+    };
+
+    fetchChurches();
+  }, []);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (formData.password !== formData.confirmPassword) {
+    if (formData.password !== formData.password_confirmation) {
       toast({
         title: "Erro",
         description: "As senhas não coincidem.",
@@ -46,8 +57,10 @@ export default function RegisterMember() {
     
     try {
       // TODO: Implement register member API call
-      console.log("Registering member:", formData);
+      console.debug("Registering member:", formData);
       
+      await authService.register(formData);
+
       toast({
         title: "Sucesso!",
         description: "Cadastro realizado com sucesso. Você pode fazer login agora.",
@@ -80,6 +93,24 @@ export default function RegisterMember() {
 
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+
+           <Select 
+              value={formData.church_id?.toString()} 
+              onValueChange={(value) => setFormData(prev => ({ ...prev, church_id: value }))}
+              disabled={loading}
+            >
+              <SelectTrigger className="h-11">
+                <SelectValue placeholder="Selecione sua igreja" />
+              </SelectTrigger>
+              <SelectContent>
+                {churches.map((church) => (
+                  <SelectItem key={church.id} value={church.id.toString()}>
+                    {church.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Nome completo</label>
               <Input
@@ -87,6 +118,18 @@ export default function RegisterMember() {
                 placeholder="Seu nome completo"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                className="h-11"
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Data de nascimento</label>
+              <Input
+                type="date"
+                value={formData.birthday}
+                onChange={(e) => setFormData(prev => ({ ...prev, birthday: e.target.value }))}
                 className="h-11"
                 required
                 disabled={loading}
@@ -104,26 +147,6 @@ export default function RegisterMember() {
                 required
                 disabled={loading}
               />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Igreja</label>
-              <Select 
-                value={formData.churchId} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, churchId: value }))}
-                disabled={loading}
-              >
-                <SelectTrigger className="h-11">
-                  <SelectValue placeholder="Selecione sua igreja" />
-                </SelectTrigger>
-                <SelectContent>
-                  {churches.map((church) => (
-                    <SelectItem key={church.id} value={church.id}>
-                      {church.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
 
             <div className="space-y-2">
@@ -155,8 +178,8 @@ export default function RegisterMember() {
                 <Input
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  value={formData.password_confirmation}
+                  onChange={(e) => setFormData(prev => ({ ...prev, password_confirmation: e.target.value }))}
                   className="h-11 pr-10"
                   required
                   disabled={loading}

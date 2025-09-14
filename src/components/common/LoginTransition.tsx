@@ -10,7 +10,7 @@ interface LoginTransitionProps {
 
 
 export function LoginTransition({ isVisible, loginStatus }: LoginTransitionProps) {
-  const [step, setStep] = useState(0);  
+  const [step, setStep] = useState(0);
 
   useEffect(() => {
     if (!isVisible) return;
