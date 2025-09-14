@@ -5,8 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    
+    "build:prod": "vite build",
     "build:dev": "vite build --mode development",
+    
+    "copy:android": "npx cap copy android",
+    "copy:ios": "npx cap copy ios",
+    
+    "build:android": "vite build && npx cap copy android",
+    "build:ios": "vite build && npx cap copy ios",
+    
+    "apk:debug": "bash build-android.sh",
+    
     "lint": "eslint .",
     "preview": "vite preview"
   },
