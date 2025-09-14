@@ -44,9 +44,9 @@ else
   npm run build:dev
 fi
 
-# ===== PASSO 2: Copiar para Android =====
-echo "Copying build to Android..."
-npx cap copy android
+# ===== PASSO 2: Syncronizar =====
+echo "Sync..."
+npx cap sync android
 
 # ===== PASSO 3: Gerar APK =====
 echo "Building Android APK..."

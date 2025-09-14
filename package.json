@@ -5,24 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    
     "build:prod": "vite build",
     "build:dev": "vite build --mode development",
-    
     "copy:android": "npx cap copy android",
     "copy:ios": "npx cap copy ios",
-    
     "build:android": "vite build && npx cap copy android",
     "build:ios": "vite build && npx cap copy ios",
-    
     "apk:debug": "bash build-android.sh",
-    
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.3",
-    "@capacitor/cli": "^7.4.3",
     "@capacitor/core": "^7.4.3",
     "@capacitor/ios": "^7.4.3",
     "@capacitor/status-bar": "^7.0.3",
@@ -79,6 +73,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@capacitor/cli": "^7.4.3",
     "@eslint/js": "^9.9.0",
     "@tailwindcss/typography": "^0.5.15",
     "@types/node": "^22.5.5",
