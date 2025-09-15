@@ -43,9 +43,43 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface Area {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface Permission {
+  user_id : number;
+  create_scale : boolean;
+  read_scale : boolean;
+  update_scale : boolean;
+  delete_scale : boolean;
+  create_music : boolean;
+  read_music : boolean;
+  update_music : boolean;
+  delete_music : boolean;
+  create_role : boolean;
+  read_role : boolean;
+  update_role : boolean;
+  delete_role : boolean;
+  create_area : boolean;
+  read_area : boolean;
+  update_area : boolean;
+  delete_area : boolean;
+  create_chat : boolean;
+  read_chat : boolean;
+  update_chat : boolean;
+  delete_chat : boolean;
+  manage_users : boolean;
+  manage_church_settings : boolean;
+  manage_app_settings : boolean;
+}
 export interface LoginResponse {
   access_token: string;
   user: User;
+  area: Array<Area>;
+  permissions: Permission
 }
 
 export interface ApiResponse<T> {
@@ -74,4 +108,24 @@ export interface RegisterUser {
   confirmPassword: string;
   churchId: string;
   birthday: string;
+}
+
+export interface Chat {
+  id: string;
+  name: string;
+  chatable_type: string;
+  description: string;
+}
+
+export interface Message {
+  content: string;
+  image_path: string;
+  sent_at: string;
+  user_name: string;
+}
+
+
+export interface ChatWithMessages {
+  chat: Chat;
+  messages: Array<Message>;
 }

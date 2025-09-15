@@ -1,3 +1,4 @@
+import { Area, Permission } from "@/api";
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 interface User {
@@ -6,6 +7,8 @@ interface User {
   email: string;
   photo_path?: string;
   church_id: string;
+  permissions: Permission;
+  areas: Array<Area>
 }
 
 interface AuthContextType {
@@ -23,27 +26,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Initialize from localStorage
-    const storedToken = localStorage.getItem("jwt");
-    const storedUserId = localStorage.getItem("user_id");
-    const storedUserName = localStorage.getItem("user_name");
-    const storedUserEmail = localStorage.getItem("user_email");
-    const storedUserPhoto = localStorage.getItem("user_photo");
-    const storedChurchId = localStorage.getItem("church_id");
+  // useEffect(() => {
+  //   // Initialize from localStorage
+  //   const storedToken = localStorage.getItem("jwt");
+  //   const storedUserId = localStorage.getItem("user_id");
+  //   const storedUserName = localStorage.getItem("user_name");
+  //   const storedUserEmail = localStorage.getItem("user_email");
+  //   const storedUserPhoto = localStorage.getItem("user_photo");
+  //   const storedChurchId = localStorage.getItem("church_id");
 
-    if (storedToken && storedUserId && storedUserName && storedUserEmail && storedChurchId) {
-      setToken(storedToken);
-      setUser({
-        id: storedUserId,
-        name: storedUserName,
-        email: storedUserEmail,
-        photo_path: storedUserPhoto || undefined,
-        church_id: storedChurchId,
-      });
-    }
-    setIsLoading(false);
-  }, []);
+  //   if (storedToken && storedUserId && storedUserName && storedUserEmail && storedChurchId) {
+  //     setToken(storedToken);
+  //     setUser({
+  //       id: storedUserId,
+  //       name: storedUserName,
+  //       email: storedUserEmail,
+  //       photo_path: storedUserPhoto || undefined,
+  //       church_id: storedChurchId,
+  //     });
+  //   }
+  //   setIsLoading(false);
+  // }, []);
 
   const login = (newToken: string, userData: User) => {
     setToken(newToken);
@@ -65,12 +68,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     
     // Clear localStorage
-    localStorage.removeItem("jwt");
-    localStorage.removeItem("user_id");
-    localStorage.removeItem("user_name");
-    localStorage.removeItem("user_email");
-    localStorage.removeItem("user_photo");
-    localStorage.removeItem("church_id");
+    // localStorage.removeItem("jwt");
+    // localStorage.removeItem("user_id");
+    // localStorage.removeItem("user_name");
+    // localStorage.removeItem("user_email");
+    // localStorage.removeItem("user_photo");
+    // localStorage.removeItem("church_id");
   };
 
   return (

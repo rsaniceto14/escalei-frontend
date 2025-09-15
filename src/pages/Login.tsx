@@ -42,6 +42,8 @@ export default function Login() {
         email: res.user.email,
         photo_path: res.user.photo_path,
         church_id: res.user.church_id,
+        permissions: res.permission,
+        areas: res.areas
       });
 
       setLoginStep('success'); // animação de sucesso

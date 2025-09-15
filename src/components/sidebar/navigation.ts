@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 export const mainItems = [
-  { title: "Início", url: "/", icon: Home },
+  { title: "Início", url: "/home", icon: Home },
   { title: "Escalas", url: "/scales", icon: Calendar },
   { title: "Disponibilidade", url: "/availability", icon: Clock },
   { title: "Chats", url: "/chats", icon: MessageCircle },
