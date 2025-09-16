@@ -39,7 +39,7 @@ export default function Index() {
           icon={<AlertCircle className="w-5 h-5 text-yellow-500" />}
           scales={escalasPendentes}
           variant="pending"
-          emptyMessage="Nenhuma pendência!"
+          emptyMessage="Nenhuma pendênci!"
           emptyDescription="Você está em dia com suas escalas"
         />
       </div>
