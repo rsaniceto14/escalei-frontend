@@ -10,6 +10,11 @@ import Login from "./pages/Login";
 import Landing from "./pages/Landing";
 import RegisterMember from "./pages/RegisterMember";
 import RegisterChurch from "./pages/RegisterChurch";
+import ChurchSetup from "./pages/ChurchSetup";
+import AreasSetup from "./pages/setup/AreasSetup";
+import InvitesSetup from "./pages/setup/InvitesSetup";
+import SchedulesSetup from "./pages/setup/SchedulesSetup";
+import MusicSetup from "./pages/setup/MusicSetup";
 import PasswordRecover from "./pages/PasswordRecover";
 import PasswordReset from "./pages/PasswordReset";
 import Profile from "./pages/Profile";
@@ -40,6 +45,13 @@ const App = () => (
             <Route path="/register-church" element={<RegisterChurch />} />
             <Route path="/request-reset" element={<PasswordRecover />} />
             <Route path="/password-reset/:token" element={<PasswordReset />} />
+            
+            {/* Setup routes */}
+            <Route path="/church-setup" element={<ChurchSetup />} />
+            <Route path="/setup/areas" element={<AreasSetup />} />
+            <Route path="/setup/invites" element={<InvitesSetup />} />
+            <Route path="/setup/schedules" element={<SchedulesSetup />} />
+            <Route path="/setup/music" element={<MusicSetup />} />
             <Route
               path="/home"
               element={
