@@ -4,7 +4,7 @@ import { LoginRequest, LoginResponse, User, ApiResponse } from '../types';
 export const authService = {
   async login(credentials: LoginRequest): Promise<any> {
     try {
-      const response = await apiClient.post<ApiResponse<LoginResponse>>('/v1/auth/login', credentials);
+      const response = await apiClient.post<ApiResponse<LoginResponse>>('/auth/login', credentials);
       return response.data;
     } catch (error) {
       throw error;
@@ -22,11 +22,11 @@ export const authService = {
   },
 
   async forgotPassword(email: string): Promise<void> {
-    await apiClient.post<ApiResponse<void>>('/v1/auth/forgot-password', { email });
+    await apiClient.post<ApiResponse<void>>('/auth/forgot-password', { email });
   },
 
   async resetPassword(token: string, email: string, password: string, confpass: string): Promise<any> {
-    const response = await apiClient.post<ApiResponse<void>>('/v1/auth/reset-password', { token, email, password, password_confirmation: confpass });
+    const response = await apiClient.post<ApiResponse<void>>('/auth/reset-password', { token, email, password, password_confirmation: confpass });
     return response.data;
   },
 
@@ -36,7 +36,7 @@ export const authService = {
   },
 
   async register(formData: { name: string; email: string; password: string; password_confirmation: string; church_id: string; birthday: string; }): Promise<any> {
-    const response = await apiClient.post<ApiResponse<LoginResponse>>('/v1/auth/register', formData);
+    const response = await apiClient.post<ApiResponse<LoginResponse>>('/auth/register', formData);
     return response.data;
   },
 
