@@ -36,14 +36,14 @@ export default function Login() {
       const res = await authService.login({ email, password: senha });
 
       // Use context login method
-      login(res.access_token, {
-        id: res.user.id,
-        name: res.user.name,
-        email: res.user.email,
-        photo_path: res.user.photo_path,
-        church_id: res.user.church_id,
-        permissions: res.permissions,
-        areas: res.areas
+      login(res.data.access_token, {
+        id: res.data.user.id,
+        name: res.data.user.name,
+        email: res.data.user.email,
+        photo_path: res.data.user.photo_path,
+        church_id: res.data.user.church_id,
+        permissions: res.data.permissions,
+        areas: res.data.areas
       });
 
       setLoginStep('success'); // animação de sucesso

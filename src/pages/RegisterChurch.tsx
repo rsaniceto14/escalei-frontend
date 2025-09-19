@@ -89,14 +89,14 @@ export default function RegisterChurch() {
       const response = await authService.registerChurch(formData);
       
       // Store user data and church_id in AuthContext
-      login(response.access_token, {
-        id: response.user.id,
-        name: response.user.name,
-        email: response.user.email,
-        photo_path: response.user.photo_path,
-        church_id: response.church_id,
-        permissions: response.permissions,
-        areas: response.areas,
+      login(response.data.access_token, {
+        id: response.data.user.id,
+        name: response.data.user.name,
+        email: response.data.user.email,
+        photo_path: response.data.user.photo_path,
+        church_id: response.data.church_id,
+        permissions: response.data.permissions,
+        areas: response.data.areas,
       });
       
       toast({

@@ -4,8 +4,8 @@ import { Area, ApiResponse } from '../types';
 export const areaService = {
   async getAll(): Promise<Area[]> {
     try {
-      const response = await apiClient.get<Area[]>('/areas');
-      return response.data;
+      const response = await apiClient.get<ApiResponse<Area[]>>('/areas');
+      return response.data.data;
     } catch (error) {
       throw error;
     }
@@ -13,8 +13,8 @@ export const areaService = {
 
   async getById(id: number): Promise<Area> {
     try {
-      const response = await apiClient.get<Area>(`/areas/${id}`);
-      return response.data;
+      const response = await apiClient.get<ApiResponse<Area>>(`/areas/${id}`);
+      return response.data.data;
     } catch (error) {
       throw error;
     }
@@ -22,8 +22,8 @@ export const areaService = {
 
   async create(data: { name: string; description?: string }): Promise<Area> {
     try {
-      const response = await apiClient.post<Area>('/areas', data);
-      return response.data;
+      const response = await apiClient.post<ApiResponse<Area>>('/areas', data);
+      return response.data.data;
     } catch (error) {
       throw error;
     }
@@ -31,8 +31,8 @@ export const areaService = {
 
   async update(id: number, data: { name?: string; description?: string }): Promise<Area> {
     try {
-      const response = await apiClient.put<Area>(`/areas/${id}`, data);
-      return response.data;
+      const response = await apiClient.put<ApiResponse<Area>>(`/areas/${id}`, data);
+      return response.data.data;
     } catch (error) {
       throw error;
     }

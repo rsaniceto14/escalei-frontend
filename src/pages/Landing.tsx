@@ -10,7 +10,7 @@ export default function Landing() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-echurch-500 via-echurch-600 to-echurch-700 flex flex-col items-center justify-center p-6 text-white relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-echurch-500 via-echurch-600 to-echurch-700 flex flex-col items-center justify-center p-4 sm:p-6 text-white relative overflow-hidden">
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-20 -left-20 w-40 h-40 bg-white/10 rounded-full blur-xl animate-pulse"></div>
@@ -18,45 +18,45 @@ export default function Landing() {
           <div className="absolute top-1/3 left-1/4 w-20 h-20 bg-white/10 rounded-full blur-lg animate-bounce delay-500"></div>
         </div>
 
-        <div className="relative z-10 text-center mb-12">
-          <div className="mb-8">
-            <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm shadow-2xl">
-              <Heart className="w-10 h-10 text-white animate-pulse" />
+        <div className="relative z-10 text-center mb-8 sm:mb-12">
+          <div className="mb-6 sm:mb-8">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 backdrop-blur-sm shadow-2xl">
+              <Heart className="w-8 h-8 sm:w-10 sm:h-10 text-white animate-pulse" />
             </div>
-            <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-white to-echurch-100 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl font-bold mb-2 sm:mb-3 bg-gradient-to-r from-white to-echurch-100 bg-clip-text text-transparent">
               eChurch
             </h1>
-            <p className="text-echurch-100 text-lg font-medium">
+            <p className="text-echurch-100 text-base sm:text-lg font-medium px-4">
               Gestão Inteligente para sua Igreja
             </p>
           </div>
         </div>
 
-        <div className="w-full max-w-sm space-y-6 relative z-10">
+        <div className="w-full max-w-sm space-y-6 sm:space-y-8 relative z-10 px-2">
           <Link to="/login">
-            <Button className="w-full h-16 bg-white text-echurch-600 hover:bg-echurch-50 font-semibold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border-2 border-white/20">
-              <LogIn className="w-6 h-6 mr-3" />
+            <Button className="w-full h-14 sm:h-16 bg-white text-echurch-600 hover:bg-echurch-50 font-semibold text-base sm:text-lg shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border-2 border-white/20 active:scale-95">
+              <LogIn className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3" />
               Fazer Login
             </Button>
           </Link>
           
           <Link to="/register-member">
-            <Button variant="outline" className="w-full h-16 border-2 border-white/50 text-white hover:bg-white/20 font-semibold text-lg backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white/10">
-              <Users className="w-6 h-6 mr-3" />
+            <Button variant="outline" className="w-full h-14 sm:h-16 border-2 border-white/50 text-white hover:bg-white/20 font-semibold text-base sm:text-lg backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white/10 active:scale-95">
+              <Users className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3" />
               Cadastrar Membro
             </Button>
           </Link>
           
           <Link to="/register-church">
-            <Button variant="outline" className="w-full h-16 border-2 border-white/50 text-white hover:bg-white/20 font-semibold text-lg backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white/10">
-              <Church className="w-6 h-6 mr-3" />
+            <Button variant="outline" className="w-full h-14 sm:h-16 border-2 border-white/50 text-white hover:bg-white/20 font-semibold text-base sm:text-lg backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white/10 active:scale-95">
+              <Church className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3" />
               Cadastrar Igreja
             </Button>
           </Link>
         </div>
 
-        <div className="mt-8 flex items-center text-echurch-200 text-sm">
-          <Sparkles className="w-4 h-4 mr-2" />
+        <div className="mt-6 sm:mt-8 flex items-center justify-center text-echurch-200 text-xs sm:text-sm px-4">
+          <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
           <span>Transformando a gestão da sua igreja</span>
         </div>
       </div>

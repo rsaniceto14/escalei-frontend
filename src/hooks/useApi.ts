@@ -1,19 +1,35 @@
-import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect } from "react";
+import { useToast } from "./use-toast";
 
-interface UseApiOptions {
+interface ApiSuccessResponse<T> {
+  success: true;
+  data: T;
+  message?: string;
+}
+
+interface ApiError {
+  success: false;
+  error: {
+    code: string;
+    message: string;
+    details?: any;
+    timestamp: string;
+  };
+}
+
+interface UseApiOptions<T> {
   immediate?: boolean;
-  onSuccess?: (data: any) => void;
-  onError?: (error: any) => void;
+  onSuccess?: (data: T) => void;
+  onError?: (error: ApiError) => void;
 }
 
 export function useApi<T>(
-  apiFunction: () => Promise<T>,
-  options: UseApiOptions = {}
+  apiFunction: () => Promise<ApiSuccessResponse<T>>,
+  options: UseApiOptions<T> = {}
 ) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ApiError | null>(null);
   const { toast } = useToast();
 
   const { immediate = false, onSuccess, onError } = options;
@@ -23,19 +39,19 @@ export function useApi<T>(
       setLoading(true);
       setError(null);
       const result = await apiFunction();
-      setData(result);
-      onSuccess?.(result);
-      return result;
+      
+      if (result.success) {
+        setData(result.data);
+        onSuccess?.(result.data);
+        return result.data;
+      } else {
+        throw result;
+      }
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || 'Erro inesperado';
-      setError(errorMessage);
-      toast({
-        title: "Erro",
-        description: errorMessage,
-        variant: "destructive",
-      });
-      onError?.(err);
-      throw err;
+      const apiError = err as ApiError;
+      setError(apiError);
+      onError?.(apiError);
+      throw apiError;
     } finally {
       setLoading(false);
     }
@@ -58,11 +74,12 @@ export function useApi<T>(
 
 // Specialized hook for mutations (create, update, delete)
 export function useMutation<T, P = any>(
-  mutationFunction: (params: P) => Promise<T>,
-  options: UseApiOptions = {}
+  mutationFunction: (params: P) => Promise<ApiSuccessResponse<T>>,
+  options: UseApiOptions<T> = {}
 ) {
+  const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ApiError | null>(null);
   const { toast } = useToast();
 
   const { onSuccess, onError } = options;
@@ -72,26 +89,28 @@ export function useMutation<T, P = any>(
       setLoading(true);
       setError(null);
       const result = await mutationFunction(params);
-      onSuccess?.(result);
-      return result;
+      
+      if (result.success) {
+        setData(result.data);
+        onSuccess?.(result.data);
+        return result.data;
+      } else {
+        throw result;
+      }
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || 'Erro inesperado';
-      setError(errorMessage);
-      toast({
-        title: "Erro",
-        description: errorMessage,
-        variant: "destructive",
-      });
-      onError?.(err);
-      throw err;
+      const apiError = err as ApiError;
+      setError(apiError);
+      onError?.(apiError);
+      throw apiError;
     } finally {
       setLoading(false);
     }
   };
 
   return {
-    mutate,
+    data,
     loading,
-    error
+    error,
+    mutate
   };
 }
