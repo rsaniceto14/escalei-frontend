@@ -25,10 +25,10 @@ export default function AreasSetup() {
 
   const { toast } = useToast();
 
-  // Don't load areas in setup - only create new ones
-  // useEffect(() => {
-  //   loadAreas();
-  // }, []);
+  // Load areas on component mount
+  useEffect(() => {
+    loadAreas();
+  }, []);
 
   const loadAreas = async () => {
     setIsLoading(true);
@@ -140,7 +140,7 @@ export default function AreasSetup() {
           <div className="flex justify-between items-center">
             <div>
               <h3 className="text-lg font-semibold text-echurch-700">Áreas Configuradas</h3>
-              <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
                 {areas.length} área{areas.length !== 1 ? 's' : ''} configurada{areas.length !== 1 ? 's' : ''}
               </p>
             </div>
