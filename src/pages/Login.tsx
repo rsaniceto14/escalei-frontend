@@ -42,7 +42,7 @@ export default function Login() {
         email: res.user.email,
         photo_path: res.user.photo_path,
         church_id: res.user.church_id,
-        permissions: res.permission,
+        permissions: res.permissions,
         areas: res.areas
       });
 

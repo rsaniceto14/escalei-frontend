@@ -22,31 +22,30 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Initialize state with localStorage values immediately to prevent race condition
+  const [user, setUser] = useState<User | null>(() => {
+    const storedUserId = localStorage.getItem("user_id");
+    const storedUserName = localStorage.getItem("user_name");
+    const storedUserEmail = localStorage.getItem("user_email");
+    const storedUserPhoto = localStorage.getItem("user_photo");
+    const storedChurchId = localStorage.getItem("church_id");
 
-  // useEffect(() => {
-  //   // Initialize from localStorage
-  //   const storedToken = localStorage.getItem("jwt");
-  //   const storedUserId = localStorage.getItem("user_id");
-  //   const storedUserName = localStorage.getItem("user_name");
-  //   const storedUserEmail = localStorage.getItem("user_email");
-  //   const storedUserPhoto = localStorage.getItem("user_photo");
-  //   const storedChurchId = localStorage.getItem("church_id");
-
-  //   if (storedToken && storedUserId && storedUserName && storedUserEmail && storedChurchId) {
-  //     setToken(storedToken);
-  //     setUser({
-  //       id: storedUserId,
-  //       name: storedUserName,
-  //       email: storedUserEmail,
-  //       photo_path: storedUserPhoto || undefined,
-  //       church_id: storedChurchId,
-  //     });
-  //   }
-  //   setIsLoading(false);
-  // }, []);
+    if (storedUserId && storedUserName && storedUserEmail && storedChurchId) {
+      return {
+        id: storedUserId,
+        name: storedUserName,
+        email: storedUserEmail,
+        photo_path: storedUserPhoto || undefined,
+        church_id: storedChurchId,
+        permissions: JSON.parse(localStorage.getItem("user_permissions") || "{}"),
+        areas: JSON.parse(localStorage.getItem("user_areas") || "[]"),
+      };
+    }
+    return null;
+  });
+  
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem("jwt"));
+  const [isLoading, setIsLoading] = useState(false);
 
   const login = (newToken: string, userData: User) => {
     setToken(newToken);
@@ -61,6 +60,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem("user_photo", userData.photo_path);
     }
     localStorage.setItem("church_id", userData.church_id);
+    localStorage.setItem("user_permissions", JSON.stringify(userData.permissions));
+    localStorage.setItem("user_areas", JSON.stringify(userData.areas));
   };
 
   const logout = () => {
@@ -68,12 +69,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     
     // Clear localStorage
-    // localStorage.removeItem("jwt");
-    // localStorage.removeItem("user_id");
-    // localStorage.removeItem("user_name");
-    // localStorage.removeItem("user_email");
-    // localStorage.removeItem("user_photo");
-    // localStorage.removeItem("church_id");
+    localStorage.removeItem("jwt");
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("user_name");
+    localStorage.removeItem("user_email");
+    localStorage.removeItem("user_photo");
+    localStorage.removeItem("church_id");
+    localStorage.removeItem("user_permissions");
+    localStorage.removeItem("user_areas");
   };
 
   return (

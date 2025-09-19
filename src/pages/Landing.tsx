@@ -32,24 +32,24 @@ export default function Landing() {
           </div>
         </div>
 
-        <div className="w-full max-w-sm space-y-4 relative z-10">
+        <div className="w-full max-w-sm space-y-6 relative z-10">
           <Link to="/login">
-            <Button className="w-full h-14 bg-white text-echurch-600 hover:bg-echurch-50 font-semibold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-              <LogIn className="w-5 h-5 mr-3" />
+            <Button className="w-full h-16 bg-white text-echurch-600 hover:bg-echurch-50 font-semibold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border-2 border-white/20">
+              <LogIn className="w-6 h-6 mr-3" />
               Fazer Login
             </Button>
           </Link>
           
           <Link to="/register-member">
-            <Button variant="outline" className="w-full h-14 border-2 border-white/30 text-white hover:bg-white/10 font-semibold text-lg backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-              <Users className="w-5 h-5 mr-3" />
+            <Button variant="outline" className="w-full h-16 border-2 border-white/50 text-white hover:bg-white/20 font-semibold text-lg backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white/10">
+              <Users className="w-6 h-6 mr-3" />
               Cadastrar Membro
             </Button>
           </Link>
           
           <Link to="/register-church">
-            <Button variant="outline" className="w-full h-14 border-2 border-white/30 text-white hover:bg-white/10 font-semibold text-lg backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-              <Church className="w-5 h-5 mr-3" />
+            <Button variant="outline" className="w-full h-16 border-2 border-white/50 text-white hover:bg-white/20 font-semibold text-lg backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white/10">
+              <Church className="w-6 h-6 mr-3" />
               Cadastrar Igreja
             </Button>
           </Link>

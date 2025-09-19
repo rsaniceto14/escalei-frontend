@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,19 +9,45 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
   Plus, Settings, Users, Shield, Eye, Edit, 
-  UserPlus, MapPin, Calendar 
+  UserPlus, MapPin, Calendar, Loader2
 } from "lucide-react";
+import { areaService, Area } from "@/api";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Admin() {
   const [novaArea, setNovaArea] = useState("");
   const [showNovaAreaDialog, setShowNovaAreaDialog] = useState(false);
+  const [areas, setAreas] = useState<Area[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const areas = [
-    { id: 1, nome: "Louvor", membros: 15, responsavel: "Maria Santos" },
-    { id: 2, nome: "Diáconos", membros: 12, responsavel: "João Silva" },
-    { id: 3, nome: "Recepção", membros: 8, responsavel: "Ana Costa" },
-    { id: 4, nome: "Som", membros: 6, responsavel: "Carlos Lima" },
-  ];
+  const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Check if user has permission to create areas
+  const canCreateArea = user?.permissions?.create_area || false;
+
+  // Load areas on component mount
+  useEffect(() => {
+    loadAreas();
+  }, []);
+
+  const loadAreas = async () => {
+    setIsLoading(true);
+    try {
+      const areasData = await areaService.getAll();
+      setAreas(areasData);
+    } catch (error: any) {
+      toast({
+        title: "Erro ao carregar áreas",
+        description: error.message || "Não foi possível carregar as áreas",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const usuarios = [
     { 
@@ -53,11 +79,37 @@ export default function Admin() {
     },
   ];
 
-  const adicionarArea = () => {
-    if (novaArea.trim()) {
-      // Aqui adicionaria a nova área
+  const adicionarArea = async () => {
+    if (!novaArea.trim()) {
+      toast({
+        title: "Nome obrigatório",
+        description: "O nome da área é obrigatório.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const newArea = await areaService.create({
+        name: novaArea.trim(),
+        description: ""
+      });
+      setAreas(prev => [...prev, newArea]);
       setNovaArea("");
       setShowNovaAreaDialog(false);
+      toast({
+        title: "Área criada!",
+        description: `A área ${novaArea} foi criada com sucesso.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível criar a área",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -97,73 +149,101 @@ export default function Admin() {
         <TabsContent value="areas" className="space-y-6">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold text-echurch-700">Áreas de Ministério</h2>
-            <Dialog open={showNovaAreaDialog} onOpenChange={setShowNovaAreaDialog}>
-              <DialogTrigger asChild>
-                <Button className="bg-echurch-500 hover:bg-echurch-600">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nova Área
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Criar Nova Área</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium">Nome da Área</label>
-                    <Input
-                      placeholder="Ex: Infantil, Jovens, etc."
-                      value={novaArea}
-                      onChange={(e) => setNovaArea(e.target.value)}
-                    />
+            {canCreateArea && (
+              <Dialog open={showNovaAreaDialog} onOpenChange={setShowNovaAreaDialog}>
+                <DialogTrigger asChild>
+                  <Button className="bg-echurch-500 hover:bg-echurch-600">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nova Área
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Criar Nova Área</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Nome da Área</label>
+                      <Input
+                        placeholder="Ex: Infantil, Jovens, etc."
+                        value={novaArea}
+                        onChange={(e) => setNovaArea(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={adicionarArea} 
+                        className="flex-1 bg-echurch-500 hover:bg-echurch-600"
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                        Criar Área
+                      </Button>
+                      <Button variant="outline" onClick={() => setShowNovaAreaDialog(false)} className="flex-1">
+                        Cancelar
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button onClick={adicionarArea} className="flex-1 bg-echurch-500 hover:bg-echurch-600">
-                      Criar Área
-                    </Button>
-                    <Button variant="outline" onClick={() => setShowNovaAreaDialog(false)} className="flex-1">
-                      Cancelar
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {areas.map(area => (
-              <Card key={area.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center justify-between">
-                    <span className="text-lg text-echurch-700">{area.nome}</span>
-                    <Button variant="outline" size="sm">
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm text-echurch-600">
-                    <Users className="w-4 h-4" />
-                    <span>{area.membros} membros</span>
-                  </div>
-                  <div className="text-sm">
-                    <span className="text-echurch-600">Responsável: </span>
-                    <span className="font-medium">{area.responsavel}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Eye className="w-4 h-4 mr-1" />
-                      Ver Membros
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <UserPlus className="w-4 h-4 mr-1" />
-                      Adicionar
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <Loader2 className="w-6 h-6 animate-spin" />
+              <span className="ml-2">Carregando áreas...</span>
+            </div>
+          ) : areas.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-8">
+                <Settings className="w-8 h-8 text-gray-400 mb-2" />
+                <p className="text-gray-500 text-center">
+                  {canCreateArea 
+                    ? "Nenhuma área encontrada. Crie sua primeira área de ministério."
+                    : "Nenhuma área encontrada."
+                  }
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {areas.map(area => (
+                <Card key={area.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="text-lg text-echurch-700">{area.name}</span>
+                      <Button variant="outline" size="sm">
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {area.description && (
+                      <div className="text-sm text-gray-600">
+                        {area.description}
+                      </div>
+                    )}
+                    {!area.description && (
+                      <div className="text-sm text-gray-400 italic">
+                        Nenhuma descrição fornecida
+                      </div>
+                    )}
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1">
+                        <Eye className="w-4 h-4 mr-1" />
+                        Ver Detalhes
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex-1">
+                        <UserPlus className="w-4 h-4 mr-1" />
+                        Gerenciar
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="usuarios" className="space-y-6">

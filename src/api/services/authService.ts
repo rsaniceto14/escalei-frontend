@@ -41,7 +41,7 @@ export const authService = {
   },
 
   async registerChurch(formData: any): Promise<any> {
-    const response = await apiClient.post<ApiResponse<LoginResponse>>('/v1/auth/register-church', formData);
+    const response = await apiClient.post<ApiResponse<LoginResponse>>('/auth/register-church', formData);
     return response.data;
   },
 };

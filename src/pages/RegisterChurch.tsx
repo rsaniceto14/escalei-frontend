@@ -7,6 +7,7 @@ import { Logo } from "@/components/common/Logo";
 import { Eye, EyeOff, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { authService } from "@/api/services/authService";
+import { useAuth } from "@/context/AuthContext";
 
 export default function RegisterChurch() {
   const [formData, setFormData] = useState({
@@ -35,6 +36,7 @@ export default function RegisterChurch() {
   
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login } = useAuth();
 
   const fetchAddressByCep = async (cep: string) => {
     if (cep.length !== 8) return;
@@ -85,6 +87,17 @@ export default function RegisterChurch() {
     
     try {
       const response = await authService.registerChurch(formData);
+      
+      // Store user data and church_id in AuthContext
+      login(response.access_token, {
+        id: response.user.id,
+        name: response.user.name,
+        email: response.user.email,
+        photo_path: response.user.photo_path,
+        church_id: response.church_id,
+        permissions: response.permissions,
+        areas: response.areas,
+      });
       
       toast({
         title: "Sucesso!",

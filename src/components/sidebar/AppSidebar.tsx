@@ -14,14 +14,32 @@ import {
 } from "@/components/ui/sidebar";
 import { Logo } from "../common/Logo";
 import { mainItems, configItems, adminItems } from "./navigation";
+import { useAuth } from "@/context/AuthContext";
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
+  const { user } = useAuth();
 
   const isCollapsed = state === "collapsed";
   const isAdmin = localStorage.getItem("userRole") === "admin";
+
+  // Check if user has any area permissions
+  const hasAreaPermissions = user?.permissions && (
+    user.permissions.create_area ||
+    user.permissions.read_area ||
+    user.permissions.update_area ||
+    user.permissions.delete_area
+  );
+
+  // Filter main items based on permissions
+  const filteredMainItems = mainItems.filter(item => {
+    if (item.url === "/areas") {
+      return hasAreaPermissions;
+    }
+    return true;
+  });
 
   const getNavCls = ({ isActive }: { isActive: boolean }) => {
     return `group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-echurch-100 hover:text-echurch-700 data-[active=true]:bg-echurch-100 data-[active=true]:text-echurch-700 ${
@@ -61,7 +79,7 @@ export function AppSidebar() {
         <SidebarGroup>
           {!isCollapsed && <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>}
           <SidebarGroupContent>
-            {renderMenuItems(mainItems)}
+            {renderMenuItems(filteredMainItems)}
           </SidebarGroupContent>
         </SidebarGroup>
 

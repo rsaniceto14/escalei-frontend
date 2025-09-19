@@ -44,7 +44,7 @@ export interface LoginRequest {
 }
 
 export interface Area {
-  id: string;
+  id: number;
   name: string;
   description: string;
 }
