@@ -2,8 +2,9 @@ import { toast } from '@/hooks/use-toast';
 import axios from 'axios';
 
 // Change this URL to your API endpoint
-export const API_BASE_URL = 'http://localhost:8000/api/v1'; //This only works for web
+// export const API_BASE_URL = 'http://localhost:8000/api/v1'; //This only works for web
 // export const API_BASE_URL = 'http://192.168.164.18:8000/api/v1'; //This only works for Mobile
+export const API_BASE_URL = 'https://e-church-backend.onrender.com/api/v1'; //To prod ;)
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
