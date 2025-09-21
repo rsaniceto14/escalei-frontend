@@ -1,10 +1,10 @@
-# E-Church Management System
+# Escalei Management System
 
 A comprehensive church management application built with React, TypeScript, and modern web technologies. The app includes features for scale management, user availability tracking, and administrative functions.
 
 ## Project Info
 
-**URL**: https://lovable.dev/projects/f093c655-0a0e-401d-9f09-7ea8b859fb3c
+**URL**: https://escalai.com
 
 ## Features
 
@@ -143,19 +143,15 @@ To run on physical devices or emulators:
 ### Mobile Configuration
 
 The Capacitor configuration is located in `capacitor.config.ts`:
-- **App ID**: `app.lovable.f093c6550a0e401d9f097ea8b859fb3c`
-- **App Name**: `e-church`
+- **App ID**: `com.escalai.app`
+- **App Name**: `escalai`
 - **Hot Reload**: Enabled for development
 
 ## How to Edit This Code
 
-### Using Lovable (Recommended)
-
-Visit the [Lovable Project](https://lovable.dev/projects/f093c655-0a0e-401d-9f09-7ea8b859fb3c) and start prompting. Changes are automatically committed to this repo.
-
 ### Using Your Preferred IDE
 
-Clone this repo and push changes. All changes will be reflected in Lovable.
+Clone this repo and start developing. All changes will be reflected in the application.
 
 ### GitHub Codespaces
 
@@ -184,13 +180,13 @@ src/
 
 ### Web Deployment
 
-Open [Lovable](https://lovable.dev/projects/f093c655-0a0e-401d-9f09-7ea8b859fb3c) and click Share → Publish.
+Deploy your application using your preferred hosting service.
 
 ### Custom Domain
 
 Navigate to Project → Settings → Domains and click Connect Domain.
 
-Read more: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Configure your custom domain through your hosting provider.
 
 ### Mobile App Store Deployment
 
@@ -208,10 +204,10 @@ After building with Capacitor:
 
 ## Support
 
-- [Lovable Documentation](https://docs.lovable.dev/)
-- [Lovable Discord Community](https://discord.com/channels/1119885301872070706/1280461670979993613)
-- [Troubleshooting Guide](https://docs.lovable.dev/tips-tricks/troubleshooting)
+- [React Documentation](https://react.dev/)
+- [TypeScript Documentation](https://www.typescriptlang.org/)
+- [Capacitor Documentation](https://capacitorjs.com/docs)
 
 ## License
 
-This project is built with Lovable and follows standard web development practices.
+This project follows standard web development practices and modern React patterns.

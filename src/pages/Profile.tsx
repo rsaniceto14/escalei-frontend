@@ -12,7 +12,7 @@ export default function Profile() {
   // Simulação de dados mockados
   const [usuario, setUsuario] = useState({
     nome: "Maria Oliveira",
-    email: "demo@e-church.com",
+    email: "demo@escalai.com",
     telefone: "(11) 99999-9999",
     area: "Louvor",
     instrumento: "Voz",

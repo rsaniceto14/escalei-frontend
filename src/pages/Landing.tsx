@@ -2,15 +2,39 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/common/Logo";
-import { Users, Church, LogIn, Sparkles, Heart } from "lucide-react";
+import { Users, Church, LogIn, Sparkles } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useEffect, useState } from "react";
+import { SafeArea } from "capacitor-plugin-safe-area";
 
 export default function Landing() {
   const isMobile = useIsMobile();
+  const [safeArea, setSafeArea] = useState({ top: 0, bottom: 0, left: 0, right: 0 });
+
+  useEffect(() => {
+    const getSafeAreaInsets = async () => {
+      try {
+        const insets = await SafeArea.getSafeAreaInsets();
+        setSafeArea(insets.insets);
+      } catch (error) {
+        console.log('SafeArea not available:', error);
+      }
+    };
+
+    getSafeAreaInsets();
+  }, []);
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-echurch-500 via-echurch-600 to-echurch-700 flex flex-col items-center justify-center p-4 sm:p-6 text-white relative overflow-hidden">
+      <div 
+        className="min-h-screen bg-gradient-to-br from-echurch-500 via-echurch-600 to-echurch-700 flex flex-col items-center justify-center p-4 sm:p-6 text-white relative overflow-hidden"
+        style={{
+          paddingTop: Math.max(safeArea.top, 16),
+          paddingBottom: Math.max(safeArea.bottom, 16),
+          paddingLeft: Math.max(safeArea.left, 16),
+          paddingRight: Math.max(safeArea.right, 16)
+        }}
+      >
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-20 -left-20 w-40 h-40 bg-white/10 rounded-full blur-xl animate-pulse"></div>
@@ -21,25 +45,29 @@ export default function Landing() {
         <div className="relative z-10 text-center mb-8 sm:mb-12">
           <div className="mb-6 sm:mb-8">
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 backdrop-blur-sm shadow-2xl">
-              <Heart className="w-8 h-8 sm:w-10 sm:h-10 text-white animate-pulse" />
+              <img 
+                src="/logo_size_invert.jpg" 
+                alt="Escalei Logo" 
+                className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover" 
+              />
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold mb-2 sm:mb-3 bg-gradient-to-r from-white to-echurch-100 bg-clip-text text-transparent">
-              eChurch
+              Escalei
             </h1>
             <p className="text-echurch-100 text-base sm:text-lg font-medium px-4">
-              Gestão Inteligente para sua Igreja
+              Escalando um mundo de oportunidades!
             </p>
           </div>
         </div>
 
-        <div className="w-full max-w-sm space-y-6 sm:space-y-8 relative z-10 px-2">
+       <div className="w-full max-w-sm flex flex-col space-y-4 relative z-10 px-2">
           <Link to="/login">
             <Button className="w-full h-14 sm:h-16 bg-white text-echurch-600 hover:bg-echurch-50 font-semibold text-base sm:text-lg shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border-2 border-white/20 active:scale-95">
               <LogIn className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3" />
               Fazer Login
             </Button>
           </Link>
-          
+
           <Link to="/register-member">
             <Button variant="outline" className="w-full h-14 sm:h-16 border-2 border-white/50 text-white hover:bg-white/20 font-semibold text-base sm:text-lg backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white/10 active:scale-95">
               <Users className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3" />
@@ -55,7 +83,7 @@ export default function Landing() {
           </Link>
         </div>
 
-        <div className="mt-6 sm:mt-8 flex items-center justify-center text-echurch-200 text-xs sm:text-sm px-4">
+        <div className="mt-10 sm:mt-12 flex items-center justify-center text-echurch-200 text-xs sm:text-sm px-4">
           <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
           <span>Transformando a gestão da sua igreja</span>
         </div>
@@ -78,7 +106,7 @@ export default function Landing() {
             <Logo />
           </div>
           <h1 className="text-5xl lg:text-6xl font-bold text-echurch-700 mb-6 leading-tight">
-            Bem-vindo ao <span className="bg-gradient-to-r from-echurch-500 to-echurch-700 bg-clip-text text-transparent">eChurch</span>
+            Bem-vindo ao <span className="bg-gradient-to-r from-echurch-500 to-echurch-700 bg-clip-text text-transparent">Escalei</span>
           </h1>
           <p className="text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             Gerencie suas escalas e atividades da igreja de forma simples, inteligente e eficiente

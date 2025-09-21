@@ -7,8 +7,8 @@ android {
         applicationId "com.echurch.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "0.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +16,17 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            storeFile file("../../my-release-key.jks") // caminho para o keystore
+            storePassword "SUASENHAAQUI" // NAO SOBE ISSO VALIDO PORFAVOR - nao sabe o que eh? verifique o doc de build no drive!
+            keyAlias "my-key-alias"
+            keyPassword "SUASENHAAQUI" // NAO SOBE ISSO VALIDO PORFAVOR
+        }
+    }
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

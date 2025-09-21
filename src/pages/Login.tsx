@@ -65,7 +65,11 @@ export default function Login() {
         <Card className="w-full max-w-md relative z-10 shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader className="text-center pb-4">
             <div className="flex justify-center mb-6">
-              <Logo />
+              <img 
+                src="image.png" 
+                alt="Escalei Logo" 
+                className="object-cover shadow-md rounded-md w-65 h-14" 
+              />
             </div>
             <h2 className="text-2xl font-bold text-echurch-700">Acesse sua conta</h2>
             <p className="text-echurch-600">Entre para gerenciar suas escalas</p>

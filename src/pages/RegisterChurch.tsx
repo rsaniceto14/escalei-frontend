@@ -126,7 +126,7 @@ export default function RegisterChurch() {
             <Logo />
           </div>
           <h2 className="text-2xl font-bold text-echurch-700">Cadastrar Igreja</h2>
-          <p className="text-muted-foreground">Registre sua igreja no eChurch</p>
+          <p className="text-muted-foreground">Registre sua igreja no Escalei</p>
         </CardHeader>
 
         <CardContent>
