@@ -8,7 +8,7 @@ import { ActionButtons } from "@/components/dashboard/ActionButtons";
 import { useScalesData } from "@/hooks/useScalesData";
 
 export default function Index() {
-  const { escalasParticipa, escalasPendentes, loading, error } = useScalesData();
+  const { escalasParticipa = [], escalasPendentes = [], loading, error } = useScalesData();
 
   return (
     <div className="space-y-8">

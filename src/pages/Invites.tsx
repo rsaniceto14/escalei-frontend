@@ -8,7 +8,8 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, Plus, Users, Send, Copy, Trash2, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Mail, Plus, Users, Send, Copy, Trash2, Clock, CheckCircle, XCircle, UserCheck, UserX } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Invite {
@@ -20,6 +21,16 @@ interface Invite {
   status: 'pending' | 'accepted' | 'expired';
   sentAt: string;
   message?: string;
+}
+
+interface PendingApproval {
+  id: string;
+  email: string;
+  name: string;
+  area: string;
+  role: string;
+  registeredAt: string;
+  status: 'awaiting' | 'approved' | 'rejected';
 }
 
 export default function Invites() {
@@ -42,6 +53,27 @@ export default function Invites() {
       role: 'Operador',
       status: 'accepted',
       sentAt: '2024-01-10'
+    }
+  ]);
+
+  const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>([
+    {
+      id: '3',
+      email: 'carlos@email.com',
+      name: 'Carlos Oliveira',
+      area: 'Louvor',
+      role: 'Cantor',
+      registeredAt: '2024-01-16',
+      status: 'awaiting'
+    },
+    {
+      id: '4',
+      email: 'ana@email.com',
+      name: 'Ana Costa',
+      area: 'Recepção',
+      role: 'Recepcionista',
+      registeredAt: '2024-01-14',
+      status: 'awaiting'
     }
   ]);
 
@@ -105,6 +137,33 @@ export default function Invites() {
     });
   };
 
+  const handleApproveUser = (userId: string) => {
+    setPendingApprovals(prev => prev.map(user => 
+      user.id === userId 
+        ? { ...user, status: 'approved' as const }
+        : user
+    ));
+
+    toast({
+      title: "Usuário aprovado!",
+      description: "O usuário foi aprovado e pode agora acessar o sistema.",
+    });
+  };
+
+  const handleRejectUser = (userId: string) => {
+    setPendingApprovals(prev => prev.map(user => 
+      user.id === userId 
+        ? { ...user, status: 'rejected' as const }
+        : user
+    ));
+
+    toast({
+      title: "Usuário rejeitado",
+      description: "O usuário foi rejeitado e notificado.",
+      variant: "destructive"
+    });
+  };
+
   const getStatusBadge = (status: Invite['status']) => {
     switch (status) {
       case 'pending':
@@ -113,6 +172,17 @@ export default function Invites() {
         return <Badge variant="outline" className="text-green-600 border-green-300"><CheckCircle className="w-3 h-3 mr-1" />Aceito</Badge>;
       case 'expired':
         return <Badge variant="outline" className="text-red-600 border-red-300"><XCircle className="w-3 h-3 mr-1" />Expirado</Badge>;
+    }
+  };
+
+  const getApprovalStatusBadge = (status: PendingApproval['status']) => {
+    switch (status) {
+      case 'awaiting':
+        return <Badge variant="outline" className="text-blue-600 border-blue-300"><Clock className="w-3 h-3 mr-1" />Aguardando</Badge>;
+      case 'approved':
+        return <Badge variant="outline" className="text-green-600 border-green-300"><UserCheck className="w-3 h-3 mr-1" />Aprovado</Badge>;
+      case 'rejected':
+        return <Badge variant="outline" className="text-red-600 border-red-300"><UserX className="w-3 h-3 mr-1" />Rejeitado</Badge>;
     }
   };
 
@@ -222,76 +292,155 @@ export default function Invites() {
         </Dialog>
       </div>
 
-      <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              Convites Enviados ({invites.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {invites.length === 0 ? (
-              <div className="text-center py-12">
-                <Mail className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">Nenhum convite enviado ainda</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {invites.map((invite, index) => (
-                  <div key={invite.id}>
-                    <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-medium">{invite.name}</h3>
-                          {getStatusBadge(invite.status)}
+      <Tabs defaultValue="invites" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="invites">Convites Enviados</TabsTrigger>
+          <TabsTrigger value="approvals">Aguardando Aprovação</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="invites" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="w-5 h-5" />
+                Convites Enviados ({invites.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {invites.length === 0 ? (
+                <div className="text-center py-12">
+                  <Mail className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">Nenhum convite enviado ainda</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {invites.map((invite, index) => (
+                    <div key={invite.id}>
+                      <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="font-medium">{invite.name}</h3>
+                            {getStatusBadge(invite.status)}
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-1">{invite.email}</p>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <span>{invite.area} - {invite.role}</span>
+                            <span>Enviado em {new Date(invite.sentAt).toLocaleDateString('pt-BR')}</span>
+                          </div>
+                          {invite.message && (
+                            <p className="text-sm text-muted-foreground mt-2 italic">"{invite.message}"</p>
+                          )}
                         </div>
-                        <p className="text-sm text-muted-foreground mb-1">{invite.email}</p>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>{invite.area} - {invite.role}</span>
-                          <span>Enviado em {new Date(invite.sentAt).toLocaleDateString('pt-BR')}</span>
-                        </div>
-                        {invite.message && (
-                          <p className="text-sm text-muted-foreground mt-2 italic">"{invite.message}"</p>
-                        )}
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        {invite.status === 'pending' && (
+                        
+                        <div className="flex items-center gap-2">
+                          {invite.status === 'pending' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleResendInvite(invite.id)}
+                            >
+                              <Send className="w-4 h-4 mr-1" />
+                              Reenviar
+                            </Button>
+                          )}
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleResendInvite(invite.id)}
+                            onClick={() => navigator.clipboard.writeText(`Convite: ${invite.name} - ${invite.email}`)}
                           >
-                            <Send className="w-4 h-4 mr-1" />
-                            Reenviar
+                            <Copy className="w-4 h-4" />
                           </Button>
-                        )}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => navigator.clipboard.writeText(`Convite: ${invite.name} - ${invite.email}`)}
-                        >
-                          <Copy className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteInvite(invite.id)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteInvite(invite.id)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
+                      {index < invites.length - 1 && <Separator className="my-2" />}
                     </div>
-                    {index < invites.length - 1 && <Separator className="my-2" />}
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="approvals" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Aguardando Aprovação ({pendingApprovals.filter(p => p.status === 'awaiting').length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {pendingApprovals.length === 0 ? (
+                <div className="text-center py-12">
+                  <UserCheck className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">Nenhum usuário aguardando aprovação</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {pendingApprovals.map((user, index) => (
+                    <div key={user.id}>
+                      <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="font-medium">{user.name}</h3>
+                            {getApprovalStatusBadge(user.status)}
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-1">{user.email}</p>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <span>{user.area} - {user.role}</span>
+                            <span>Registrado em {new Date(user.registeredAt).toLocaleDateString('pt-BR')}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          {user.status === 'awaiting' && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleApproveUser(user.id)}
+                                className="text-green-600 hover:text-green-700 border-green-300"
+                              >
+                                <UserCheck className="w-4 h-4 mr-1" />
+                                Aprovar
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleRejectUser(user.id)}
+                                className="text-red-600 hover:text-red-700 border-red-300"
+                              >
+                                <UserX className="w-4 h-4 mr-1" />
+                                Rejeitar
+                              </Button>
+                            </>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigator.clipboard.writeText(`Usuário: ${user.name} - ${user.email}`)}
+                          >
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      {index < pendingApprovals.length - 1 && <Separator className="my-2" />}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

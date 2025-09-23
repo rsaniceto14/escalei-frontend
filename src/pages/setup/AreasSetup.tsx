@@ -60,7 +60,7 @@ export default function AreasSetup() {
     try {
       if (editingArea) {
         // Update existing area
-        const updatedArea = await areaService.update(editingArea.id, newArea);
+        const updatedArea = await areaService.update(parseInt(editingArea.id), newArea);
         setAreas(prev => prev.map(area => 
           area.id === editingArea.id ? updatedArea : area
         ));
@@ -101,10 +101,10 @@ export default function AreasSetup() {
     setIsAreaDialogOpen(true);
   };
 
-  const handleDeleteArea = async (areaId: number) => {
+  const handleDeleteArea = async (areaId: string) => {
     const area = areas.find(a => a.id === areaId);
     try {
-      await areaService.delete(areaId);
+      await areaService.delete(parseInt(areaId));
       setAreas(prev => prev.filter(area => area.id !== areaId));
       toast({
         title: "Área removida",

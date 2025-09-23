@@ -79,7 +79,7 @@ export default function Areas() {
     try {
       if (editingArea) {
         // Update existing area
-        const updatedArea = await areaService.update(editingArea.id, newArea);
+        const updatedArea = await areaService.update(parseInt(editingArea.id), newArea);
         setAreas(prev => prev.map(area => 
           area.id === editingArea.id ? updatedArea : area
         ));
@@ -120,10 +120,10 @@ export default function Areas() {
     setIsAreaDialogOpen(true);
   };
 
-  const handleDeleteArea = async (areaId: number) => {
+  const handleDeleteArea = async (areaId: string) => {
     const area = areas.find(a => a.id === areaId);
     try {
-      await areaService.delete(areaId);
+      await areaService.delete(parseInt(areaId));
       setAreas(prev => prev.filter(area => area.id !== areaId));
       toast({
         title: "Área removida",
@@ -142,18 +142,6 @@ export default function Areas() {
     setNewArea({ name: '', description: '' });
     setEditingArea(null);
     setIsAreaDialogOpen(false);
-  };
-
-  const getIconComponent = (iconName: string) => {
-    switch (iconName) {
-      case 'Music': return <Settings className="w-6 h-6" />;
-      case 'Mic': return <Settings className="w-6 h-6" />;
-      case 'Settings': return <Settings className="w-6 h-6" />;
-      case 'Shield': return <Settings className="w-6 h-6" />;
-      case 'Users': return <Settings className="w-6 h-6" />;
-      case 'Sparkles': return <Settings className="w-6 h-6" />;
-      default: return <Settings className="w-6 h-6" />;
-    }
   };
 
   if (isLoading) {
@@ -227,7 +215,6 @@ export default function Areas() {
               </DialogContent>
             </Dialog>
           )}
-          
         </div>
       </div>
 

@@ -8,14 +8,20 @@ export function useScalesData() {
     loading: loadingConfirmed,
     error: errorConfirmed,
     refetch: refetchConfirmed
-  } = useApi(() => scaleService.getConfirmedScales(), { immediate: true });
+  } = useApi(
+    async () => ({ success: true as const, data: await scaleService.getConfirmedScales() }),
+    { immediate: true }
+  );
 
   const {
     data: pendingScales,
     loading: loadingPending,
     error: errorPending,
     refetch: refetchPending
-  } = useApi(() => scaleService.getPendingScales(), { immediate: true });
+  } = useApi(
+    async () => ({ success: true as const, data: await scaleService.getPendingScales() }),
+    { immediate: true }
+  );
 
   return {
     escalasParticipa: confirmedScales || [],
