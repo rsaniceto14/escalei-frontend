@@ -22,12 +22,12 @@ import PasswordReset from "./pages/PasswordReset";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Availability from "./pages/Availability";
-import Scales from "./pages/Scales";
+import Schedules from "./pages/Schedules";
 import Chats from "./pages/Chats";
 import Musics from "./pages/Musics";
 import ScaleCreate from "./pages/ScaleCreate";
 import Admin from "./pages/Admin";
-import ScaleDetails from "./pages/ScaleDetails";
+import ScheduleDetails from "./pages/ScheduleDetails";
 import { AuthProvider } from "./context/AuthContext";
 import PrivateRoute from "./components/route/privateRoute";
 
@@ -105,21 +105,21 @@ const App = () => (
               }
             />
             <Route
-              path="/scales"
+              path="/schedules"
               element={
                 <PrivateRoute>
                   <Layout>
-                    <Scales />
+                    <Schedules />
                   </Layout>
                 </PrivateRoute>
               }
             />
             <Route
-              path="/scales/:id"
+              path="/schedules/:id"
               element={
                 <PrivateRoute>
                   <Layout>
-                    <ScaleDetails />
+                    <ScheduleDetails />
                   </Layout>
                 </PrivateRoute>
               }

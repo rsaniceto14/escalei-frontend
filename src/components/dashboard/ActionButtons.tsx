@@ -6,7 +6,7 @@ import { Calendar, Settings } from "lucide-react";
 export function ActionButtons() {
   return (
     <div className="flex flex-col sm:flex-row gap-4">
-      <Link to="/scales" className="flex-1">
+      <Link to="/schedules" className="flex-1">
         <Button className="w-full bg-echurch-500 hover:bg-echurch-600 h-12">
           <Calendar className="w-4 h-4 mr-2" />
           Visualizar Todas as Escalas
