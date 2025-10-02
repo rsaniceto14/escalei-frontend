@@ -28,28 +28,15 @@ export function AppSidebar() {
   const { toast } = useToast();
 
   const isCollapsed = state === "collapsed";
-  const isAdmin = localStorage.getItem("userRole") === "admin";
-
-  // Check if user has any area permissions
-  const hasAreaPermissions = user?.permissions && (
-    user.permissions.create_area ||
-    user.permissions.read_area ||
-    user.permissions.update_area ||
-    user.permissions.delete_area
-  );
+  const isAdmin = user.permissions.manage_users;
 
   // Filter main items based on permissions
-  const filteredMainItems = mainItems.filter(item => {
-    if (item.url === "/areas") {
-      return hasAreaPermissions;
-    }
-    return true;
-  });
+  const filteredMainItems = mainItems;
 
   const getNavCls = ({ isActive }: { isActive: boolean }) => {
     return `group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-echurch-100 hover:text-echurch-700 data-[active=true]:bg-echurch-100 data-[active=true]:text-echurch-700 ${
       isActive ? "bg-echurch-100 text-echurch-700" : "text-echurch-500"
-    }`;
+    } ${isCollapsed ? "justify-center px-2" : ""}`;
   };
 
   const handleLogout = async () => {
@@ -93,17 +80,17 @@ export function AppSidebar() {
 
   return (
     <Sidebar
-      className={isCollapsed ? "w-14" : "w-64"}
+      className={`${isCollapsed ? "w-25" : "w-64"}`}
       collapsible="icon"
     >
-      <div className="p-4 bg-gradient-to-br from-echurch-50 to-echurch-100 md:bg-transparent rounded-br-xl">
+      <div className="p-4 bg-gradient-to-br from-echurch-50 to-echurch-100 md:bg-transparent">
         {!isCollapsed && <Logo />}
         {isCollapsed && (
           <div className="w-8 h-8 bg-gradient-to-br from-echurch-400 to-echurch-600 rounded-lg flex items-center justify-center" />
         )}
       </div>
 
-      <SidebarContent className="px-2 bg-white/95 md:bg-transparent shadow-2xl md:shadow-none rounded-br-xl">
+      <SidebarContent className={`${isCollapsed ? "px-1" : "px-2"} bg-white/95 md:bg-transparent shadow-2xl md:shadow-none rounded-br-xl`}>
         {/* Menu Principal */}
         <SidebarGroup>
           {!isCollapsed && <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>}
@@ -122,11 +109,11 @@ export function AppSidebar() {
       </SidebarContent>
 
       {/* User Info and Logout Button */}
-      <SidebarFooter className="p-2 bg-white/95 md:bg-transparent shadow-2xl md:shadow-none rounded-tr-xl">
+      <SidebarFooter className={`${isCollapsed ? "p-1" : "p-2"} bg-white/95 md:bg-transparent shadow-2xl md:shadow-none rounded-tr-xl`}>
         <div className="space-y-2">
           {/* User Info */}
           {user && (
-            <div className={`flex items-center gap-3 px-3 py-2 rounded-md bg-echurch-50 ${isCollapsed ? 'justify-center' : ''}`}>
+            <div className={`flex items-center gap-3 py-2 rounded-md bg-echurch-50 ${isCollapsed ? 'justify-center px-2' : 'px-3'}`}>
               <div className="w-8 h-8 bg-gradient-to-br from-echurch-400 to-echurch-600 rounded-full flex items-center justify-center">
                 <User className="w-4 h-4 text-white" />
               </div>

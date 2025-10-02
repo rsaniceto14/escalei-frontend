@@ -19,7 +19,13 @@ export const mainItems = [
   { title: "Disponibilidade", url: "/availability", icon: Clock },
   { title: "Chats", url: "/chats", icon: MessageCircle },
   { title: "Músicas", url: "/musics", icon: Music },
-  { title: "Áreas", url: "/areas", icon: Map },
+];
+
+export const mobileItems = [
+  { title: "Início", url: "/home", icon: Home },
+  { title: "Escalas", url: "/schedules", icon: Calendar },
+  { title: "Chats", url: "/chats", icon: MessageCircle },
+  { title: "Músicas", url: "/musics", icon: Music },
 ];
 
 

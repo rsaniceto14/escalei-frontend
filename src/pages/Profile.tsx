@@ -1,44 +1,143 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Shield, Mail, Phone, MapPin, Edit } from "lucide-react";
+import { User, Shield, Mail, Phone, MapPin, Edit, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { userService } from "@/api/services/userService";
+import { permissionService } from "@/api/services/permissionService";
+import { UserProfile } from "@/api/types";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Profile() {
-  // Simulação de dados mockados
-  const [usuario, setUsuario] = useState({
-    nome: "Maria Oliveira",
-    email: "demo@escalai.com",
-    telefone: "(11) 99999-9999",
-    area: "Louvor",
-    instrumento: "Voz",
-    igreja: "Igreja Batista Central",
-    enderecoIgreja: "Rua das Flores, 123 - São Paulo, SP",
-    isAdmin: localStorage.getItem("userRole") === "admin",
-    foto: "https://randomuser.me/api/portraits/women/44.jpg",
-  });
+  const { user: authUser } = useAuth();
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [permissoes, setPermissoes] = useState({
-    criarEscala: true,
-    editarDisponibilidade: true,
-    gerenciarMusicas: false,
-    aprovarEscalas: usuario.isAdmin,
-    gerenciarUsuarios: usuario.isAdmin,
-    acessarRelatorios: usuario.isAdmin
-  });
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
 
-  const handlePermissaoChange = (permissao: keyof typeof permissoes, valor: boolean) => {
-    if (!usuario.isAdmin) {
-      toast.error("Apenas administradores podem alterar permissões");
+  const fetchUserProfile = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const profileData = await userService.getProfile();
+      setUser(profileData);
+    } catch (err) {
+      console.error('Error fetching profile:', err);
+      setError('Erro ao carregar perfil do usuário');
+      toast.error('Erro ao carregar perfil do usuário');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePermissaoChange = async (permissao: string, valor: boolean) => {
+    if (!user?.permissions.manage_users) {
+      toast.error("Apenas usuários com permissão de gerenciar usuários podem alterar permissões");
       return;
     }
-    setPermissoes(prev => ({ ...prev, [permissao]: valor }));
-    toast.success("Permissão atualizada");
+
+    try {
+      // Update the permission via API
+      await permissionService.updateUserPermissions(parseInt(user.id), {
+        [permissao]: valor
+      });
+
+      // Update local state
+      setUser(prev => prev ? {
+        ...prev,
+        permissions: {
+          ...prev.permissions,
+          [permissao]: valor
+        }
+      } : null);
+
+      toast.success("Permissão atualizada com sucesso");
+    } catch (error) {
+      console.error('Error updating permission:', error);
+      toast.error("Erro ao atualizar permissão");
+    }
   };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Não informado';
+    const [year, month, day] = dateString.split("-");
+    const date = new Date(Number(year), Number(month) - 1, Number(day));
+    return date.toLocaleDateString("pt-BR");
+  };
+
+  const formatAddress = (church: UserProfile['church']) => {
+    if (!church) return 'Não informado';
+    
+    const addressParts = [];
+    
+    if (church.street) {
+      addressParts.push(church.street);
+    }
+    if (church.number) {
+      addressParts.push(`Nº ${church.number}`);
+    }
+    if (church.complement) {
+      addressParts.push(church.complement);
+    }
+    if (church.quarter) {
+      addressParts.push(church.quarter);
+    }
+    if (church.city) {
+      addressParts.push(church.city);
+    }
+    if (church.state) {
+      addressParts.push(church.state);
+    }
+    if (church.cep) {
+      addressParts.push(`CEP: ${church.cep}`);
+    }
+    
+    return addressParts.length > 0 ? addressParts.join(', ') : 'Não informado';
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'A':
+        return <Badge className="bg-green-500 text-white">Ativo</Badge>;
+      case 'I':
+        return <Badge className="bg-red-500 text-white">Inativo</Badge>;
+      case 'WA':
+        return <Badge className="bg-red-500 text-white">Aguardando aprovação</Badge>;
+      default:
+        return <Badge className="bg-gray-500 text-white">Desconhecido</Badge>;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-echurch-500" />
+          <p className="text-echurch-600">Carregando perfil...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error || 'Erro ao carregar perfil'}</p>
+          <Button onClick={fetchUserProfile} variant="outline">
+            Tentar novamente
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -64,8 +163,10 @@ export default function Profile() {
               <div className="flex flex-col md:flex-row gap-6">
                 <div className="flex flex-col items-center space-y-4">
                   <Avatar className="w-24 h-24">
-                    <AvatarImage src={usuario.foto} alt={usuario.nome} />
-                    <AvatarFallback>{usuario.nome.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    <AvatarImage src={user.photo_path || ''} alt={user.name} />
+                    <AvatarFallback>
+                      {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                    </AvatarFallback>
                   </Avatar>
                   <Button variant="outline" size="sm">
                     <Edit className="w-4 h-4 mr-2" />
@@ -77,31 +178,34 @@ export default function Profile() {
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label className="text-sm font-medium text-echurch-600">Nome Completo</Label>
-                      <div className="p-2 bg-echurch-50 rounded border text-echurch-800">{usuario.nome}</div>
+                      <div className="p-2 bg-echurch-50 rounded border text-echurch-800">{user.name}</div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-echurch-600">Área de Atuação</Label>
-                      <Badge className="bg-echurch-500 text-white">{usuario.area}</Badge>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-echurch-600 flex items-center gap-1">
-                        <Mail className="w-4 h-4" />
-                        Email
-                      </Label>
-                      <div className="p-2 bg-echurch-50 rounded border text-echurch-800">{usuario.email}</div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-echurch-600 flex items-center gap-1">
-                        <Phone className="w-4 h-4" />
-                        Telefone
-                      </Label>
-                      <div className="p-2 bg-echurch-50 rounded border text-echurch-800">{usuario.telefone}</div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-echurch-600">Instrumento/Função</Label>
-                      <div className="p-2 bg-echurch-50 rounded border text-echurch-800">{usuario.instrumento}</div>
+                      <Label className="text-sm font-medium text-echurch-600">Data de Nascimento</Label>
+                      <div className="p-2 bg-echurch-50 rounded border text-echurch-800">{formatDate(user.birthday)}</div>
                     </div>
                   </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-echurch-600 flex items-center gap-1">
+                      <Mail className="w-4 h-4" />
+                      Email
+                    </Label>
+                    <div className="p-2 bg-echurch-50 rounded border text-echurch-800">{user.email}</div>
+                  </div>
+                  
+                  {user.areas.length > 0 && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-echurch-600">Áreas de Atuação</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {user.areas.map((area) => (
+                          <Badge key={area.id} className="bg-echurch-500 text-white">
+                            {area.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   
                   <Button className="bg-echurch-500 hover:bg-echurch-600">
                     <Edit className="w-4 h-4 mr-2" />
@@ -113,30 +217,64 @@ export default function Profile() {
           </Card>
 
           {/* Informações da Igreja */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="w-5 h-5" />
-                Igreja
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-echurch-600">Nome da Igreja</Label>
-                  <div className="p-3 bg-gradient-to-r from-echurch-50 to-echurch-100 rounded border flex items-center gap-2">
-                    <span className="text-lg">⛪</span>
-                    <span className="text-echurch-800 font-medium">{usuario.igreja}</span>
+          {user.church && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="w-5 h-5" />
+                  Igreja
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-echurch-600">Nome da Igreja</Label>
+                    <div className="p-3 bg-gradient-to-r from-echurch-50 to-echurch-100 rounded border flex items-center gap-2">
+                      <span className="text-echurch-800 font-medium">{user.church.name}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-echurch-600">Endereço Completo</Label>
+                    <div className="p-3 bg-echurch-50 rounded border text-echurch-800">
+                      <div className="space-y-1">
+                        {user.church.street && user.church.number && (
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">📍</span>
+                            <span>{user.church.street}, Nº {user.church.number}</span>
+                            {user.church.complement && <span>- {user.church.complement}</span>}
+                          </div>
+                        )}
+                        {user.church.quarter && (
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">🏘️</span>
+                            <span>{user.church.quarter}</span>
+                          </div>
+                        )}
+                        {user.church.city && user.church.state && (
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">🏙️</span>
+                            <span>{user.church.city} - {user.church.state}</span>
+                          </div>
+                        )}
+                        {user.church.cep && (
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">📮</span>
+                            <span>CEP: {user.church.cep}</span>
+                          </div>
+                        )}
+                        {!user.church.street && !user.church.quarter && !user.church.city && !user.church.cep && (
+                          <span className="text-echurch-500 italic">Endereço não informado</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-echurch-600">Endereço</Label>
-                  <div className="p-2 bg-echurch-50 rounded border text-echurch-800">{usuario.enderecoIgreja}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
 
+          {/* Permissões do Sistema */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -144,7 +282,9 @@ export default function Profile() {
                 Permissões do Sistema
               </CardTitle>
               <CardDescription>
-                {usuario.isAdmin ? "Você pode alterar as permissões abaixo" : "Permissões controladas pelo administrador"}
+                {user.permissions.manage_users 
+                  ? "Você pode alterar as permissões abaixo" 
+                  : "Permissões controladas pelo administrador"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -155,21 +295,9 @@ export default function Profile() {
                     <p className="text-sm text-echurch-600">Permite criar novas escalas</p>
                   </div>
                   <Switch
-                    checked={permissoes.criarEscala}
-                    onCheckedChange={(checked) => handlePermissaoChange('criarEscala', checked)}
-                    disabled={!usuario.isAdmin}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-echurch-50 rounded-lg">
-                  <div>
-                    <Label className="font-medium">Editar Disponibilidade</Label>
-                    <p className="text-sm text-echurch-600">Permite alterar sua disponibilidade</p>
-                  </div>
-                  <Switch
-                    checked={permissoes.editarDisponibilidade}
-                    onCheckedChange={(checked) => handlePermissaoChange('editarDisponibilidade', checked)}
-                    disabled={!usuario.isAdmin}
+                    checked={user.permissions.create_scale}
+                    onCheckedChange={(checked) => handlePermissaoChange('create_scale', checked)}
+                    disabled={!user.permissions.manage_users}
                   />
                 </div>
 
@@ -179,21 +307,21 @@ export default function Profile() {
                     <p className="text-sm text-echurch-600">Permite adicionar e editar músicas</p>
                   </div>
                   <Switch
-                    checked={permissoes.gerenciarMusicas}
-                    onCheckedChange={(checked) => handlePermissaoChange('gerenciarMusicas', checked)}
-                    disabled={!usuario.isAdmin}
+                    checked={user.permissions.create_music || user.permissions.update_music}
+                    onCheckedChange={(checked) => handlePermissaoChange('manage_music', checked)}
+                    disabled={!user.permissions.manage_users}
                   />
                 </div>
 
                 <div className="flex items-center justify-between p-3 bg-echurch-50 rounded-lg">
                   <div>
-                    <Label className="font-medium">Aprovar Escalas</Label>
-                    <p className="text-sm text-echurch-600">Permite aprovar escalas criadas</p>
+                    <Label className="font-medium">Gerenciar Áreas</Label>
+                    <p className="text-sm text-echurch-600">Permite criar e editar áreas</p>
                   </div>
                   <Switch
-                    checked={permissoes.aprovarEscalas}
-                    onCheckedChange={(checked) => handlePermissaoChange('aprovarEscalas', checked)}
-                    disabled={!usuario.isAdmin}
+                    checked={user.permissions.create_area || user.permissions.update_area}
+                    onCheckedChange={(checked) => handlePermissaoChange('manage_area', checked)}
+                    disabled={!user.permissions.manage_users}
                   />
                 </div>
 
@@ -203,21 +331,33 @@ export default function Profile() {
                     <p className="text-sm text-echurch-600">Permite gerenciar outros usuários</p>
                   </div>
                   <Switch
-                    checked={permissoes.gerenciarUsuarios}
-                    onCheckedChange={(checked) => handlePermissaoChange('gerenciarUsuarios', checked)}
-                    disabled={!usuario.isAdmin}
+                    checked={user.permissions.manage_users}
+                    onCheckedChange={(checked) => handlePermissaoChange('manage_users', checked)}
+                    disabled={!user.permissions.manage_users}
                   />
                 </div>
 
                 <div className="flex items-center justify-between p-3 bg-echurch-50 rounded-lg">
                   <div>
-                    <Label className="font-medium">Acessar Relatórios</Label>
-                    <p className="text-sm text-echurch-600">Permite visualizar relatórios do sistema</p>
+                    <Label className="font-medium">Configurações da Igreja</Label>
+                    <p className="text-sm text-echurch-600">Permite alterar configurações da igreja</p>
                   </div>
                   <Switch
-                    checked={permissoes.acessarRelatorios}
-                    onCheckedChange={(checked) => handlePermissaoChange('acessarRelatorios', checked)}
-                    disabled={!usuario.isAdmin}
+                    checked={user.permissions.manage_church_settings}
+                    onCheckedChange={(checked) => handlePermissaoChange('manage_church_settings', checked)}
+                    disabled={!user.permissions.manage_users}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-echurch-50 rounded-lg">
+                  <div>
+                    <Label className="font-medium">Configurações do Sistema</Label>
+                    <p className="text-sm text-echurch-600">Permite alterar configurações gerais</p>
+                  </div>
+                  <Switch
+                    checked={user.permissions.manage_app_settings}
+                    onCheckedChange={(checked) => handlePermissaoChange('manage_app_settings', checked)}
+                    disabled={!user.permissions.manage_users}
                   />
                 </div>
               </div>
@@ -234,37 +374,39 @@ export default function Profile() {
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm">Tipo de usuário:</span>
-                <Badge variant={usuario.isAdmin ? "default" : "secondary"}>
-                  {usuario.isAdmin ? "Administrador" : "Usuário"}
+                <Badge variant={user.permissions.manage_users ? "default" : "secondary"}>
+                  {user.permissions.manage_users ? "Administrador" : "Membro"}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm">Status:</span>
-                <Badge className="bg-green-500 text-white">Ativo</Badge>
+                {getStatusBadge(user.status)}
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm">Último acesso:</span>
-                <span className="text-sm text-echurch-600">Hoje</span>
+                <span className="text-sm">ID do usuário:</span>
+                <span className="text-sm text-echurch-600 font-mono">{user.id}</span>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Estatísticas</CardTitle>
+              <CardTitle>Informações Adicionais</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-sm">Escalas este mês:</span>
-                <span className="font-medium">8</span>
+                <span className="text-sm">Áreas vinculadas:</span>
+                <span className="font-medium">{user.areas.length}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm">Faltas:</span>
-                <span className="font-medium text-green-600">0</span>
+                <span className="text-sm">Igreja:</span>
+                <span className="font-medium text-echurch-600">{user.church?.name || 'Não vinculada'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm">Participação:</span>
-                <span className="font-medium text-echurch-600">100%</span>
+                <span className="text-sm">Permissões:</span>
+                <span className="font-medium text-echurch-600">
+                  {Object.values(user.permissions).filter(Boolean).length} ativas
+                </span>
               </div>
             </CardContent>
           </Card>

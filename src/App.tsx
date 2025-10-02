@@ -16,7 +16,6 @@ import InvitesSetup from "@/pages/setup/InvitesSetup";
 import SchedulesSetup from "@/pages/setup/SchedulesSetup";
 import MusicSetup from "@/pages/setup/MusicSetup";
 import Invites from "@/pages/Invites";
-import Areas from "@/pages/Areas";
 import PasswordRecover from "./pages/PasswordRecover";
 import PasswordReset from "./pages/PasswordReset";
 import Profile from "./pages/Profile";
@@ -60,16 +59,6 @@ const App = () => (
                <PrivateRoute>
                  <Layout>
                    <Invites />
-                 </Layout>
-               </PrivateRoute>
-             }
-           />
-           <Route
-             path="/areas"
-             element={
-               <PrivateRoute>
-                 <Layout>
-                   <Areas />
                  </Layout>
                </PrivateRoute>
              }

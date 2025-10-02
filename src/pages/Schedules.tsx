@@ -6,22 +6,25 @@ export default function Schedules() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[200px]">
+      <div className="flex items-center justify-center w-full h-screen">
         <div className="text-echurch-600">Carregando escalas...</div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col w-full min-h-screen">
       <ScalesHeader />
 
-      <ScalesTabs
-        filtroAtivo={filtroAtivo}
-        onFiltroChange={setFiltroAtivo}
-        escalasFiltradas={escalasFiltradas}
-        onConfirmParticipation={handleConfirmParticipation}
-      />
+      <div className="flex-1">
+        <ScalesTabs
+          filtroAtivo={filtroAtivo}
+          onFiltroChange={setFiltroAtivo}
+          escalasFiltradas={escalasFiltradas}
+          onConfirmParticipation={handleConfirmParticipation}
+        />
+      </div>
     </div>
   );
+
 }

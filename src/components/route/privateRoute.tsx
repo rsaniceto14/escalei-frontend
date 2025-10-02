@@ -20,6 +20,7 @@ const PrivateRoute = ({ children }: PrivateRouteProps) => {
     }
 
     if (!token) {
+        console.log('aaaaa')
         return <Navigate to="/" replace />;
     }
 

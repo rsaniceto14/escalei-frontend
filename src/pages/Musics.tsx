@@ -1,14 +1,16 @@
-
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Upload, ExternalLink, Music, Trash2, Search, Play } from "lucide-react";
+import { Plus, Upload, ExternalLink, Music, Trash2, Search, Play, AlertCircle, Pause, Volume2, VolumeX, SkipBack, SkipForward } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { musicService, type Song, type CreateSongData } from "@/api/services/musicService";
+import { spotifyService, type SpotifyTrack } from "@/api/services/spotifyService";
 
 type Arquivo = {
   nome: string;
@@ -16,142 +18,235 @@ type Arquivo = {
   url?: string;
 };
 
-type Musica = {
-  id: number;
-  nome: string;
-  artista?: string;
-  link: string;
-  spotifyId: string;
-  spotifyUrl: string;
-  arquivos: Arquivo[];
-};
-
 export default function Musics() {
-  const [musicas, setMusicas] = useState<Musica[]>([
-    { 
-      id: 1, 
-      nome: "A Ele a Glória", 
-      artista: "Diante do Trono",
-      link: "https://www.cifras.com.br", 
-      spotifyId: "4iV5W9uYEdYUVa79Axb7Rh",
-      spotifyUrl: "https://open.spotify.com/track/4iV5W9uYEdYUVa79Axb7Rh", 
-      arquivos: [
-        { nome: "A_Ele_a_Gloria_Soprano.mp3", categoria: "Soprano" },
-        { nome: "A_Ele_a_Gloria_Tenor.mp3", categoria: "Tenor" }
-      ] 
-    },
-    { 
-      id: 2, 
-      nome: "Tu És Soberano", 
-      artista: "Isaías Saad",
-      link: "", 
-      spotifyId: "1A2B3C4D5E6F7G8H9I0J",
-      spotifyUrl: "https://open.spotify.com/track/1A2B3C4D5E6F7G8H9I0J", 
-      arquivos: [] 
-    },
-  ]);
-
+  const [musicas, setMusicas] = useState<Song[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [pesquisaMusica, setPesquisaMusica] = useState("");
   const [pesquisaGeral, setPesquisaGeral] = useState("");
-  const [novaMusica, setNovaMusica] = useState({
-    nome: "",
-    artista: "",
-    link: "",
-    spotifyUrl: ""
+  const [novaMusica, setNovaMusica] = useState<Partial<CreateSongData>>({
+    name: "",
+    artist: "",
+    album: "",
+    spotify_url: "",
+    preview_url: "",
+    duration: 0,
+    cover_path: "",
+    spotify_id: "",
   });
   
-  const [resultadosSpotify, setResultadosSpotify] = useState<any[]>([]);
+  const [resultadosSpotify, setResultadosSpotify] = useState<SpotifyTrack[]>([]);
+  const [searchingSpotify, setSearchingSpotify] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  // Audio player states
+  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+  const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+  const [currentPreviewTrack, setCurrentPreviewTrack] = useState<SpotifyTrack | null>(null);
+  const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
+  
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const previewAudioRef = useRef<HTMLAudioElement>(null);
 
   const categorias = ["Soprano", "Contralto", "Tenor", "Baixo", "Partitura", "Playback", "Click"];
 
-  // Simulação de pesquisa no Spotify
+  // Load songs from API
+  const loadSongs = async (page: number = 1, search?: string) => {
+    try {
+      setLoading(true);
+      const response = await musicService.getSongs(search, page, 15);
+      setMusicas(response.data);
+      setTotalPages(response.last_page);
+      setCurrentPage(response.current_page);
+    } catch (error) {
+      console.error('Error loading songs:', error);
+      toast.error("Erro ao carregar músicas");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSongs(1, pesquisaGeral);
+  }, [pesquisaGeral]);
+
+  // Search on Spotify
   const pesquisarSpotify = async () => {
     if (!pesquisaMusica.trim()) return;
     
-    // Simulação de resultados do Spotify
-    const resultadosSimulados = [
-      {
-        id: "4iV5W9uYEdYUVa79Axb7Rh",
-        name: pesquisaMusica,
-        artists: [{ name: "Diante do Trono" }],
-        external_urls: { spotify: "https://open.spotify.com/track/4iV5W9uYEdYUVa79Axb7Rh" },
-        preview_url: "https://p.scdn.co/mp3-preview/..."
-      },
-      {
-        id: "5jV6X0zFEdYUVa79Axb7Ri",
-        name: `${pesquisaMusica} (Ao Vivo)`,
-        artists: [{ name: "Ministério Zoe" }],
-        external_urls: { spotify: "https://open.spotify.com/track/5jV6X0zFEdYUVa79Axb7Ri" },
-        preview_url: "https://p.scdn.co/mp3-preview/..."
-      }
-    ];
-    
-    setResultadosSpotify(resultadosSimulados);
-    toast.success(`${resultadosSimulados.length} resultados encontrados`);
+    try {
+      setSearchingSpotify(true);
+      const resultados = await spotifyService.searchTracks(pesquisaMusica, 10);
+      setResultadosSpotify(resultados);
+      toast.success(`${resultados.length} resultados encontrados`);
+    } catch (error) {
+      console.error('Error searching Spotify:', error);
+      toast.error("Erro ao pesquisar no Spotify. Verifique suas credenciais.");
+    } finally {
+      setSearchingSpotify(false);
+    }
   };
 
-  const selecionarMusicaSpotify = (musica: any) => {
-    setNovaMusica({
-      ...novaMusica,
-      nome: musica.name,
-      artista: musica.artists[0]?.name || "",
-      spotifyUrl: musica.external_urls.spotify
-    });
+  const selecionarMusicaSpotify = (track: SpotifyTrack) => {
+    const songData = spotifyService.convertSpotifyTrackToSong(track);
+    setNovaMusica(songData);
     setResultadosSpotify([]);
     setPesquisaMusica("");
     toast.success("Música selecionada do Spotify");
   };
 
-  const handleAddMusic = () => {
-    if (!novaMusica.nome) {
-      toast.error("Nome da música é obrigatório");
+  const handleAddMusic = async () => {
+    if (!novaMusica.name || !novaMusica.artist) {
+      toast.error("Nome e artista são obrigatórios");
       return;
     }
 
-    const newId = Math.max(...musicas.map(m => m.id), 0) + 1;
-    const spotifyId = novaMusica.spotifyUrl.split('/').pop()?.split('?')[0] || "";
-    
-    setMusicas([...musicas, {
-      id: newId,
-      ...novaMusica,
-      spotifyId,
-      arquivos: []
-    }]);
-
-    setNovaMusica({ nome: "", artista: "", link: "", spotifyUrl: "" });
-    setIsDialogOpen(false);
-    toast.success("Música adicionada com sucesso!");
+    try {
+      await musicService.createSong(novaMusica as CreateSongData);
+      setNovaMusica({
+        name: "",
+        artist: "",
+        album: "",
+        spotify_url: "",
+        preview_url: "",
+        duration: 0,
+        cover_path: "",
+        spotify_id: "",
+      });
+      setIsDialogOpen(false);
+      loadSongs(currentPage, pesquisaGeral);
+      toast.success("Música adicionada com sucesso!");
+    } catch (error) {
+      console.error('Error adding song:', error);
+      toast.error("Erro ao adicionar música");
+    }
   };
 
-  const handleFileUpload = (musicaId: number, categoria: string, file: File) => {
-    const novoArquivo: Arquivo = {
-      nome: file.name,
-      categoria: categoria,
-      url: URL.createObjectURL(file)
+  const handleDeleteMusic = async (id: number) => {
+    try {
+      await musicService.deleteSong(id);
+      loadSongs(currentPage, pesquisaGeral);
+      toast.success("Música removida com sucesso!");
+    } catch (error) {
+      console.error('Error deleting song:', error);
+      toast.error("Erro ao remover música");
+    }
+  };
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Audio player functions
+  const openPlayerModal = (song: Song) => {
+    setSelectedSong(song);
+    setIsPlayerModalOpen(true);
+  };
+
+  const togglePlay = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const togglePreview = (track: SpotifyTrack) => {
+    if (!track.preview_url) {
+      toast.error("Preview não disponível para esta música");
+      return;
+    }
+
+    if (currentPreviewTrack?.id === track.id && isPreviewPlaying) {
+      // Stop current preview
+      if (previewAudioRef.current) {
+        previewAudioRef.current.pause();
+      }
+      setIsPreviewPlaying(false);
+      setCurrentPreviewTrack(null);
+    } else {
+      // Stop any current preview
+      if (previewAudioRef.current) {
+        previewAudioRef.current.pause();
+      }
+      
+      // Start new preview
+      setCurrentPreviewTrack(track);
+      setIsPreviewPlaying(true);
+      
+      if (previewAudioRef.current) {
+        previewAudioRef.current.src = track.preview_url;
+        previewAudioRef.current.play().catch(console.error);
+      }
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration);
+    }
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const time = parseFloat(e.target.value);
+    if (audioRef.current) {
+      audioRef.current.currentTime = time;
+      setCurrentTime(time);
+    }
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value);
+    setVolume(newVolume);
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume;
+    }
+  };
+
+  const toggleMute = () => {
+    if (audioRef.current) {
+      if (isMuted) {
+        audioRef.current.volume = volume;
+      } else {
+        audioRef.current.volume = 0;
+      }
+      setIsMuted(!isMuted);
+    }
+  };
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      if (previewAudioRef.current) {
+        previewAudioRef.current.pause();
+      }
     };
-
-    setMusicas(musicas.map(musica => 
-      musica.id === musicaId 
-        ? { ...musica, arquivos: [...musica.arquivos, novoArquivo] }
-        : musica
-    ));
-
-    toast.success(`Arquivo ${file.name} enviado para ${categoria}`);
-  };
-
-  const removeArquivo = (musicaId: number, arquivoNome: string) => {
-    setMusicas(musicas.map(musica => 
-      musica.id === musicaId 
-        ? { ...musica, arquivos: musica.arquivos.filter(arq => arq.nome !== arquivoNome) }
-        : musica
-    ));
-    toast.success("Arquivo removido");
-  };
+  }, []);
 
   const musicasFiltradas = musicas.filter(musica =>
-    musica.nome.toLowerCase().includes(pesquisaGeral.toLowerCase()) ||
-    musica.artista?.toLowerCase().includes(pesquisaGeral.toLowerCase())
+    musica.name.toLowerCase().includes(pesquisaGeral.toLowerCase()) ||
+    musica.artist.toLowerCase().includes(pesquisaGeral.toLowerCase()) ||
+    (musica.album && musica.album.toLowerCase().includes(pesquisaGeral.toLowerCase()))
   );
 
   return (
@@ -172,11 +267,20 @@ export default function Musics() {
               Nova Música
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Adicionar Nova Música</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
+              {/* Open Source Notice */}
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Área Open Source:</strong> Qualquer usuário pode adicionar e visualizar músicas. 
+                  Use o Spotify para encontrar músicas e adicioná-las ao repertório da igreja.
+                </AlertDescription>
+              </Alert>
+
               {/* Pesquisa no Spotify */}
               <div className="space-y-2">
                 <Label>Pesquisar no Spotify</Label>
@@ -186,8 +290,13 @@ export default function Musics() {
                     onChange={(e) => setPesquisaMusica(e.target.value)}
                     placeholder="Digite o nome da música..."
                     className="flex-1"
+                    onKeyPress={(e) => e.key === 'Enter' && pesquisarSpotify()}
                   />
-                  <Button onClick={pesquisarSpotify} variant="outline">
+                  <Button 
+                    onClick={pesquisarSpotify} 
+                    variant="outline" 
+                    disabled={searchingSpotify}
+                  >
                     <Search className="w-4 h-4" />
                   </Button>
                 </div>
@@ -197,72 +306,108 @@ export default function Musics() {
               {resultadosSpotify.length > 0 && (
                 <div className="space-y-2">
                   <Label>Resultados do Spotify</Label>
-                  <div className="max-h-40 overflow-y-auto space-y-1">
-                    {resultadosSpotify.map((resultado) => (
-                      <div
-                        key={resultado.id}
-                        className="p-2 border rounded-lg cursor-pointer hover:bg-echurch-50 flex items-center justify-between"
-                        onClick={() => selecionarMusicaSpotify(resultado)}
-                      >
-                        <div>
-                          <div className="font-medium">{resultado.name}</div>
-                          <div className="text-sm text-echurch-600">{resultado.artists[0]?.name}</div>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {resultadosSpotify.map((track) => (
+                      <Card key={track.id} className="p-3 hover:bg-gray-50">
+                        <div className="flex items-center gap-3">
+                          {track.album.images[0] && (
+                            <img 
+                              src={track.album.images[0].url} 
+                              alt={track.album.name}
+                              className="w-12 h-12 rounded"
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{track.name}</p>
+                            <p className="text-sm text-gray-600 truncate">
+                              {track.artists.map(a => a.name).join(', ')}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">{track.album.name}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            {track.preview_url && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  togglePreview(track);
+                                }}
+                                className="text-blue-500 hover:text-blue-700"
+                              >
+                                {currentPreviewTrack?.id === track.id && isPreviewPlaying ? (
+                                  <Pause className="w-4 h-4" />
+                                ) : (
+                                  <Play className="w-4 h-4" />
+                                )}
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                selecionarMusicaSpotify(track);
+                              }}
+                              className="text-green-500 hover:text-green-700"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
-                        <Button size="sm" variant="outline">
-                          Selecionar
-                        </Button>
-                      </div>
+                      </Card>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Formulário manual */}
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="nome">Nome da Música *</Label>
+              {/* Formulário de música */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="name">Nome da Música *</Label>
                   <Input
-                    id="nome"
-                    value={novaMusica.nome}
-                    onChange={(e) => setNovaMusica({...novaMusica, nome: e.target.value})}
-                    placeholder="Digite o nome da música"
+                    id="name"
+                    value={novaMusica.name || ""}
+                    onChange={(e) => setNovaMusica({...novaMusica, name: e.target.value})}
+                    placeholder="Nome da música"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="artista">Artista</Label>
+                <div>
+                  <Label htmlFor="artist">Artista *</Label>
                   <Input
-                    id="artista"
-                    value={novaMusica.artista}
-                    onChange={(e) => setNovaMusica({...novaMusica, artista: e.target.value})}
+                    id="artist"
+                    value={novaMusica.artist || ""}
+                    onChange={(e) => setNovaMusica({...novaMusica, artist: e.target.value})}
                     placeholder="Nome do artista"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="link">Link da Cifra</Label>
+                <div>
+                  <Label htmlFor="album">Álbum</Label>
                   <Input
-                    id="link"
-                    value={novaMusica.link}
-                    onChange={(e) => setNovaMusica({...novaMusica, link: e.target.value})}
-                    placeholder="https://..."
+                    id="album"
+                    value={novaMusica.album || ""}
+                    onChange={(e) => setNovaMusica({...novaMusica, album: e.target.value})}
+                    placeholder="Nome do álbum"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="spotify">Link do Spotify</Label>
+                <div>
+                  <Label htmlFor="duration">Duração (segundos)</Label>
                   <Input
-                    id="spotify"
-                    value={novaMusica.spotifyUrl}
-                    onChange={(e) => setNovaMusica({...novaMusica, spotifyUrl: e.target.value})}
-                    placeholder="https://open.spotify.com/..."
+                    id="duration"
+                    type="number"
+                    value={novaMusica.duration || 0}
+                    onChange={(e) => setNovaMusica({...novaMusica, duration: parseInt(e.target.value) || 0})}
+                    placeholder="Duração em segundos"
                   />
                 </div>
               </div>
-              
-              <div className="flex gap-2">
-                <Button onClick={handleAddMusic} className="bg-echurch-500 hover:bg-echurch-600 flex-1">
-                  Adicionar
-                </Button>
+
+              <div className="flex gap-2 justify-end">
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancelar
+                </Button>
+                <Button onClick={handleAddMusic} className="bg-echurch-500 hover:bg-echurch-600">
+                  Adicionar Música
                 </Button>
               </div>
             </div>
@@ -270,124 +415,244 @@ export default function Musics() {
         </Dialog>
       </div>
 
-      {/* Barra de pesquisa */}
-      <div className="flex gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-echurch-400" />
-          <Input
-            value={pesquisaGeral}
-            onChange={(e) => setPesquisaGeral(e.target.value)}
-            placeholder="Pesquisar músicas..."
-            className="pl-10"
-          />
-        </div>
+      {/* Pesquisa geral */}
+      <div className="flex gap-2">
+        <Input
+          value={pesquisaGeral}
+          onChange={(e) => setPesquisaGeral(e.target.value)}
+          placeholder="Pesquisar músicas..."
+          className="flex-1"
+        />
       </div>
 
-      <div className="grid gap-6">
-        {musicasFiltradas.map(musica => (
-          <Card key={musica.id}>
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <CardTitle className="text-lg text-echurch-700 flex items-center gap-2">
-                    <Music className="w-5 h-5" />
-                    {musica.nome}
-                  </CardTitle>
-                  {musica.artista && (
-                    <p className="text-sm text-echurch-600">por {musica.artista}</p>
-                  )}
+      {/* Lista de músicas */}
+      {loading ? (
+        <div className="text-center py-8">
+          <p>Carregando músicas...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {musicasFiltradas.map((musica) => (
+            <Card key={musica.id} className="hover:shadow-md transition-shadow cursor-pointer" 
+                  onClick={() => openPlayerModal(musica)}>
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-lg truncate">{musica.name}</CardTitle>
+                    <p className="text-sm text-gray-600 truncate">{musica.artist}</p>
+                    {musica.album && (
+                      <p className="text-xs text-gray-500 truncate">{musica.album}</p>
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteMusic(musica.id);
+                    }}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
-                <div className="flex gap-2">
-                  {musica.link && (
-                    <Button variant="outline" size="sm" asChild>
-                      <a href={musica.link} target="_blank" rel="noopener noreferrer">
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="flex items-center gap-2 mb-3">
+                  {musica.cover_path && (
+                    <img 
+                      src={musica.cover_path} 
+                      alt={musica.name}
+                      className="w-12 h-12 rounded object-cover"
+                    />
+                  )}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">{formatDuration(musica.duration)}</Badge>
+                      {musica.spotify_url && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(musica.spotify_url, '_blank');
+                          }}
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* File upload area - keeping styling for future implementation */}
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                  <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-500 mb-2">Upload de arquivos</p>
+                  <p className="text-xs text-gray-400">Em breve: envio de gravações</p>
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {categorias.slice(0, 4).map((categoria) => (
+                      <Badge key={categoria} variant="outline" className="text-xs">
+                        {categoria}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {musicasFiltradas.length === 0 && !loading && (
+        <div className="text-center py-8">
+          <Music className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+          <p className="text-gray-500">Nenhuma música encontrada</p>
+          <p className="text-sm text-gray-400">Use o botão "Nova Música" para adicionar músicas</p>
+        </div>
+      )}
+
+      {/* Music Player Modal */}
+      <Dialog open={isPlayerModalOpen} onOpenChange={setIsPlayerModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Player de Música</DialogTitle>
+          </DialogHeader>
+          
+          {selectedSong && (
+            <div className="space-y-6">
+              {/* Song Info */}
+              <div className="flex items-center gap-4">
+                {selectedSong.cover_path && (
+                  <img 
+                    src={selectedSong.cover_path} 
+                    alt={selectedSong.name}
+                    className="w-24 h-24 rounded-lg object-cover"
+                  />
+                )}
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold">{selectedSong.name}</h3>
+                  <p className="text-gray-600">{selectedSong.artist}</p>
+                  {selectedSong.album && (
+                    <p className="text-sm text-gray-500">{selectedSong.album}</p>
+                  )}
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant="secondary">{formatDuration(selectedSong.duration)}</Badge>
+                    {selectedSong.spotify_url && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => window.open(selectedSong.spotify_url, '_blank')}
+                      >
                         <ExternalLink className="w-4 h-4 mr-1" />
-                        Cifra
-                      </a>
-                    </Button>
-                  )}
-                  {musica.spotifyUrl && (
-                    <Button variant="outline" size="sm" asChild>
-                      <a href={musica.spotifyUrl} target="_blank" rel="noopener noreferrer" className="text-green-600">
-                        <Play className="w-4 h-4 mr-1" />
                         Spotify
-                      </a>
-                    </Button>
-                  )}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Player do Spotify */}
-              {musica.spotifyId && (
-                <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-sm font-medium text-green-800">Player do Spotify</span>
+
+              {/* Audio Player */}
+              {selectedSong.preview_url && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-center gap-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={toggleMute}
+                    >
+                      {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                    </Button>
+                    
+                    <Button
+                      onClick={togglePlay}
+                      className="bg-echurch-500 hover:bg-echurch-600 rounded-full w-12 h-12"
+                    >
+                      {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+                    </Button>
+
+                    <div className="w-20">
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        value={isMuted ? 0 : volume}
+                        onChange={handleVolumeChange}
+                        className="w-full"
+                      />
+                    </div>
                   </div>
-                  <iframe
-                    src={`https://open.spotify.com/embed/track/${musica.spotifyId}?utm_source=generator&theme=0`}
-                    width="100%"
-                    height="152"
-                    frameBorder="0"
-                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                    loading="lazy"
-                    className="rounded-lg"
-                  ></iframe>
+
+                  {/* Progress Bar */}
+                  <div className="space-y-2">
+                    <input
+                      type="range"
+                      min="0"
+                      max={duration || 0}
+                      value={currentTime}
+                      onChange={handleSeek}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-sm text-gray-500">
+                      <span>{formatDuration(currentTime)}</span>
+                      <span>{formatDuration(duration)}</span>
+                    </div>
+                  </div>
+
+                  {/* Audio Element */}
+                  <audio
+                    ref={audioRef}
+                    src={selectedSong.preview_url}
+                    onTimeUpdate={handleTimeUpdate}
+                    onLoadedMetadata={handleLoadedMetadata}
+                    onEnded={() => setIsPlaying(false)}
+                  />
                 </div>
               )}
 
-              <div>
-                <h4 className="font-semibold text-echurch-600 mb-2">Arquivos de Áudio</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-                  {categorias.map(categoria => (
-                    <div key={categoria} className="space-y-2">
-                      <Label className="text-sm text-echurch-600">{categoria}</Label>
-                      <div className="relative">
-                        <Input
-                          type="file"
-                          accept="audio/*,.pdf"
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              handleFileUpload(musica.id, categoria, file);
-                              e.target.value = '';
-                            }
-                          }}
-                        />
-                        <div className="flex items-center justify-center h-10 border-2 border-dashed border-echurch-300 rounded-lg hover:border-echurch-500 transition-colors">
-                          <Upload className="w-4 h-4 text-echurch-500" />
-                        </div>
-                      </div>
-                    </div>
+              {/* File Upload Section */}
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <Upload className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                <h4 className="font-medium mb-2">Upload de Arquivos</h4>
+                <p className="text-sm text-gray-500 mb-4">
+                  Em breve você poderá enviar gravações, partituras e outros arquivos relacionados a esta música.
+                </p>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {categorias.map((categoria) => (
+                    <Badge key={categoria} variant="outline" className="text-xs justify-center py-1">
+                      {categoria}
+                    </Badge>
                   ))}
                 </div>
-                
-                {musica.arquivos.length > 0 && (
-                  <div className="space-y-2">
-                    <h5 className="text-sm font-medium text-echurch-600">Arquivos Enviados:</h5>
-                    <div className="flex flex-wrap gap-2">
-                      {musica.arquivos.map(arquivo => (
-                        <Badge key={arquivo.nome} variant="secondary" className="bg-echurch-100 text-echurch-700 hover:bg-echurch-200">
-                          <span className="text-xs mr-2">{arquivo.categoria}</span>
-                          <span className="text-xs truncate max-w-[100px]">{arquivo.nome}</span>
-                          <button
-                            onClick={() => removeArquivo(musica.id, arquivo.nome)}
-                            className="ml-2 text-red-500 hover:text-red-700"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+
+              {/* Song Details */}
+              <div className="space-y-2">
+                <h4 className="font-medium">Detalhes da Música</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium">Duração:</span> {formatDuration(selectedSong.duration)}
+                  </div>
+                  <div>
+                    <span className="font-medium">Álbum:</span> {selectedSong.album || 'N/A'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Spotify ID:</span> {selectedSong.spotify_id || 'N/A'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Preview:</span> {selectedSong.preview_url ? 'Disponível' : 'Não disponível'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Hidden Audio Elements */}
+      <audio ref={previewAudioRef} onEnded={() => setIsPreviewPlaying(false)} />
     </div>
   );
 }

@@ -2,10 +2,19 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  photo_path: string;
+  photo_path?: string;
   birthday?: string;
   status: string;
   church_id: string;
+  church?: {
+    id: string;
+    name: string;
+  };
+  areas?: Array<{
+    id: string;
+    name: string;
+    description: string;
+  }>;
 }
 
 export enum UserScheduleStatus {
@@ -18,15 +27,11 @@ export enum UserScheduleType {
   Geral = 'Geral',
 }
 
-export interface UserScheduleUpdate {
-  schedule_id: number;
-  status: UserScheduleStatus;
-}
-
-export interface Schedule {
-  id: number;
-  name: string;
-  description: string;
+export interface Scale {
+  id?: string;
+  nome: string;
+  data: string;
+  horario: string;
   local: string;
   start_date: string;
   end_date: string;
@@ -162,4 +167,138 @@ export interface Message {
 export interface ChatWithMessages {
   chat: Chat;
   messages: Array<Message>;
+}
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  photo_path?: string;
+  birthday?: string;
+  status: string;
+  church?: {
+    id: string;
+    name: string;
+    cep?: string;
+    street?: string;
+    number?: string;
+    complement?: string;
+    quarter?: string;
+    city?: string;
+    state?: string;
+  };
+  areas: Array<{
+    id: string;
+    name: string;
+    description: string;
+  }>;
+  permissions: {
+    create_scale: boolean;
+    read_scale: boolean;
+    update_scale: boolean;
+    delete_scale: boolean;
+    create_music: boolean;
+    read_music: boolean;
+    update_music: boolean;
+    delete_music: boolean;
+    create_role: boolean;
+    read_role: boolean;
+    update_role: boolean;
+    delete_role: boolean;
+    create_area: boolean;
+    read_area: boolean;
+    update_area: boolean;
+    delete_area: boolean;
+    create_chat: boolean;
+    read_chat: boolean;
+    update_chat: boolean;
+    delete_chat: boolean;
+    manage_users: boolean;
+    manage_church_settings: boolean;
+    manage_app_settings: boolean;
+  };
+}
+
+export interface SpotifyTrack {
+  id: string;
+  name: string;
+  artists: Array<{
+    id: string;
+    name: string;
+  }>;
+  album: {
+    id: string;
+    name: string;
+    images: Array<{
+      url: string;
+      height: number;
+      width: number;
+    }>;
+  };
+  duration_ms: number;
+  preview_url?: string;
+  external_urls: {
+    spotify: string;
+  };
+}
+
+export interface SpotifySearchResponse {
+  tracks: {
+    items: SpotifyTrack[];
+    total: number;
+    limit: number;
+    offset: number;
+  };
+}
+
+export interface Song {
+  id: number;
+  name: string;
+  artist: string;
+  album?: string;
+  spotify_url?: string;
+  preview_url?: string;
+  duration: number;
+  cover_path?: string;
+  spotify_id?: string;
+  key?: string;
+  tempo?: number;
+  lyrics?: string;
+  chords?: string;
+  youtube_url?: string;
+  church_id?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CreateSongData {
+  name: string;
+  artist: string;
+  album?: string;
+  spotify_url?: string;
+  preview_url?: string;
+  duration: number;
+  cover_path?: string;
+  spotify_id?: string;
+  key?: string;
+  tempo?: number;
+  lyrics?: string;
+  chords?: string;
+  youtube_url?: string;
+}
+
+export interface UpdateMusicRequest {
+  name?: string;
+  artist?: string;
+  album?: string;
+  spotify_url?: string;
+  preview_url?: string;
+  duration?: number;
+  cover_path?: string;
+  spotify_id?: string;
+  key?: string;
+  tempo?: number;
+  lyrics?: string;
+  chords?: string;
+  youtube_url?: string;
 }

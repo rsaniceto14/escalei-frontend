@@ -1,14 +1,14 @@
 import { apiClient } from '../config';
-import { User, ApiResponse, PaginatedResponse } from '../types';
+import { User, UserProfile, ApiResponse, PaginatedResponse } from '../types';
 
 export const userService = {
-  async getProfile(): Promise<User> {
-    const response = await apiClient.get<ApiResponse<User>>('/users/profile');
+  async getProfile(): Promise<UserProfile> {
+    const response = await apiClient.get<ApiResponse<UserProfile>>('/users/profile');
     return response.data.data;
   },
 
-  async updateProfile(userData: Partial<User>): Promise<User> {
-    const response = await apiClient.put<ApiResponse<User>>('/users/profile', userData);
+  async updateProfile(userData: Partial<UserProfile>): Promise<UserProfile> {
+    const response = await apiClient.put<ApiResponse<UserProfile>>('/users/profile', userData);
     return response.data.data;
   },
 
@@ -43,5 +43,20 @@ export const userService = {
       currentPassword,
       newPassword
     });
+  },
+
+  async getUsersByChurch(): Promise<User[]> {
+    const response = await apiClient.get<ApiResponse<User[]>>('/users/by-church');
+    return response.data.data;
+  },
+
+  async updateUserById(id: string, userData: Partial<User>): Promise<User> {
+    const response = await apiClient.put<ApiResponse<User>>(`/users/${id}`, userData);
+    return response.data.data;
+  },
+
+  async toggleUserStatus(id: string): Promise<{ id: string; status: string }> {
+    const response = await apiClient.patch<ApiResponse<{ id: string; status: string }>>(`/users/${id}/toggle-status`);
+    return response.data.data;
   }
 };

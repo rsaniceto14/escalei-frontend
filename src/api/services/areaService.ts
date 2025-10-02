@@ -45,4 +45,23 @@ export const areaService = {
       throw error;
     }
   },
+
+  async getUsers(areaId: number): Promise<any[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<any[]>>(`/areas/${areaId}/users`);
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  async switchUserArea(areaId: number, userId: number, newAreaId: number): Promise<void> {
+    try {
+      await apiClient.put(`/areas/${areaId}/users/${userId}/switch`, {
+        new_area_id: newAreaId
+      });
+    } catch (error) {
+      throw error;
+    }
+  },
 };

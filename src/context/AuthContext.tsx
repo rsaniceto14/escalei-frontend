@@ -2,11 +2,11 @@ import { Area, Permission } from "@/api";
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 interface User {
-  id: string;
+  id: number;
   name: string;
   email: string;
   photo_path?: string;
-  church_id: string;
+  church_id: number;
   permissions: Permission;
   areas: Array<Area>
 }

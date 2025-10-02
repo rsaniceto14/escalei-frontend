@@ -33,8 +33,8 @@ export default function Login() {
     setLoginStep('pending'); // inicia a animação
 
     try {
-      const res = await authService.login({ email, password: senha });
-
+      let res = await authService.login({ email, password: senha });
+      console.log(res)
       // Use context login method
       login(res.data.access_token, {
         id: res.data.user.id,
@@ -51,7 +51,8 @@ export default function Login() {
       navigate("/home");
 
     } catch (error: any) {
-      setErro(error.message || "Erro ao autenticar.");
+      console.error(error)
+      setErro(error || "Erro ao autenticar.");
       setLoginStep('idle');
     } finally {
       setLoading(false);

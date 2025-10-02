@@ -4,36 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/common/Logo";
 import { Users, Church, LogIn, Sparkles } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useEffect, useState } from "react";
-import { SafeArea } from "capacitor-plugin-safe-area";
+import { useSafeArea } from "@/hooks/useSafeArea";
 
 export default function Landing() {
   const isMobile = useIsMobile();
-  const [safeArea, setSafeArea] = useState({ top: 0, bottom: 0, left: 0, right: 0 });
-
-  useEffect(() => {
-    const getSafeAreaInsets = async () => {
-      try {
-        const insets = await SafeArea.getSafeAreaInsets();
-        setSafeArea(insets.insets);
-      } catch (error) {
-        console.log('SafeArea not available:', error);
-      }
-    };
-
-    getSafeAreaInsets();
-  }, []);
+  const { getSafeAreaStyle } = useSafeArea();
 
   if (isMobile) {
     return (
       <div 
-        className="min-h-screen bg-gradient-to-br from-echurch-500 via-echurch-600 to-echurch-700 flex flex-col items-center justify-center p-4 sm:p-6 text-white relative overflow-hidden"
-        style={{
-          paddingTop: Math.max(safeArea.top, 16),
-          paddingBottom: Math.max(safeArea.bottom, 16),
-          paddingLeft: Math.max(safeArea.left, 16),
-          paddingRight: Math.max(safeArea.right, 16)
-        }}
+        className={`min-h-screen bg-gradient-to-br from-echurch-500 via-echurch-600 to-echurch-700 flex flex-col items-center justify-center p-4 sm:p-6 text-white relative overflow-hidden`}
+        style={getSafeAreaStyle(16)}
       >
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
@@ -44,11 +25,11 @@ export default function Landing() {
 
         <div className="relative z-10 text-center mb-8 sm:mb-12">
           <div className="mb-6 sm:mb-8">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 backdrop-blur-sm shadow-2xl">
+            <div className="w-16 h-16 sm:w-20 sm:h-20  rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
               <img 
-                src="/logo_size_invert.jpg" 
+                src="/favicon.ico" 
                 alt="Escalei Logo" 
-                className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover" 
+                className="object-cover  rounded-md w-16 h-16"  
               />
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold mb-2 sm:mb-3 bg-gradient-to-r from-white to-echurch-100 bg-clip-text text-transparent">

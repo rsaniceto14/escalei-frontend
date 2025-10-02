@@ -10,6 +10,7 @@ import { MessageCircle, Send, Users, Calendar } from "lucide-react";
 import { Area, ChatWithMessages } from "@/api/types";
 import { useAuth } from "@/context/AuthContext";
 import { chatService } from "@/api/services/chatService";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Chats() {
   const [mensagem, setMensagem] = useState("");
@@ -17,6 +18,7 @@ export default function Chats() {
   const [chats, setChats] = useState<ChatWithMessages[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const isMobile  = useIsMobile();
 
   useEffect(() => {
     async function carregarChats() {
@@ -113,82 +115,84 @@ export default function Chats() {
           )}
         </div>
 
-        {/* Área do chat */}
-        <div className="lg:col-span-2">
-          {chatAtivo ? (
-            <Card className="h-full flex flex-col">
-              <CardHeader className="border-b">
-                <CardTitle className="flex items-center gap-2">
-                  <MessageCircle className="w-5 h-5" />
-                  {chats.find((c) => c.chat.id === chatAtivo)?.chat.name}
-                </CardTitle>
-              </CardHeader>
+        { !isMobile ? (
+          // --------- DESKTOP ----------
+          <div className="lg:col-span-2">
+            {chatAtivo ? (
+              <Card className="h-full flex flex-col">
+                <CardHeader className="border-b">
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageCircle className="w-5 h-5" />
+                    {chats.find((c) => c.chat.id === chatAtivo)?.chat.name}
+                  </CardTitle>
+                </CardHeader>
 
-              <CardContent className="flex-1 flex flex-col p-0">
-                {/* Mensagens */}
-                <div className="flex-1 p-4 space-y-4 overflow-y-auto">
-                  {chats
-                    .find((c) => c.chat.id === chatAtivo)
-                    ?.messages.map((msg, idx) => (
-                      <div
-                        key={idx}
-                        className={`flex ${
-                          msg.user_name === "Eu" ? "justify-end" : "justify-start"
-                        }`}
-                      >
+                <CardContent className="flex-1 flex flex-col p-0">
+                  {/* Mensagens */}
+                  <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+                    {chats
+                      .find((c) => c.chat.id === chatAtivo)
+                      ?.messages.map((msg, idx) => (
                         <div
-                          className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                            msg.user_name === "Eu"
-                              ? "bg-echurch-500 text-white"
-                              : "bg-gray-100 text-gray-900"
+                          key={idx}
+                          className={`flex ${
+                            msg.user_name === "Eu" ? "justify-end" : "justify-start"
                           }`}
                         >
-                          {msg.user_name !== "Eu" && (
-                            <p className="text-xs font-medium mb-1 opacity-75">{msg.user_name}</p>
-                          )}
-                          <p className="text-sm">{msg.content}</p>
-                          <p
-                            className={`text-xs mt-1 ${
-                              msg.user_name === "Eu" ? "text-echurch-100" : "text-gray-500"
+                          <div
+                            className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                              msg.user_name === "Eu"
+                                ? "bg-echurch-500 text-white"
+                                : "bg-gray-100 text-gray-900"
                             }`}
                           >
-                            {msg.sent_at}
-                          </p>
+                            {msg.user_name !== "Eu" && (
+                              <p className="text-xs font-medium mb-1 opacity-75">{msg.user_name}</p>
+                            )}
+                            <p className="text-sm">{msg.content}</p>
+                            <p
+                              className={`text-xs mt-1 ${
+                                msg.user_name === "Eu" ? "text-echurch-100" : "text-gray-500"
+                              }`}
+                            >
+                              {msg.sent_at}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                </div>
-
-                {/* Input de mensagem */}
-                <div className="p-4 border-t bg-gray-50">
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Digite sua mensagem..."
-                      value={mensagem}
-                      onChange={(e) => setMensagem(e.target.value)}
-                      onKeyPress={(e) => e.key === "Enter" && enviarMensagem()}
-                      className="flex-1"
-                    />
-                    <Button
-                      onClick={enviarMensagem}
-                      className="bg-echurch-500 hover:bg-echurch-600"
-                    >
-                      <Send size={16} />
-                    </Button>
+                      ))}
                   </div>
+
+                  {/* Input de mensagem */}
+                  <div className="p-4 border-t bg-gray-50">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Digite sua mensagem..."
+                        value={mensagem}
+                        onChange={(e) => setMensagem(e.target.value)}
+                        onKeyPress={(e) => e.key === "Enter" && enviarMensagem()}
+                        className="flex-1"
+                      />
+                      <Button
+                        onClick={enviarMensagem}
+                        className="bg-echurch-500 hover:bg-echurch-600"
+                      >
+                        <Send size={16} />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="h-full flex items-center justify-center">
+                <div className="text-center text-echurch-500">
+                  <MessageCircle size={48} className="mx-auto mb-4 opacity-50" />
+                  <p className="text-lg font-medium">Selecione um chat</p>
+                  <p className="text-sm">Escolha uma escala ou área para conversar</p>
                 </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="h-full flex items-center justify-center">
-              <div className="text-center text-echurch-500">
-                <MessageCircle size={48} className="mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-medium">Selecione um chat</p>
-                <p className="text-sm">Escolha uma escala ou área para conversar</p>
-              </div>
-            </Card>
-          )}
-        </div>
+              </Card>
+            )}
+          </div>
+        ) : ""}
       </div>
     </div>
   );
