@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">E_Church</string>
-    <string name="title_activity_main">E_Church</string>
-    <string name="package_name">com.echurch.app</string>
-    <string name="custom_url_scheme">com.echurch.app</string>
+    <string name="app_name">Escalei</string>
+    <string name="title_activity_main">Escalei</string>
+    <string name="package_name">com.escalei.app</string>
+    <string name="custom_url_scheme">com.escalei.app</string>
 </resources>

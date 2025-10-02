@@ -143,7 +143,7 @@ To run on physical devices or emulators:
 ### Mobile Configuration
 
 The Capacitor configuration is located in `capacitor.config.ts`:
-- **App ID**: `com.escalai.app`
+- **App ID**: `com.escalei.app`
 - **App Name**: `escalai`
 - **Hot Reload**: Enabled for development
 

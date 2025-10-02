@@ -1,14 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.echurch.app"
+    namespace "com.escalei.app"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.echurch.app"
+        applicationId "com.escalei.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
-        versionName "0.1"
+        versionCode 4
+        versionName "0.3"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -19,9 +19,9 @@ android {
     signingConfigs {
         release {
             storeFile file("../../my-release-key.jks") // caminho para o keystore
-            storePassword "SUASENHAAQUI" // NAO SOBE ISSO VALIDO PORFAVOR - nao sabe o que eh? verifique o doc de build no drive!
+            storePassword "" // NAO SOBE ISSO VALIDO PORFAVOR - nao sabe o que eh? verifique o doc de build no drive!
             keyAlias "my-key-alias"
-            keyPassword "SUASENHAAQUI" // NAO SOBE ISSO VALIDO PORFAVOR
+            keyPassword "" // NAO SOBE ISSO VALIDO PORFAVOR
         }
     }
     buildTypes {

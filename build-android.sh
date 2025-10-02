@@ -53,6 +53,7 @@ npx cap sync android
 
 echo "Building Android APK..."
 cd $ANDROID_DIR
+./gradlew clean
 if [ "$BUILD_MODE" = "production" ]; then
   ./gradlew assembleRelease
 else
