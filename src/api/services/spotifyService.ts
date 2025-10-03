@@ -1,17 +1,60 @@
-import { apiClient } from '../config';
-import { ApiResponse, SpotifySearchResponse, SpotifyTrack } from '../types';
+import { SpotifySearchResponse, SpotifyTrack } from '../types';
+
+// Spotify API configuration
+const SPOTIFY_CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
+const SPOTIFY_CLIENT_SECRET = import.meta.env.VITE_SPOTIFY_CLIENT_SECRET;
+const SPOTIFY_API_BASE = 'https://api.spotify.com/v1';
+
+// Get access token from Spotify
+async function getAccessToken(): Promise<string> {
+  const response = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': `Basic ${btoa(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`)}`
+    },
+    body: 'grant_type=client_credentials'
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to get Spotify access token');
+  }
+
+  const data = await response.json();
+  return data.access_token;
+}
+
+// Make authenticated request to Spotify API
+async function spotifyRequest(endpoint: string, params: Record<string, string> = {}): Promise<any> {
+  const token = await getAccessToken();
+  const url = new URL(`${SPOTIFY_API_BASE}${endpoint}`);
+  
+  Object.entries(params).forEach(([key, value]) => {
+    url.searchParams.append(key, value);
+  });
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Spotify API error: ${response.status}`);
+  }
+
+  return response.json();
+}
 
 export const spotifyService = {
   async searchTracks(query: string, limit = 20): Promise<SpotifyTrack[]> {
     try {
-      const response = await apiClient.get<SpotifySearchResponse>('/spotify/search', {
-        params: { 
-          q: query,
-          type: 'track',
-          limit 
-        }
+      const response = await spotifyRequest('/search', {
+        q: query,
+        type: 'track',
+        limit: limit.toString()
       });
-      return response.data.tracks.items;
+      return response.tracks.items;
     } catch (error) {
       console.error('Error searching Spotify tracks:', error);
       return [];
@@ -20,8 +63,8 @@ export const spotifyService = {
 
   async getTrackById(id: string): Promise<SpotifyTrack | null> {
     try {
-      const response = await apiClient.get<SpotifyTrack>(`/spotify/tracks/${id}`);
-      return response.data;
+      const response = await spotifyRequest(`/tracks/${id}`);
+      return response;
     } catch (error) {
       console.error('Error fetching Spotify track:', error);
       return null;
@@ -30,13 +73,11 @@ export const spotifyService = {
 
   async getRecommendations(seedTracks: string[], limit = 20): Promise<SpotifyTrack[]> {
     try {
-      const response = await apiClient.get<SpotifySearchResponse>('/spotify/recommendations', {
-        params: { 
-          seed_tracks: seedTracks.join(','),
-          limit 
-        }
+      const response = await spotifyRequest('/recommendations', {
+        seed_tracks: seedTracks.join(','),
+        limit: limit.toString()
       });
-      return response.data.tracks.items;
+      return response.tracks;
     } catch (error) {
       console.error('Error getting Spotify recommendations:', error);
       return [];
