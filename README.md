@@ -10,8 +10,10 @@ A comprehensive church management application built with React, TypeScript, and 
 
 - **Scale Management**: Create, view, and manage church service scales
 - **User Availability**: Set weekly availability and exception dates
+- **Invites & Approvals**: Send invites and approve self-registered users by area
+- **Area/Function Management**: Create and manage church areas and functions
 - **Authentication System**: User login and profile management
-- **Responsive Design**: Works on desktop and mobile devices
+- **Responsive Design**: Mobile-first design with optimized layouts
 - **API Integration**: Ready-to-use service layer for backend connectivity
 - **Mobile App Support**: Native mobile app capabilities via Capacitor
 
@@ -170,9 +172,13 @@ src/
 ├── components/         # Reusable UI components
 │   ├── ui/            # shadcn-ui components
 │   ├── dashboard/     # Dashboard-specific components
+│   ├── schedules/     # Schedule management components
+│   ├── availability/  # Availability management
 │   └── common/        # Shared components
 ├── hooks/             # Custom React hooks
 ├── pages/             # Page components
+│   ├── setup/        # Setup and configuration pages
+│   └── ...           # Main application pages
 └── utils/             # Utility functions
 ```
 
