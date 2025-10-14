@@ -3,6 +3,7 @@ export interface User {
   name: string;
   email: string;
   photo_path?: string;
+  photo_url?: string; // Signed URL for immediate use
   birthday?: string;
   status: string;
   church_id: string;
@@ -174,6 +175,7 @@ export interface UserProfile {
   name: string;
   email: string;
   photo_path?: string;
+  photo_url?: string; // Signed URL for immediate use
   birthday?: string;
   status: string;
   church?: {

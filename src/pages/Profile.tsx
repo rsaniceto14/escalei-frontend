@@ -9,14 +9,17 @@ import { User, Shield, Mail, Phone, MapPin, Edit, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { userService } from "@/api/services/userService";
 import { permissionService } from "@/api/services/permissionService";
+import { storageService } from "@/api/services/storageService";
 import { UserProfile } from "@/api/types";
 import { useAuth } from "@/context/AuthContext";
+import { ImagePicker } from "@/components/common/ImagePicker";
 
 export default function Profile() {
   const { user: authUser } = useAuth();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   useEffect(() => {
     fetchUserProfile();
@@ -34,6 +37,38 @@ export default function Profile() {
       toast.error('Erro ao carregar perfil do usuário');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePhotoUpload = async (file: File) => {
+    if (!user?.id) {
+      toast.error('ID do usuário não encontrado');
+      return;
+    }
+
+    try {
+      setUploadingPhoto(true);
+      
+      // Upload image and update user profile in one call
+      const result = await storageService.changeUserPhoto(file, user.id);
+
+      if (!result.success || !result.data) {
+        throw new Error(result.message || 'Falha no upload da imagem');
+      }
+
+      // Update local state with new photo path and signed URL
+      setUser(prev => prev ? {
+        ...prev,
+        photo_path: result.data!.file_path,
+        photo_url: result.data!.photo_url
+      } : null);
+
+      toast.success('Foto atualizada com sucesso!');
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      toast.error('Erro ao fazer upload da foto');
+    } finally {
+      setUploadingPhoto(false);
     }
   };
 
@@ -163,15 +198,31 @@ export default function Profile() {
               <div className="flex flex-col md:flex-row gap-6">
                 <div className="flex flex-col items-center space-y-4">
                   <Avatar className="w-24 h-24">
-                    <AvatarImage src={user.photo_path || ''} alt={user.name} />
+                    <AvatarImage src={user.photo_url || ''} alt={user.name} />
                     <AvatarFallback>
                       {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <Button variant="outline" size="sm">
-                    <Edit className="w-4 h-4 mr-2" />
-                    Trocar Foto
-                  </Button>
+                  <ImagePicker
+                    onImageSelect={handlePhotoUpload}
+                    currentImage={user.photo_url}
+                    disabled={uploadingPhoto}
+                    trigger={
+                      <Button variant="outline" size="sm" disabled={uploadingPhoto}>
+                        {uploadingPhoto ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Enviando...
+                          </>
+                        ) : (
+                          <>
+                            <Edit className="w-4 h-4 mr-2" />
+                            Trocar Foto
+                          </>
+                        )}
+                      </Button>
+                    }
+                  />
                 </div>
                 
                 <div className="flex-1 space-y-4">
