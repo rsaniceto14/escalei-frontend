@@ -4,7 +4,7 @@ A comprehensive church management application built with React, TypeScript, and 
 
 ## Project Info
 
-**URL**: https://escalai.com
+**URL**: https://escalei.com
 
 ## Features
 
