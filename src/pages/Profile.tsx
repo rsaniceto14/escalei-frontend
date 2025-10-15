@@ -60,7 +60,7 @@ export default function Profile() {
       setUser(prev => prev ? {
         ...prev,
         photo_path: result.data!.file_path,
-        photo_url: result.data!.photo_url
+        photo_url: result.data!.photo_url.replace(/\\\//g, '/')
       } : null);
 
       toast.success('Foto atualizada com sucesso!');
