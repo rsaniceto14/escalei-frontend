@@ -213,7 +213,3 @@ After building with Capacitor:
 - [React Documentation](https://react.dev/)
 - [TypeScript Documentation](https://www.typescriptlang.org/)
 - [Capacitor Documentation](https://capacitorjs.com/docs)
-
-## License
-
-This project follows standard web development practices and modern React patterns.
