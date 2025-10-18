@@ -35,7 +35,7 @@ export const authService = {
     return response.data.data.token;
   },
 
-  async register(formData: { name: string; email: string; password: string; password_confirmation: string; church_id: string; birthday: string; }): Promise<any> {
+  async register(formData: { name: string; email: string; password: string; password_confirmation: string; church_id: string; birthday: string; token?: string }): Promise<any> {
     const response = await apiClient.post<ApiResponse<LoginResponse>>('/auth/register', formData);
     return response.data;
   },

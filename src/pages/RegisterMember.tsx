@@ -19,8 +19,8 @@ export default function RegisterMember() {
     password: "",
     password_confirmation: "",
     church_id: "",
-    area_id: "",
-    role_id: "",
+    area_ids: [],
+    role_ids: [],
     birthday: "",
     token: "",
   });
@@ -29,12 +29,13 @@ export default function RegisterMember() {
   const [loading, setLoading] = useState(false);
   const [churches, setChurches] = useState([]);
   const [searchParams] = useSearchParams();
+  const [hasInvite, setHasInvite] = useState(false);
 
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    const token = searchParams.get("token");
+    const token = searchParams.get("invite");
 
     const fetchChurches = async () => {
       try {
@@ -49,16 +50,19 @@ export default function RegisterMember() {
       if (!token) return;
 
       try {
-        const invite = await inviteService.getInviteByToken(token);
+        const response = await inviteService.getInviteByToken(token);
+        const invite = response.data;
 
         setFormData(prev => ({
           ...prev,
           email: invite.email,
           church_id: invite.church_id.toString(),
-          area_id: invite.area_id.toString(),
-          role_id: invite.role_id?.toString() || "",
+          area_ids: invite.areas?.map(a => a.id) || [],
+          role_ids: invite.roles?.map(r => r.id) || [],
           token,
         }));
+        
+        setHasInvite(true); // Mark that user has an invite
       } catch (err) {
         console.error("Erro ao carregar convite:", err);
         toast({
@@ -90,14 +94,24 @@ export default function RegisterMember() {
     setLoading(true);
     
     try {
-      // TODO: Implement register member API call
       console.debug("Registering member:", formData);
       
-      await authService.register(formData);
+      // Send registration with token if present
+      await authService.register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        password_confirmation: formData.password_confirmation,
+        birthday: formData.birthday,
+        church_id: formData.church_id,
+        token: formData.token || undefined,
+      });
 
       toast({
         title: "Sucesso!",
-        description: "Cadastro realizado com sucesso. Você pode fazer login agora.",
+        description: formData.token 
+          ? "Cadastro realizado com sucesso! Você foi aprovado automaticamente."
+          : "Cadastro realizado com sucesso. Aguarde a aprovação da administração.",
       });
       
       navigate("/login");
@@ -131,7 +145,7 @@ export default function RegisterMember() {
            <Select 
               value={formData.church_id?.toString()} 
               onValueChange={(value) => setFormData(prev => ({ ...prev, church_id: value }))}
-              disabled={loading}
+              disabled={loading || hasInvite}
             >
               <SelectTrigger className="h-11">
                 <SelectValue placeholder="Selecione sua igreja" />
@@ -144,6 +158,11 @@ export default function RegisterMember() {
                 ))}
               </SelectContent>
             </Select>
+            {hasInvite && (
+              <p className="text-xs text-muted-foreground">
+                Igreja pré-selecionada pelo convite
+              </p>
+            )}
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Nome completo</label>
@@ -179,8 +198,13 @@ export default function RegisterMember() {
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                 className="h-11"
                 required
-                disabled={loading}
+                disabled={loading || hasInvite}
               />
+              {hasInvite && (
+                <p className="text-xs text-muted-foreground">
+                  E-mail pré-preenchido pelo convite
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">

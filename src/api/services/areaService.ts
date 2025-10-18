@@ -1,10 +1,30 @@
 import { apiClient } from '../config';
 import { Area, ApiResponse } from '../types';
 
+export interface AreaWithRoles {
+  id: number;
+  name: string;
+  description: string;
+  roles: Array<{
+    id: number;
+    name: string;
+    description: string;
+  }>;
+}
+
 export const areaService = {
   async getAll(): Promise<Area[]> {
     try {
       const response = await apiClient.get<ApiResponse<Area[]>>('/areas');
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  async getAreasWithRoles(): Promise<AreaWithRoles[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<AreaWithRoles[]>>('/areas-with-roles');
       return response.data.data;
     } catch (error) {
       throw error;

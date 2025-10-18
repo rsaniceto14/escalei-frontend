@@ -23,6 +23,7 @@ import Settings from "./pages/Settings";
 import Availability from "./pages/Availability";
 import Schedules from "./pages/Schedules";
 import Chats from "./pages/Chats";
+import ChatDetail from "./pages/ChatDetail";
 import Musics from "./pages/Musics";
 import ScaleCreate from "./pages/ScaleCreate";
 import Admin from "./pages/Admin";
@@ -130,6 +131,14 @@ const App = () => (
                   <Layout>
                     <Chats />
                   </Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/chats/:chatId"
+              element={
+                <PrivateRoute>
+                  <ChatDetail />
                 </PrivateRoute>
               }
             />

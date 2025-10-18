@@ -82,12 +82,22 @@ export function ImagePicker({ onImageSelect, currentImage, trigger, disabled }: 
     setIsOpen(false);
   };
 
-  const openFileDialog = () => {
-    fileInputRef.current?.click();
+  const openFileDialog = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''; // Reset input to allow selecting the same file
+      fileInputRef.current.click();
+    }
   };
 
-  const openCameraDialog = () => {
-    cameraInputRef.current?.click();
+  const openCameraDialog = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    if (cameraInputRef.current) {
+      cameraInputRef.current.value = ''; // Reset input to allow selecting the same file
+      cameraInputRef.current.click();
+    }
   };
 
   return (
@@ -134,20 +144,22 @@ export function ImagePicker({ onImageSelect, currentImage, trigger, disabled }: 
             {/* Action Buttons */}
             <div className="flex gap-2 justify-center">
               <Button
-                onClick={openFileDialog}
+                onClick={(e) => openFileDialog(e)}
                 variant="outline"
                 className="flex-1"
                 disabled={isUploading}
+                type="button"
               >
                 <Image className="w-4 h-4 mr-2" />
                 Galeria
               </Button>
               {isMobile && (
                 <Button
-                  onClick={openCameraDialog}
+                  onClick={(e) => openCameraDialog(e)}
                   variant="outline"
                   className="flex-1"
                   disabled={isUploading}
+                  type="button"
                 >
                   <Camera className="w-4 h-4 mr-2" />
                   Câmera
@@ -189,7 +201,7 @@ export function ImagePicker({ onImageSelect, currentImage, trigger, disabled }: 
             type="file"
             accept="image/*"
             onChange={handleFileInputChange}
-            className="hidden"
+            style={{ display: 'none' }}
           />
           <input
             ref={cameraInputRef}
@@ -197,7 +209,7 @@ export function ImagePicker({ onImageSelect, currentImage, trigger, disabled }: 
             accept="image/*"
             capture="environment"
             onChange={handleCameraInputChange}
-            className="hidden"
+            style={{ display: 'none' }}
           />
         </DialogContent>
       </Dialog>

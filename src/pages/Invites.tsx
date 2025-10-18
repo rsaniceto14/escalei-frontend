@@ -9,23 +9,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mail, Plus, Users, Send, Copy, Trash2, Clock, CheckCircle, XCircle, UserCheck, UserX } from "lucide-react";
+import { Mail, Plus, Users, Send, Copy, Trash2, Clock, CheckCircle, XCircle, UserCheck, UserX, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { inviteService } from "@/api/services/inviteService";
+import { inviteService, Invite as InviteType } from "@/api/services/inviteService";
 import { useEffect } from "react";
-import { areaService } from "@/api/services/areaService";
-import { roleService } from "@/api/services/roleService";
-import { useRef } from "react";
+import { areaService, AreaWithRoles } from "@/api/services/areaService";
+import { userApprovalService, PendingUser } from "@/api/services/userApprovalService";
 
-interface Invite {
-  id: string;
-  email: string;
-  name: string;
-  area: string;
-  role: string;
-  status: 'pending' | 'accepted' | 'expired';
-  sentAt: string;
-  message?: string;
+type InviteStatus = 'pending' | 'accepted' | 'expired';
+
+interface InviteDisplay extends InviteType {
+  status: InviteStatus;
 }
 
 interface PendingApproval {
@@ -39,68 +33,30 @@ interface PendingApproval {
 }
 
 export default function Invites() {
-  const [invites, setInvites] = useState<Invite[]>([
-    {
-      id: '1',
-      email: 'joao@email.com',
-      name: 'João Silva',
-      area: 'Louvor',
-      role: 'Músico',
-      status: 'pending',
-      sentAt: '2024-01-15',
-      message: 'Bem-vindo ao ministério de louvor!'
-    },
-    {
-      id: '2',
-      email: 'maria@email.com',
-      name: 'Maria Santos',
-      area: 'Mídia',
-      role: 'Operador',
-      status: 'accepted',
-      sentAt: '2024-01-10'
-    }
-  ]);
-
-  interface PendingUser {
-    id: string;
-    name: string;
-    email: string;
-    area: string;
-    role: string;
-    requestedAt: string;
-  }
-
-  const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([
-    {
-      id: '101',
-      name: 'Carlos Pereira',
-      email: 'carlos@email.com',
-      area: 'Recepção',
-      role: 'Recepcionista',
-      requestedAt: '2024-01-20'
-    }
-  ]);
-
-  const rolesDropdownRef = useRef<HTMLDivElement | null>(null);
-  const [showRolesDropdown, setShowRolesDropdown] = useState(false);
-
+  const [invites, setInvites] = useState<InviteDisplay[]>([]);
+  const { toast } = useToast();
+  const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [areasWithRoles, setAreasWithRoles] = useState<AreaWithRoles[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingPending, setIsLoadingPending] = useState(true);
+  const [isSending, setIsSending] = useState(false);
+  const [resendingId, setResendingId] = useState<number | null>(null);
+  const [approvingId, setApprovingId] = useState<number | null>(null);
+  const [rejectingId, setRejectingId] = useState<number | null>(null);
+
   const [newInvite, setNewInvite] = useState({
     email: '',
-    name: '',
-    area: '',
+    area_ids: [] as string[],
     role_ids: [] as string[],
     message: ''
   });
 
-
-  const { toast } = useToast();
-
   const handleSendInvite = async () => {
-    if (!newInvite.email || !newInvite.name || !newInvite.area || newInvite.role_ids.length === 0) {
+    if (!newInvite.email || newInvite.area_ids.length === 0 || newInvite.role_ids.length === 0) {
       toast({
         title: "Campos obrigatórios",
-        description: "Preencha todos os campos obrigatórios.",
+        description: "Preencha todos os campos obrigatórios (email, áreas e funções).",
         variant: "destructive"
       });
       return;
@@ -116,80 +72,204 @@ export default function Invites() {
       return;
     }
 
+    setIsSending(true);
     try {
       await inviteService.sendInvite({
         email: newInvite.email,
-        name: newInvite.name,
-        area_id: Number(newInvite.area),
+        area_ids: newInvite.area_ids.map(id => Number(id)),
         role_ids: newInvite.role_ids.map(id => Number(id)),
-        message: newInvite.message,
       });
-
-
 
       toast({
         title: "Convite enviado!",
-        description: `Convite enviado para ${newInvite.name}`,
+        description: `Convite enviado para ${newInvite.email}`,
       });
 
       setNewInvite({
         email: "",
-        name: "",
-        area: "",
+        area_ids: [],
         role_ids: [],
         message: "",
       });
 
       setIsDialogOpen(false);
+      
+      // Reload invites after creating new one
+      await loadInvites();
     } catch (error: any) {
       toast({
         title: "Erro",
         description: error.message || "Falha ao enviar o convite.",
         variant: "destructive"
       });
+    } finally {
+      setIsSending(false);
     }
   };
 
-
-  const handleResendInvite = (inviteId: string) => {
-    setInvites(prev => prev.map(invite => 
-      invite.id === inviteId 
-        ? { ...invite, sentAt: new Date().toISOString().split('T')[0] }
-        : invite
-    ));
-
+  const handleCopyInviteLink = (token: string) => {
+    const inviteUrl = `${window.location.origin}/register-member?invite=${token}`;
+    navigator.clipboard.writeText(inviteUrl);
     toast({
-      title: "Convite reenviado!",
-      description: "O convite foi enviado novamente.",
+      title: "Link copiado!",
+      description: "O link do convite foi copiado para a área de transferência.",
     });
   };
 
-  const handleDeleteInvite = (inviteId: string) => {
-    setInvites(prev => prev.filter(invite => invite.id !== inviteId));
-    
-    toast({
-      title: "Convite removido",
-      description: "O convite foi removido com sucesso.",
-    });
+  const getInviteStatus = (invite: InviteType): InviteStatus => {
+    if (invite.used) return 'accepted';
+    const expiresAt = new Date(invite.expires_at);
+    const now = new Date();
+    if (expiresAt < now) return 'expired';
+    return 'pending';
   };
 
-  const handleApproveUser = (userId: string) => {
-    setPendingUsers(prev => prev.filter(u => u.id !== userId));
-    toast({
-      title: "Usuário aprovado!",
-      description: "O usuário foi aprovado para participar da área."
-    });
+  const loadInvites = async () => {
+    try {
+      setIsLoading(true);
+      const response = await inviteService.getAll();
+      const invitesWithStatus: InviteDisplay[] = response.data.map(invite => ({
+        ...invite,
+        status: getInviteStatus(invite)
+      }));
+      setInvites(invitesWithStatus);
+    } catch (error) {
+      console.error("Erro ao carregar convites:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os convites.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleRejectUser = (userId: string) => {
-    setPendingUsers(prev => prev.filter(u => u.id !== userId));
-    toast({
-      title: "Usuário rejeitado",
-      description: "O usuário foi rejeitado e não fará parte da área."
-    });
+  const handleResendInvite = async (inviteId: number) => {
+    setResendingId(inviteId);
+    try {
+      await inviteService.resendInvite(inviteId);
+      
+      // Reload invites to get updated expiration date
+      await loadInvites();
+      
+      toast({
+        title: "Convite reenviado!",
+        description: "O convite foi enviado novamente com nova data de validade.",
+      });
+    } catch (error) {
+      console.error("Erro ao reenviar convite:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível reenviar o convite.",
+        variant: "destructive"
+      });
+    } finally {
+      setResendingId(null);
+    }
   };
 
-  const getStatusBadge = (status: Invite['status']) => {
+  const handleDeleteInvite = async (inviteId: number, status: InviteStatus) => {
+    // Business rule: Cannot delete accepted invites
+    if (status === 'accepted') {
+      toast({
+        title: "Ação não permitida",
+        description: "Não é possível deletar um convite que já foi aceito.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await inviteService.deleteInvite(inviteId);
+      setInvites(prev => prev.filter(invite => invite.id !== inviteId));
+      
+      toast({
+        title: "Convite removido",
+        description: "O convite foi removido com sucesso.",
+      });
+    } catch (error: any) {
+      console.error("Erro ao deletar convite:", error);
+      
+      // Show backend error message if available
+      const errorMessage = error?.response?.data?.error?.message 
+        || error?.message 
+        || "Não foi possível deletar o convite.";
+      
+      toast({
+        title: "Erro",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const loadPendingUsers = async () => {
+    try {
+      setIsLoadingPending(true);
+      const response = await userApprovalService.getPendingUsers();
+      setPendingUsers(response.data);
+    } catch (error) {
+      console.error("Erro ao carregar usuários pendentes:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar usuários pendentes.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingPending(false);
+    }
+  };
+
+  const handleApproveUser = async (userId: number) => {
+    setApprovingId(userId);
+    try {
+      await userApprovalService.approveUser(userId);
+      setPendingUsers(prev => prev.filter(u => u.id !== userId));
+      toast({
+        title: "Usuário aprovado!",
+        description: "O usuário foi aprovado e pode fazer login agora."
+      });
+    } catch (error: any) {
+      console.error("Erro ao aprovar usuário:", error);
+      const errorMessage = error?.response?.data?.error?.message 
+        || error?.message 
+        || "Não foi possível aprovar o usuário.";
+      toast({
+        title: "Erro",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    } finally {
+      setApprovingId(null);
+    }
+  };
+
+  const handleRejectUser = async (userId: number) => {
+    setRejectingId(userId);
+    try {
+      await userApprovalService.rejectUser(userId);
+      setPendingUsers(prev => prev.filter(u => u.id !== userId));
+      toast({
+        title: "Usuário rejeitado",
+        description: "O usuário foi rejeitado e não poderá fazer login."
+      });
+    } catch (error: any) {
+      console.error("Erro ao rejeitar usuário:", error);
+      const errorMessage = error?.response?.data?.error?.message 
+        || error?.message 
+        || "Não foi possível rejeitar o usuário.";
+      toast({
+        title: "Erro",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    } finally {
+      setRejectingId(null);
+    }
+  };
+
+  const getStatusBadge = (status: InviteStatus) => {
     switch (status) {
       case 'pending':
         return <Badge variant="outline" className="text-yellow-600 border-yellow-300"><Clock className="w-3 h-3 mr-1" />Pendente</Badge>;
@@ -200,65 +280,29 @@ export default function Invites() {
     }
   };
 
-  const getApprovalStatusBadge = (status: PendingApproval['status']) => {
-    switch (status) {
-      case 'awaiting':
-        return <Badge variant="outline" className="text-blue-600 border-blue-300"><Clock className="w-3 h-3 mr-1" />Aguardando</Badge>;
-      case 'approved':
-        return <Badge variant="outline" className="text-green-600 border-green-300"><UserCheck className="w-3 h-3 mr-1" />Aprovado</Badge>;
-      case 'rejected':
-        return <Badge variant="outline" className="text-red-600 border-red-300"><UserX className="w-3 h-3 mr-1" />Rejeitado</Badge>;
-    }
-  };
-
-  const [areas, setAreas] = useState<{ id: number; name: string }[]>([]);
-  const [roles, setRoles] = useState<{ id: number; name: string; area_id?: number }[]>([]);
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [areasData, rolesData] = await Promise.all([
-          areaService.getAll(),
-          roleService.getAll(),
-        ]);
-
-        // converte id de string → number
-        const formattedAreas = areasData.map(area => ({
-          ...area,
-          id: Number(area.id),
-        }));
-
-        const formattedRoles = rolesData.map(role => ({
-          ...role,
-          id: Number(role.id),
-          area_id: role.area_id ? Number(role.area_id) : undefined,
-        }));
-
-        setAreas(formattedAreas);
-        setRoles(formattedRoles);
+        // Single API call to get areas with their roles
+        const data = await areaService.getAreasWithRoles();
+        setAreasWithRoles(data);
+        
+        // Load invites and pending users
+        loadInvites();
+        loadPendingUsers();
       } catch (error) {
         console.error("Erro ao carregar áreas e funções:", error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar áreas e funções.",
+          variant: "destructive"
+        });
       }
     };
 
     fetchData();
   }, []);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        rolesDropdownRef.current &&
-        !rolesDropdownRef.current.contains(event.target as Node)
-      ) {
-        setShowRolesDropdown(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   return (
     <div className="container max-w-6xl mx-auto p-6 space-y-8">
@@ -278,18 +322,9 @@ export default function Invites() {
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Enviar Convite</DialogTitle>
+              <p className="text-muted-foreground">Ao enviar um convite o membro é automaticamente aprovado</p>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome *</Label>
-                <Input
-                  id="name"
-                  value={newInvite.name}
-                  onChange={(e) => setNewInvite(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Nome do membro"
-                />
-              </div>
-              
               <div className="space-y-2">
                 <Label htmlFor="email">Email *</Label>
                 <Input
@@ -302,23 +337,48 @@ export default function Invites() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="area">Área *</Label>
+                <Label htmlFor="area">Áreas * (pode selecionar múltiplas)</Label>
+                <div className="border rounded-md p-2 min-h-[40px]">
+                  {newInvite.area_ids.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {newInvite.area_ids.map(areaId => {
+                        const area = areasWithRoles.find(a => a.id.toString() === areaId);
+                        return (
+                          <Badge key={areaId} variant="secondary" className="flex items-center gap-1">
+                            {area?.name}
+                            <button
+                              onClick={() => setNewInvite(prev => ({
+                                ...prev,
+                                area_ids: prev.area_ids.filter(id => id !== areaId)
+                              }))}
+                              className="ml-1 hover:text-red-600"
+                            >
+                              ×
+                            </button>
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">Nenhuma área selecionada</span>
+                  )}
+                </div>
                 <Select
-                  value={newInvite.area}
+                  value=""
                   onValueChange={(value) => {
-                    setNewInvite((prev) => ({
-                      ...prev,
-                      area: value,
-                      role_ids: [],
-                    }));
-                    setShowRolesDropdown(false);
+                    if (value && !newInvite.area_ids.includes(value)) {
+                      setNewInvite((prev) => ({
+                        ...prev,
+                        area_ids: [...prev.area_ids, value],
+                      }));
+                    }
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione a área" />
+                    <SelectValue placeholder="Adicionar área" />
                   </SelectTrigger>
                   <SelectContent>
-                    {areas.map(area => (
+                    {areasWithRoles.filter(a => !newInvite.area_ids.includes(a.id.toString())).map(area => (
                       <SelectItem key={area.id} value={area.id.toString()}>
                         {area.name}
                       </SelectItem>
@@ -327,83 +387,62 @@ export default function Invites() {
                 </Select>
               </div>
               
-              {newInvite.area && (
-                <div className="space-y-2" ref={rolesDropdownRef}>
-                  <Label htmlFor="roles">Funções *</Label>
-                  <div className="relative">
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      className="w-full justify-between"
-                      onMouseDown={(e) => {
-                        e.preventDefault(); // evita perder foco
-                        e.stopPropagation();
-                        setShowRolesDropdown((prev) => !prev);
-                      }}
-                    >
-                      {newInvite.role_ids?.length
-                        ? roles
-                            .filter((r) => newInvite.role_ids.includes(r.id.toString()))
-                            .map((r) => r.name)
-                            .join(", ")
-                        : "Selecione uma ou mais funções"}
-
-                      <span className="ml-2 text-muted-foreground">▾</span>
-                    </Button>
-
-
-                    {showRolesDropdown && (
-                      <div
-                        className="absolute z-10 mt-2 w-full rounded-md border bg-popover shadow-lg p-2 max-h-60 overflow-y-auto"
-                      >
-                        {roles
-                          .filter((role) => role.area_id?.toString() === newInvite.area)
-                          .map((role) => {
-                            const isSelected = newInvite.role_ids?.includes(role.id.toString());
-                            return (
-                              <div
-                                key={role.id}
-                                onClick={() => {
-                                  setNewInvite((prev) => {
-                                    const selected = prev.role_ids || [];
-                                    if (selected.includes(role.id.toString())) {
-                                      return {
-                                        ...prev,
-                                        role_ids: selected.filter((id) => id !== role.id.toString()),
-                                      };
-                                    } else {
-                                      return {
-                                        ...prev,
-                                        role_ids: [...selected, role.id.toString()],
-                                      };
-                                    }
-                                  });
-                                }}
-                                className={`flex items-center justify-between px-3 py-2 rounded-md cursor-pointer hover:bg-echurch-50 ${
-                                  isSelected ? "bg-echurch-50" : ""
-                                }`}
+              {newInvite.area_ids.length > 0 && (
+                <div className="space-y-2">
+                  <Label htmlFor="roles">Funções * (pode selecionar múltiplas)</Label>
+                  <div className="border rounded-md p-2 min-h-[40px]">
+                    {newInvite.role_ids.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {newInvite.role_ids.map(roleId => {
+                          const role = areasWithRoles
+                            .flatMap(a => a.roles)
+                            .find(r => r.id.toString() === roleId);
+                          return (
+                            <Badge key={roleId} variant="secondary" className="flex items-center gap-1">
+                              {role?.name}
+                              <button
+                                onClick={() => setNewInvite(prev => ({
+                                  ...prev,
+                                  role_ids: prev.role_ids.filter(id => id !== roleId)
+                                }))}
+                                className="ml-1 hover:text-red-600"
                               >
-                                <span>{role.name}</span>
-                                {isSelected && (
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="w-4 h-4 text-echurch-600"
-                                    viewBox="0 0 20 20"
-                                    fill="currentColor"
-                                  >
-                                    <path
-                                      fillRule="evenodd"
-                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                      clipRule="evenodd"
-                                    />
-                                  </svg>
-                                )}
-                              </div>
-                            );
-                          })}
+                                ×
+                              </button>
+                            </Badge>
+                          );
+                        })}
                       </div>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">Nenhuma função selecionada</span>
                     )}
                   </div>
+                  <Select
+                    value=""
+                    onValueChange={(value) => {
+                      if (value && !newInvite.role_ids.includes(value)) {
+                        setNewInvite((prev) => ({
+                          ...prev,
+                          role_ids: [...prev.role_ids, value],
+                        }));
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Adicionar função" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {areasWithRoles
+                        .filter(area => newInvite.area_ids.includes(area.id.toString()))
+                        .flatMap(area => area.roles)
+                        .filter(role => !newInvite.role_ids.includes(role.id.toString()))
+                        .map(role => (
+                          <SelectItem key={role.id} value={role.id.toString()}>
+                            {role.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
 
@@ -421,12 +460,21 @@ export default function Invites() {
               </div>
               
               <div className="flex gap-2 pt-4">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="flex-1">
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="flex-1" disabled={isSending}>
                   Cancelar
                 </Button>
-                <Button onClick={handleSendInvite} className="flex-1 bg-gradient-to-r from-echurch-500 to-echurch-600">
-                  <Send className="w-4 h-4 mr-2" />
-                  Enviar
+                <Button onClick={handleSendInvite} className="flex-1 bg-gradient-to-r from-echurch-500 to-echurch-600" disabled={isSending}>
+                  {isSending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Enviar
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
@@ -451,7 +499,12 @@ export default function Invites() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {invites.length === 0 ? (
+                {isLoading ? (
+                  <div className="text-center py-12">
+                    <Loader2 className="w-12 h-12 mx-auto text-echurch-500 mb-4 animate-spin" />
+                    <p className="text-muted-foreground">Carregando convites...</p>
+                  </div>
+                ) : invites.length === 0 ? (
                   <div className="text-center py-12">
                     <Mail className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                     <p className="text-muted-foreground">Nenhum convite enviado ainda</p>
@@ -463,17 +516,36 @@ export default function Invites() {
                         <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
-                              <h3 className="font-medium">{invite.name}</h3>
+                              <h3 className="font-medium">{invite.email}</h3>
                               {getStatusBadge(invite.status)}
                             </div>
-                            <p className="text-sm text-muted-foreground mb-1">{invite.email}</p>
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                              <span>{invite.area} - {invite.role}</span>
-                              <span>Enviado em {new Date(invite.sentAt).toLocaleDateString('pt-BR')}</span>
+                            <div className="flex flex-wrap gap-2 mb-2">
+                              {invite.areas && invite.areas.length > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs text-muted-foreground">Áreas:</span>
+                                  {invite.areas.map(area => (
+                                    <Badge key={area.id} variant="secondary" className="text-xs">
+                                      {area.name}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
                             </div>
-                            {invite.message && (
-                              <p className="text-sm text-muted-foreground mt-2 italic">"{invite.message}"</p>
-                            )}
+                            <div className="flex flex-wrap gap-2 mb-2">
+                              {invite.roles && invite.roles.length > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs text-muted-foreground">Funções:</span>
+                                  {invite.roles.map(role => (
+                                    <Badge key={role.id} variant="outline" className="text-xs">
+                                      {role.name}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              Expira em {new Date(invite.expires_at).toLocaleDateString('pt-BR')}
+                            </div>
                           </div>
 
                           <div className="flex items-center gap-2">
@@ -482,23 +554,37 @@ export default function Invites() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleResendInvite(invite.id)}
+                                disabled={resendingId === invite.id}
                               >
-                                <Send className="w-4 h-4 mr-1" />
-                                Reenviar
+                                {resendingId === invite.id ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                    Enviando...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Send className="w-4 h-4 mr-1" />
+                                    Reenviar
+                                  </>
+                                )}
                               </Button>
                             )}
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => navigator.clipboard.writeText(`Convite: ${invite.name} - ${invite.email}`)}
+                              onClick={() => handleCopyInviteLink(invite.token || '')}
+                              title="Copiar link do convite"
                             >
-                              <Copy className="w-4 h-4" />
+                              <Copy className="w-4 h-4 mr-1" />
+                              Link
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleDeleteInvite(invite.id)}
-                              className="text-red-600 hover:text-red-700"
+                              onClick={() => handleDeleteInvite(invite.id, invite.status)}
+                              disabled={invite.status === 'accepted'}
+                              className="text-red-600 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              title={invite.status === 'accepted' ? 'Não é possível deletar convites aceitos' : 'Deletar convite'}
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -525,32 +611,114 @@ export default function Invites() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {pendingUsers.length === 0 ? (
+                {isLoadingPending ? (
                   <div className="text-center py-12">
-                    <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                    <Loader2 className="w-12 h-12 mx-auto text-echurch-500 mb-4 animate-spin" />
+                    <p className="text-muted-foreground">Carregando usuários...</p>
+                  </div>
+                ) : pendingUsers.length === 0 ? (
+                  <div className="text-center py-12">
+                    <UserCheck className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                     <p className="text-muted-foreground">Nenhum usuário pendente de aprovação</p>
                   </div>
                 ) : (
-                  pendingUsers.map(user => (
-                    <div key={user.id} className="flex items-center justify-between p-4 rounded-lg border bg-card mb-3">
-                      <div>
-                        <h3 className="font-medium">{user.name}</h3>
-                        <p className="text-sm text-muted-foreground">{user.email}</p>
-                        <p className="text-sm text-muted-foreground">{user.area} - {user.role}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Solicitado em {new Date(user.requestedAt).toLocaleDateString("pt-BR")}
-                        </p>
-                      </div>
+                  <div className="space-y-4">
+                    {pendingUsers.map((user, index) => (
+                      <div key={user.id}>
+                        <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="font-medium">{user.name}</h3>
+                              {user.status === 'R' ? (
+                                <Badge variant="outline" className="text-red-600 border-red-300">
+                                  <UserX className="w-3 h-3 mr-1" />
+                                  Rejeitado
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-blue-600 border-blue-300">
+                                  <Clock className="w-3 h-3 mr-1" />
+                                  Aguardando
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-2">{user.email}</p>
+                            
+                            {/* Display Areas */}
+                            {user.areas && user.areas.length > 0 && (
+                              <div className="flex flex-wrap gap-2 mb-2">
+                                <span className="text-xs text-muted-foreground">Áreas:</span>
+                                {user.areas.map(userArea => (
+                                  <Badge key={userArea.id} variant="secondary" className="text-xs">
+                                    {userArea.area.name}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                            
+                            {/* Display Roles */}
+                            {user.roles && user.roles.length > 0 && (
+                              <div className="flex flex-wrap gap-2 mb-2">
+                                <span className="text-xs text-muted-foreground">Funções:</span>
+                                {user.roles.map(role => (
+                                  <Badge key={role.id} variant="outline" className="text-xs">
+                                    {role.name}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                            
+                            <p className="text-xs text-muted-foreground">
+                              Solicitado em {new Date(user.created_at).toLocaleDateString("pt-BR")}
+                            </p>
+                          </div>
 
-                      <div className="flex gap-2">
-                        {/* Approve User */}
-                        <Button size="sm" onClick={() => handleApproveUser(user.id)} className="bg-gradient-to-r from-echurch-500 to-echurch-600 hover:from-echurch-600 hover:to-echurch-700 text-white"> Aprovar</Button>
-                        {/* Repprove User */}
-                        <Button size="sm" variant="outline" onClick={() => handleRejectUser(user.id)} className="border-echurch-500 text-echurch-600 hover:bg-echurch-50"> Rejeitar</Button>
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleApproveUser(user.id)}
+                              disabled={approvingId === user.id || rejectingId === user.id}
+                              className="bg-gradient-to-r from-echurch-500 to-echurch-600 hover:from-echurch-600 hover:to-echurch-700 text-white"
+                            >
+                              {approvingId === user.id ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                  Aprovando...
+                                </>
+                              ) : (
+                                <>
+                                  <UserCheck className="w-4 h-4 mr-1" />
+                                  {user.status === 'I' ? 'Reativar' : 'Aprovar'}
+                                </>
+                              )}
+                            </Button>
+                            
+                            {user.status === 'WA' && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleRejectUser(user.id)}
+                                disabled={approvingId === user.id || rejectingId === user.id}
+                                className="border-red-500 text-red-600 hover:bg-red-50"
+                              >
+                                {rejectingId === user.id ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                    Rejeitando...
+                                  </>
+                                ) : (
+                                  <>
+                                    <UserX className="w-4 h-4 mr-1" />
+                                    Rejeitar
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        {index < pendingUsers.length - 1 && <Separator className="my-2" />}
                       </div>
-
-                    </div>
-                  ))
+                    ))}
+                  </div>
                 )}
               </CardContent>
             </Card>
