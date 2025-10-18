@@ -9,6 +9,8 @@ import { Eye, EyeOff, ArrowRight, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { churchService } from "@/api/services/churchService";
 import { authService } from "@/api";
+import { useSearchParams } from "react-router-dom";
+import { inviteService } from "@/api/services/inviteService";
 
 export default function RegisterMember() {
   const [formData, setFormData] = useState({
@@ -17,17 +19,23 @@ export default function RegisterMember() {
     password: "",
     password_confirmation: "",
     church_id: "",
+    area_id: "",
+    role_id: "",
     birthday: "",
+    token: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [churches, setChurches] = useState([]);
+  const [searchParams] = useSearchParams();
 
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
+    const token = searchParams.get("token");
+
     const fetchChurches = async () => {
       try {
         const res = await churchService.getChurchesForRegister();
@@ -37,8 +45,34 @@ export default function RegisterMember() {
       }
     };
 
+    const fetchInvite = async () => {
+      if (!token) return;
+
+      try {
+        const invite = await inviteService.getInviteByToken(token);
+
+        setFormData(prev => ({
+          ...prev,
+          email: invite.email,
+          church_id: invite.church_id.toString(),
+          area_id: invite.area_id.toString(),
+          role_id: invite.role_id?.toString() || "",
+          token,
+        }));
+      } catch (err) {
+        console.error("Erro ao carregar convite:", err);
+        toast({
+          title: "Convite inválido ou expirado",
+          description: "O link que você usou não é mais válido.",
+          variant: "destructive",
+        });
+        navigate("/login");
+      }
+    };
+
     fetchChurches();
-  }, []);
+    fetchInvite();
+  }, [searchParams]);
 
 
   const handleSubmit = async (e: React.FormEvent) => {

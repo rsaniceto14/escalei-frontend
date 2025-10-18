@@ -170,6 +170,16 @@ export interface ChatWithMessages {
   messages: Array<Message>;
 }
 
+export interface Role {
+  id: number;
+  name: string;
+  description?: string;
+  area_id?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+
 export interface UserProfile {
   id: string;
   name: string;
