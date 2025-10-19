@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +27,7 @@ export default function Chats() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -221,6 +222,10 @@ export default function Chats() {
     }
   };
 
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   const handleChatClick = (chatId: string) => {
     if (isMobile) {
       // Mobile: Navigate to detail page
@@ -228,8 +233,17 @@ export default function Chats() {
     } else {
       // Desktop: Set active chat
       setActiveChat(chatId);
+      // Scroll to bottom after chat is selected
+      setTimeout(() => scrollToBottom(), 100);
     }
   };
+
+  // Auto scroll when messages change
+  useEffect(() => {
+    if (activeChat) {
+      scrollToBottom();
+    }
+  }, [chats, activeChat]);
 
   const ChatItem = ({ chat }: { chat: ChatWithMessages }) => (
     <Card
@@ -347,7 +361,7 @@ export default function Chats() {
                   {chats.find((c) => c.chat.id === activeChat)?.chat.description}
                 </CardHeader>
 
-                <CardContent className="flex-1 flex flex-col p-0 max-h-[780px] overflow-y-auto">
+                <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
                   {/* Messages */}
                   <div className="flex-1 p-4 space-y-4 overflow-y-auto">
                     {chats
@@ -387,6 +401,7 @@ export default function Chats() {
                           </div>
                         </div>
                       ))}
+                    <div ref={messagesEndRef} />
                   </div>
 
                   {/* Message input */}
