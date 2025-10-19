@@ -34,7 +34,7 @@ export default function ChatDetail() {
   useEffect(() => {
     const interval = setInterval(() => {
       loadChat(false);
-    }, 70000);
+    }, 5000);
 
     loadChat(false);
     return () => clearInterval(interval);

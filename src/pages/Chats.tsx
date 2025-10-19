@@ -56,7 +56,7 @@ export default function Chats() {
   useEffect(() => {
     const interval = setInterval(() => {
       loadChats();
-    }, 90000);
+    }, 5000);
 
     loadChats();
     return () => clearInterval(interval);
