@@ -64,6 +64,9 @@ export default function Profile() {
       } : null);
 
       toast.success('Foto atualizada com sucesso!');
+      
+      // Refresh profile data from server
+      await fetchUserProfile();
     } catch (error) {
       console.error('Error uploading photo:', error);
       toast.error('Erro ao fazer upload da foto');
