@@ -6,7 +6,7 @@ export interface PendingUser {
   name: string;
   email: string;
   birthday: string;
-  status: 'WA' | 'I' | 'A' | 'B'; // WA = Waiting Approval, I = Inactive, A = Active, B = Rejected
+  status: 'WA' | 'I' | 'A' | 'R'; // WA = Waiting Approval, I = Inactive, A = Active, R = Rejected
   created_at: string;
   areas?: Array<{
     id: number;

@@ -35,7 +35,17 @@ export default function Chats() {
   const loadChats = async () => {
     try {
       const response = await chatService.getChatsForUser(Number(user.id), user.areas.map((area: Area) => { return area.id }));
-      setChats(response);
+
+      // Convert messages object to array if needed
+      const normalizedChats = response.map((chat: ChatWithMessages) => ({
+        ...chat,
+        messages: Array.isArray(chat.messages) 
+          ? chat.messages 
+          : Object.values(chat.messages || {})
+      }));
+      
+      setChats(normalizedChats);
+
     } catch (err) {
       console.error("Error loading chats", err);
     } finally {
