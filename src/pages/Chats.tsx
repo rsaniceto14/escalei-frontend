@@ -352,7 +352,7 @@ export default function Chats() {
           // --------- DESKTOP ----------
           <div className="lg:col-span-2">
             {activeChat ? (
-              <Card className="h-full flex flex-col">
+              <Card className="h-[calc(100vh-200px)] flex flex-col">
                 <CardHeader className="border-b">
                   <CardTitle className="flex items-center gap-2">
                     <MessageCircle className="w-5 h-5" />
