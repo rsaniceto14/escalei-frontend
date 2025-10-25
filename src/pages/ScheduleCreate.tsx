@@ -1,33 +1,30 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
+import { Calendar, Users, Music, AlertCircle } from 'lucide-react';
+import { ScheduleType } from '@/api';
+import { useAuth } from '@/context/AuthContext';
+import { useScheduleForm } from '@/hooks/useScheduleForm';
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import { Calendar, Clock, MapPin, Users, Music, AlertCircle } from "lucide-react";
+export default function ScheduleCreate() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { formData, errors, isSubmitting, updateField, handleSubmit } = useScheduleForm();
 
-export default function ScaleCreate() {
-  const [escala, setEscala] = useState({
-    nome: "",
-    tipo: "Geral",
-    dataHora: "",
-    local: "",
-    tipoEvento: "Presencial",
-    grupoArea: "",
-    observacoes: ""
-  });
-  
   const [musicas, setMusicas] = useState<string[]>([]);
-  const [nomeMusica, setNomeMusica] = useState("");
+  const [nomeMusica, setNomeMusica] = useState('');
 
   function addMusica(e: React.FormEvent) {
     e.preventDefault();
     if (nomeMusica && !musicas.includes(nomeMusica)) {
       setMusicas([...musicas, nomeMusica]);
-      setNomeMusica("");
+      setNomeMusica('');
     }
   }
 
@@ -35,15 +32,23 @@ export default function ScaleCreate() {
     setMusicas(musicas.filter(m => m !== musica));
   }
 
-  function handleSubmit() {
-    if (!escala.nome || !escala.dataHora || !escala.local) {
-      toast.error("Preencha todos os campos obrigatórios");
+  async function onSubmit() {
+    // Verificar se o usuário está autenticado
+    if (!user) {
+      toast.error('Você precisa estar autenticado para criar uma escala');
       return;
     }
 
-    // Simulação de criação
-    toast.success("Escala criada com sucesso! Aguardando aprovação.");
-    console.log("Escala criada:", { ...escala, musicas });
+    // Verificar permissão
+    if (!user.permissions?.create_scale) {
+      toast.error('Você não tem permissão para criar escalas');
+      return;
+    }
+
+    // Chama o handleSubmit do hook com o callback de sucesso
+    await handleSubmit(user.id, () => {
+      navigate('/schedules');
+    });
   }
 
   return (
@@ -69,81 +74,84 @@ export default function ScaleCreate() {
                   <Label htmlFor="nome">Nome da Escala *</Label>
                   <Input
                     id="nome"
-                    value={escala.nome}
-                    onChange={(e) => setEscala({...escala, nome: e.target.value})}
+                    value={formData.name}
+                    onChange={e => updateField('name', e.target.value)}
                     placeholder="Ex: Culto Domingo Manhã"
+                    className={errors.name ? 'border-red-500' : ''}
                   />
+                  {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="tipo">Tipo de Escala</Label>
-                  <Select value={escala.tipo} onValueChange={(value) => setEscala({...escala, tipo: value})}>
+                  <Select value={formData.type} onValueChange={(value: ScheduleType) => updateField('type', value)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Geral">Geral</SelectItem>
-                      <SelectItem value="Louvor">Louvor</SelectItem>
-                      <SelectItem value="Som">Som</SelectItem>
-                      <SelectItem value="Multimedia">Multimídia</SelectItem>
-                      <SelectItem value="Infantil">Infantil</SelectItem>
+                      <SelectItem value={ScheduleType.Geral}>Geral</SelectItem>
+                      <SelectItem value={ScheduleType.Louvor}>Louvor</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="dataHora">Data e Hora *</Label>
+                  <Label htmlFor="descricao">Descrição *</Label>
                   <Input
-                    id="dataHora"
-                    type="datetime-local"
-                    value={escala.dataHora}
-                    onChange={(e) => setEscala({...escala, dataHora: e.target.value})}
+                    id="descricao"
+                    value={formData.description}
+                    onChange={e => updateField('description', e.target.value)}
+                    placeholder="Descrição da escala"
+                    className={errors.description ? 'border-red-500' : ''}
                   />
+                  {errors.description && <p className="text-xs text-red-500">{errors.description}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="local">Local *</Label>
                   <Input
                     id="local"
-                    value={escala.local}
-                    onChange={(e) => setEscala({...escala, local: e.target.value})}
+                    value={formData.local}
+                    onChange={e => updateField('local', e.target.value)}
                     placeholder="Ex: Igreja Central"
+                    className={errors.local ? 'border-red-500' : ''}
                   />
+                  {errors.local && <p className="text-xs text-red-500">{errors.local}</p>}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="tipoEvento">Tipo de Evento</Label>
-                  <Select value={escala.tipoEvento} onValueChange={(value) => setEscala({...escala, tipoEvento: value})}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Presencial">Presencial</SelectItem>
-                      <SelectItem value="Online">Online</SelectItem>
-                      <SelectItem value="Híbrido">Híbrido</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="grupoArea">Grupo/Área Envolvida</Label>
+                  <Label htmlFor="dataInicio">Data e Hora de Início *</Label>
                   <Input
-                    id="grupoArea"
-                    value={escala.grupoArea}
-                    onChange={(e) => setEscala({...escala, grupoArea: e.target.value})}
-                    placeholder="Ex: Louvor, Diáconos, Som..."
+                    id="dataInicio"
+                    type="datetime-local"
+                    value={formData.start_date}
+                    onChange={e => updateField('start_date', e.target.value)}
+                    className={errors.start_date ? 'border-red-500' : ''}
                   />
+                  {errors.start_date && <p className="text-xs text-red-500">{errors.start_date}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dataFim">Data e Hora de Término *</Label>
+                  <Input
+                    id="dataFim"
+                    type="datetime-local"
+                    value={formData.end_date}
+                    onChange={e => updateField('end_date', e.target.value)}
+                    className={errors.end_date ? 'border-red-500' : ''}
+                  />
+                  {errors.end_date && <p className="text-xs text-red-500">{errors.end_date}</p>}
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="observacoes">Observações</Label>
                 <Input
                   id="observacoes"
-                  value={escala.observacoes}
-                  onChange={(e) => setEscala({...escala, observacoes: e.target.value})}
+                  value={formData.observation}
+                  onChange={e => updateField('observation', e.target.value)}
                   placeholder="Informações adicionais..."
                 />
               </div>
             </CardContent>
           </Card>
 
-          {escala.tipo === "Louvor" && (
-            <Card>
+          {formData.type === ScheduleType.Louvor && (
+            <Card className="mt-6">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Music className="w-5 h-5" />
@@ -155,7 +163,7 @@ export default function ScaleCreate() {
                 <form onSubmit={addMusica} className="flex gap-2">
                   <Input
                     value={nomeMusica}
-                    onChange={(e) => setNomeMusica(e.target.value)}
+                    onChange={e => setNomeMusica(e.target.value)}
                     placeholder="Nome da música"
                     className="flex-1"
                   />
@@ -226,13 +234,11 @@ export default function ScaleCreate() {
           </Card>
 
           <div className="space-y-2">
-            <Button onClick={handleSubmit} className="w-full bg-echurch-500 hover:bg-echurch-600">
+            <Button onClick={onSubmit} className="w-full bg-echurch-500 hover:bg-echurch-600" disabled={isSubmitting}>
               <Calendar className="w-4 h-4 mr-2" />
-              Criar Escala
+              {isSubmitting ? 'Criando...' : 'Criar Escala'}
             </Button>
-            <p className="text-xs text-center text-echurch-500">
-              * Campos obrigatórios
-            </p>
+            <p className="text-xs text-center text-echurch-500">* Campos obrigatórios</p>
           </div>
         </div>
       </div>

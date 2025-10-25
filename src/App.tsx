@@ -25,7 +25,7 @@ import Schedules from "./pages/Schedules";
 import Chats from "./pages/Chats";
 import ChatDetail from "./pages/ChatDetail";
 import Musics from "./pages/Musics";
-import ScaleCreate from "./pages/ScaleCreate";
+import ScheduleCreate from "./pages/ScheduleCreate";
 import Admin from "./pages/Admin";
 import ScheduleDetails from "./pages/ScheduleDetails";
 import { AuthProvider } from "./context/AuthContext";
@@ -153,11 +153,11 @@ const App = () => (
               }
             />
             <Route
-              path="/scales/create"
+              path="/schedules/create"
               element={
                 <PrivateRoute>
                   <Layout>
-                    <ScaleCreate />
+                    <ScheduleCreate />
                   </Layout>
                 </PrivateRoute>
               }

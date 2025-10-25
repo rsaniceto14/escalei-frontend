@@ -28,19 +28,45 @@ export enum UserScheduleType {
   Geral = 'Geral',
 }
 
-export interface Scale {
-  id?: string;
-  nome: string;
-  data: string;
-  horario: string;
+export interface Schedule {
+  id?: number;
+  name: string;
+  description: string;
   local: string;
   start_date: string;
   end_date: string;
-  observation: string | null;
-  type: UserScheduleType;
-  status: UserScheduleStatus;
-  minhaEscala: boolean;
-  created_at: string;
+  observation?: string;
+  type: ScheduleType;
+  approved?: boolean;
+  user_creator: number;
+  created_at?: string;
+  updated_at?: string;
+  // Campos dinâmicos adicionados pelo backend quando busca com relacionamento de UserSchedule
+  status?: UserScheduleStatus | null;
+  minhaEscala?: boolean;
+}
+
+export interface CreateScheduleRequest {
+  name: string;
+  description: string;
+  local: string;
+  start_date: string;
+  end_date: string;
+  observation?: string;
+  type: ScheduleType;
+  approved?: boolean;
+  user_creator: number;
+}
+
+export interface UpdateScheduleRequest {
+  name?: string;
+  description?: string;
+  local?: string;
+  start_date?: string;
+  end_date?: string;
+  observation?: string;
+  type?: ScheduleType;
+  approved?: boolean;
 }
 
 export interface AvailableUserSchedule {
