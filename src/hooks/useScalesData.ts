@@ -1,33 +1,38 @@
 import { useApi } from './useApi';
-import { scaleService} from '@/api';
+import { userScheduleService } from '@/api/services/userScheduleService';
+import { UserScheduleStatus } from '@/api';
 
 export function useScalesData() {
   const {
-    data: confirmedScales,
-    loading: loadingConfirmed,
-    error: errorConfirmed,
-    refetch: refetchConfirmed,
-  } = useApi(async () => ({ success: true as const, data: await scaleService.getConfirmedScales() }), {
-    immediate: true,
-  });
+    data: allScales,
+    loading,
+    error,
+    refetch,
+  } = useApi(
+    async () => ({ 
+      success: true as const, 
+      data: await userScheduleService.getAllScales() 
+    }), 
+    {
+      immediate: true,
+    }
+  );
 
-  const {
-    data: pendingScales,
-    loading: loadingPending,
-    error: errorPending,
-    refetch: refetchPending,
-  } = useApi(async () => ({ success: true as const, data: await scaleService.getPendingScales() }), {
-    immediate: true,
-  });
+  // Filtra escalas confirmadas (status === 'Confirmado')
+  const confirmedScales = allScales?.filter(
+    (scale) => scale.status === UserScheduleStatus.Confirmed
+  ) || [];
+
+  // Filtra escalas pendentes (usuário está na escala mas status !== 'Confirmado')
+  const pendingScales = allScales?.filter(
+    (scale) => scale.minhaEscala && scale.status !== UserScheduleStatus.Confirmed
+  ) || [];
 
   return {
-    escalasParticipa: confirmedScales || [],
-    escalasPendentes: pendingScales || [],
-    loading: loadingConfirmed || loadingPending,
-    error: errorConfirmed || errorPending,
-    refetch: () => {
-      refetchConfirmed();
-      refetchPending();
-    },
+    escalasParticipa: confirmedScales,
+    escalasPendentes: pendingScales,
+    loading,
+    error,
+    refetch,
   };
 }
