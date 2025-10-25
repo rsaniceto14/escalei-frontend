@@ -23,9 +23,14 @@ export enum UserScheduleStatus {
   Swap_requested = 'Troca Solicitada',
 }
 
-export enum UserScheduleType {
+export enum ScheduleType {
   Louvor = 'Louvor',
   Geral = 'Geral',
+}
+
+export interface UserScheduleUpdate {
+  schedule_id: number;
+  status: UserScheduleStatus;
 }
 
 export interface Schedule {
