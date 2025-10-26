@@ -200,8 +200,3 @@ After building with Capacitor:
 1. **iOS**: Open the project in Xcode and follow Apple's App Store guidelines
 2. **Android**: Open in Android Studio and follow Google Play Store guidelines
 
-## Support
-
-- [React Documentation](https://react.dev/)
-- [TypeScript Documentation](https://www.typescriptlang.org/)
-- [Capacitor Documentation](https://capacitorjs.com/docs)
