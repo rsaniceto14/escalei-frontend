@@ -1,4 +1,4 @@
-import { UserScheduleStatus, UserScheduleType } from '@/api';
+import { UserScheduleStatus, ScheduleType } from '@/api';
 
 export const formatDate = (dateString: string) => {
   const isoString = dateString.replace(' ', 'T');
@@ -45,11 +45,11 @@ export const getStatusColor = (status: UserScheduleStatus) => {
   }
 };
 
-export const getTipoColor = (tipo: UserScheduleType) => {
+export const getTipoColor = (tipo: ScheduleType) => {
   switch (tipo) {
-    case UserScheduleType.Louvor:
+    case ScheduleType.Louvor:
       return 'bg-purple-100 text-purple-800 border-purple-200';
-    case UserScheduleType.Geral:
+    case ScheduleType.Geral:
       return 'bg-blue-100 text-blue-800 border-blue-200';
     default:
       return 'bg-gray-100 text-gray-800 border-gray-200';

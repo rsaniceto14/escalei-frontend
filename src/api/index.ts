@@ -1,6 +1,6 @@
 // Export all services
 export { authService } from './services/authService';
-export { scaleService } from './services/scaleService';
+export { scheduleService } from './services/scheduleService';
 export { userService } from './services/userService';
 export { availabilityService } from './services/availabilityService';
 export { areaService } from './services/areaService';

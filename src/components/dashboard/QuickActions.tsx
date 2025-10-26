@@ -8,7 +8,7 @@ export function QuickActions() {
     {
       title: "Nova Escala",
       icon: Plus,
-      path: "/scales/create"
+      path: "/schedules/create"
     },
     {
       title: "Disponibilidade", 
