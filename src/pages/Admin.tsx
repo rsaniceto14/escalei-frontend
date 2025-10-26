@@ -22,6 +22,7 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function Admin() {
   const [novaArea, setNovaArea] = useState("");
+  const [novaAreaDescription, setNovaAreaDescription] = useState("");
   const [showNovaAreaDialog, setShowNovaAreaDialog] = useState(false);
   const [areas, setAreas] = useState<Area[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -47,6 +48,8 @@ export default function Admin() {
   const [editUserData, setEditUserData] = useState({ name: '', email: '', birthday: '' });
   const [isUpdatingUser, setIsUpdatingUser] = useState(false);
   const [isTogglingStatus, setIsTogglingStatus] = useState<string | null>(null);
+  const [userAreas, setUserAreas] = useState<any[]>([]);
+  const [isLoadingUserAreas, setIsLoadingUserAreas] = useState(false);
 
   const { toast } = useToast();
   const { user } = useAuth();
@@ -104,14 +107,24 @@ export default function Admin() {
       return;
     }
 
+    if (!novaAreaDescription.trim()) {
+      toast({
+        title: "Descrição obrigatória",
+        description: "A descrição da área é obrigatória.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const newArea = await areaService.create({
         name: novaArea.trim(),
-        description: ""
+        description: novaAreaDescription.trim()
       });
       setAreas(prev => [...prev, newArea]);
       setNovaArea("");
+      setNovaAreaDescription("");
       setShowNovaAreaDialog(false);
       toast({
         title: "Área criada!",
@@ -134,7 +147,7 @@ export default function Admin() {
     setIsLoadingUsers(true);
     
     try {
-      const users = await areaService.getUsers(area.id);
+      const users = await areaService.getUsers(parseInt(area.id));
       setAreaUsers(users);
     } catch (error: any) {
       toast({
@@ -152,10 +165,10 @@ export default function Admin() {
     
     setIsSwitchingUser(userId);
     try {
-      await areaService.switchUserArea(selectedArea.id, userId, newAreaId);
+      await areaService.switchUserArea(parseInt(selectedArea.id), userId, newAreaId);
       
       // Refresh the users list
-      const users = await areaService.getUsers(selectedArea.id);
+      const users = await areaService.getUsers(parseInt(selectedArea.id));
       setAreaUsers(users);
       
       toast({
@@ -175,7 +188,7 @@ export default function Admin() {
 
   const handleDeleteArea = async (area: Area) => {
     try {
-      await areaService.delete(area.id);
+      await areaService.delete(parseInt(area.id));
       setAreas(prev => prev.filter(a => a.id !== area.id));
       toast({
         title: "Área excluída!",
@@ -211,7 +224,7 @@ export default function Admin() {
 
     setIsUpdatingArea(true);
     try {
-      const updatedArea = await areaService.update(editingArea.id, editAreaData);
+      const updatedArea = await areaService.update(parseInt(editingArea.id), editAreaData);
       
       // Update the areas list
       setAreas(prev => prev.map(area => 
@@ -267,7 +280,68 @@ export default function Admin() {
       email: user.email,
       birthday: user.birthday || ''
     });
+    setUserAreas(user.areas || []);
     setShowUserEditDialog(true);
+  };
+
+  const handleAddUserToArea = async (areaId: number) => {
+    if (!editingUser) return;
+    
+    try {
+      // Find the area to get its name
+      const area = areas.find(a => parseInt(a.id) === areaId);
+      if (!area) return;
+      
+      // Add user to area using backend API
+      await userService.addUserToArea(editingUser.id, area.id);
+      
+      // Update local state
+      const newUserArea = {
+        id: area.id,
+        name: area.name,
+        description: area.description
+      };
+      
+      setUserAreas(prev => [...prev, newUserArea]);
+      
+      toast({
+        title: "Usuário adicionado!",
+        description: `${editingUser.name} foi adicionado à área ${area.name}.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível adicionar usuário à área",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleRemoveUserFromArea = async (areaId: number) => {
+    if (!editingUser) return;
+    
+    try {
+      // Find the area to get its name
+      const area = areas.find(a => parseInt(a.id) === areaId);
+      if (!area) return;
+      
+      // Remove user from area using backend API
+      await userService.removeUserFromArea(editingUser.id, area.id);
+      
+      // Update local state
+      setUserAreas(prev => prev.filter(ua => parseInt(ua.id) !== areaId));
+      
+      toast({
+        title: "Usuário removido!",
+        description: `${editingUser.name} foi removido da área ${area.name}.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível remover usuário da área",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleUpdateUser = async () => {
@@ -353,31 +427,46 @@ export default function Admin() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <h2 className="text-lg sm:text-xl font-semibold text-echurch-700">Áreas de Ministério</h2>
             {canCreateArea && (
-              <Dialog open={showNovaAreaDialog} onOpenChange={setShowNovaAreaDialog}>
+              <Dialog open={showNovaAreaDialog} onOpenChange={(open) => {
+                setShowNovaAreaDialog(open);
+                if (!open) {
+                  setNovaArea("");
+                  setNovaAreaDescription("");
+                }
+              }}>
                 <DialogTrigger asChild>
                   <Button className="bg-echurch-500 hover:bg-echurch-600 w-full sm:w-auto">
                     <Plus className="w-4 h-4 mr-2" />
                     Nova Área
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="mx-4 max-w-sm sm:max-w-md">
+                <DialogContent className="max-w-sm sm:max-w-md mx-auto">
                   <DialogHeader>
                     <DialogTitle>Criar Nova Área</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-medium">Nome da Área</label>
+                      <label className="text-sm font-medium">Nome da Área *</label>
                       <Input
                         placeholder="Ex: Infantil, Jovens, etc."
                         value={novaArea}
                         onChange={(e) => setNovaArea(e.target.value)}
                       />
                     </div>
+                    <div>
+                      <label className="text-sm font-medium">Descrição *</label>
+                      <Textarea
+                        placeholder="Descreva o propósito e responsabilidades desta área..."
+                        value={novaAreaDescription}
+                        onChange={(e) => setNovaAreaDescription(e.target.value)}
+                        rows={3}
+                      />
+                    </div>
                     <div className="flex gap-2">
                       <Button 
                         onClick={adicionarArea} 
                         className="flex-1 bg-echurch-500 hover:bg-echurch-600"
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || !novaArea.trim() || !novaAreaDescription.trim()}
                       >
                         {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                         Criar Área
@@ -423,7 +512,7 @@ export default function Admin() {
                               <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                             </Button>
                           </AlertDialogTrigger>
-                          <AlertDialogContent className="mx-4 max-w-sm sm:max-w-md">
+                          <AlertDialogContent className="max-w-sm sm:max-w-md mx-auto">
                             <AlertDialogHeader>
                               <AlertDialogTitle>Excluir Área</AlertDialogTitle>
                               <AlertDialogDescription>
@@ -566,7 +655,7 @@ export default function Admin() {
 
       {/* Area Management Dialog */}
       <Dialog open={showAreaManagementDialog} onOpenChange={setShowAreaManagementDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto mx-4">
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto mx-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
@@ -641,7 +730,7 @@ export default function Admin() {
 
       {/* Area Details Dialog */}
       <Dialog open={showAreaDetailsDialog} onOpenChange={setShowAreaDetailsDialog}>
-        <DialogContent className="mx-4 max-w-sm sm:max-w-md">
+        <DialogContent className="max-w-sm sm:max-w-md mx-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
@@ -697,7 +786,7 @@ export default function Admin() {
 
       {/* User Edit Dialog */}
       <Dialog open={showUserEditDialog} onOpenChange={setShowUserEditDialog}>
-        <DialogContent className="mx-4 max-w-sm sm:max-w-md">
+        <DialogContent className="max-w-sm sm:max-w-md mx-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Edit className="w-5 h-5" />
@@ -738,6 +827,54 @@ export default function Admin() {
                 onChange={(e) => setEditUserData(prev => ({ ...prev, birthday: e.target.value }))}
                 disabled={isUpdatingUser}
               />
+            </div>
+
+            {/* User Areas Section */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-medium">Áreas do Usuário</Label>
+                <Select onValueChange={(value) => handleAddUserToArea(parseInt(value))}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Adicionar área" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {areas
+                      .filter(area => !userAreas.some(ua => parseInt(ua.id) === parseInt(area.id)))
+                      .map(area => (
+                        <SelectItem key={area.id} value={area.id}>
+                          {area.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {userAreas.length > 0 ? (
+                <div className="space-y-2">
+                  {userAreas.map(userArea => (
+                    <div key={userArea.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">{userArea.name}</p>
+                        {userArea.description && (
+                          <p className="text-xs text-gray-600">{userArea.description}</p>
+                        )}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRemoveUserFromArea(parseInt(userArea.id))}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4 text-gray-500 text-sm">
+                  Usuário não está associado a nenhuma área
+                </div>
+              )}
             </div>
             
             <div className="flex gap-2">
