@@ -15,12 +15,12 @@ export function MobileTopNav() {
       <NavLink
         to="/profile"
         className={({ isActive }) =>
-          `flex flex-col items-center justify-center text-xs ${
-            isActive ? "text-echurch-700" : "text-echurch-400"
+          `flex items-center justify-center p-2 rounded-full ${
+            isActive ? "bg-black/15 backdrop-blur-sm" : ""
           }`
         }
       >
-        <User className="w-6 h-6" />
+        <User className="w-6 h-6 text-black" />
       </NavLink>
     </nav>
   );

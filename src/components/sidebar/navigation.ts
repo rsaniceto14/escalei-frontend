@@ -23,6 +23,7 @@ export const mainItems = [
 
 export const mobileItems = [
   { title: "Início", url: "/home", icon: Home },
+  { title: "Disponibilidade", url: "/availability", icon: Clock },
   { title: "Escalas", url: "/schedules", icon: Calendar },
   { title: "Chats", url: "/chats", icon: MessageCircle },
   { title: "Músicas", url: "/musics", icon: Music },
