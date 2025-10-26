@@ -200,14 +200,6 @@ After building with Capacitor:
 1. **iOS**: Open the project in Xcode and follow Apple's App Store guidelines
 2. **Android**: Open in Android Studio and follow Google Play Store guidelines
 
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly (web and mobile if applicable)
-5. Submit a pull request
-
 ## Support
 
 - [React Documentation](https://react.dev/)
