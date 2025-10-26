@@ -19,7 +19,6 @@ import Invites from "@/pages/Invites";
 import PasswordRecover from "./pages/PasswordRecover";
 import PasswordReset from "./pages/PasswordReset";
 import Profile from "./pages/Profile";
-import Settings from "./pages/Settings";
 import Availability from "./pages/Availability";
 import Schedules from "./pages/Schedules";
 import Chats from "./pages/Chats";
@@ -80,16 +79,6 @@ const App = () => (
                 <PrivateRoute>
                   <Layout>
                     <Profile />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <PrivateRoute>
-                  <Layout>
-                    <Settings />
                   </Layout>
                 </PrivateRoute>
               }
