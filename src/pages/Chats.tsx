@@ -4,13 +4,12 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageCircle, Send, Users, Calendar, Search, Image as ImageIcon, X } from "lucide-react";
+import { MessageCircle, Send, Users, Calendar, Search, Image as ImageIcon, X, LoaderCircle, Route } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-import { Area, ChatWithMessages } from "@/api/types";
+import { Area, ChatWithMessages, Message } from "@/api/types";
 import { useAuth } from "@/context/AuthContext";
 import { chatService } from "@/api/services/chatService";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -20,6 +19,8 @@ export default function Chats() {
   const [activeChat, setActiveChat] = useState<string | null>(null);
   const [chats, setChats] = useState<ChatWithMessages[]>([]);
   const [loading, setLoading] = useState(true);
+  const [, setLoadingMessages] = useState(true);
+  const [activeMessages, setActiveMessages] = useState<Message[]>([]);
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("schedules");
@@ -53,6 +54,24 @@ export default function Chats() {
       setLoading(false);
     }
   };
+
+  const loadMessages = async (chat_id: number) => {
+    try {
+      setLoadingMessages(true);
+
+      const response = await chatService.getChatById( chat_id, Number(user.id));
+
+      // Convert messages object to array if needed
+      const messages = Array.isArray(response.messages) ? response.messages : Object.values(response.messages || {})
+      
+      setActiveMessages(messages);
+
+    } catch (err) {
+      console.error("Error loading chats", err);
+    } finally {
+      setLoadingMessages(false);
+    }
+  }
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -223,7 +242,7 @@ export default function Chats() {
   };
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => {messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });}, 1500)
   };
 
   const handleChatClick = (chatId: string) => {
@@ -232,7 +251,8 @@ export default function Chats() {
       navigate(`/chats/${chatId}`);
     } else {
       // Desktop: Set active chat
-      setActiveChat(chatId);
+      setActiveChat(chatId);  
+      loadMessages(Number(chatId));
       // Scroll to bottom after chat is selected
       setTimeout(() => scrollToBottom(), 100);
     }
@@ -243,7 +263,7 @@ export default function Chats() {
     if (activeChat) {
       scrollToBottom();
     }
-  }, [chats, activeChat]);
+  }, [chats, activeChat, activeMessages]);
 
   const ChatItem = ({ chat }: { chat: ChatWithMessages }) => (
     <Card
@@ -362,47 +382,54 @@ export default function Chats() {
                 </CardHeader>
 
                 <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
-                  {/* Messages */}
-                  <div className="flex-1 p-4 space-y-4 overflow-y-auto">
-                    {chats
-                      .find((c) => c.chat.id === activeChat)
-                      ?.messages.map((msg, idx) => (
-                        <div
-                          key={idx}
-                          className={`flex ${msg.user_name === user.name || msg.user_name === "Eu" ? "justify-end" : "justify-start"
-                            }`}
-                        >
+                  {loading ? (
+                    // <Card className="h-full flex items-center justify-center">
+                      <div className="text-center text-echurch-500">
+                        <LoaderCircle size={48} className="mx-auto mb-4 opacity-50" />
+                        <p className="text-lg font-medium">Carregando...</p>
+                      </div>
+                    // </Card>
+                  ) : (
+                  /* Messages */
+                    <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+                      {activeMessages?.map((msg, idx) => (
                           <div
-                            className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${msg.user_name === user.name || msg.user_name === "Eu"
-                                ? "bg-echurch-500 text-white"
-                                : "bg-gray-100 text-gray-900"
+                            key={idx}
+                            className={`flex ${msg.user_name === user.name || msg.user_name === "Eu" ? "justify-end" : "justify-start"
                               }`}
                           >
-                            {msg.user_name !== user.name && msg.user_name !== "Eu" && (
-                              <p className="text-xs font-medium mb-1 opacity-75">{msg.user_name}</p>
-                            )}
-                            {msg.image_path && (
-                              <img
-                                src={msg.image_path}
-                                alt="Message attachment"
-                                className="max-w-full rounded-lg mb-2 cursor-pointer hover:opacity-90"
-                                onClick={() => window.open(msg.image_path, '_blank')}
-                              />
-                            )}
-                            {msg.content?.trim() && (
-                              <p className="text-sm">{msg.content}</p>
-                            )}
-                            <p
-                              className={`text-xs mt-1 ${msg.user_name === user.name || msg.user_name === "Eu" ? "text-echurch-100" : "text-gray-500"
+                            <div
+                              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${msg.user_name === user.name || msg.user_name === "Eu"
+                                  ? "bg-echurch-500 text-white"
+                                  : "bg-gray-100 text-gray-900"
                                 }`}
                             >
-                              {msg.sent_at}
-                            </p>
+                              {msg.user_name !== user.name && msg.user_name !== "Eu" && (
+                                <p className="text-xs font-medium mb-1 opacity-75">{msg.user_name}</p>
+                              )}
+                              {msg.image_path && (
+                                <img
+                                  src={msg.image_path}
+                                  alt="Message attachment"
+                                  className="max-w-full rounded-lg mb-2 cursor-pointer hover:opacity-90"
+                                  onClick={() => window.open(msg.image_path, '_blank')}
+                                />
+                              )}
+                              {msg.content?.trim() && (
+                                <p className="text-sm">{msg.content}</p>
+                              )}
+                              <p
+                                className={`text-xs mt-1 ${msg.user_name === user.name || msg.user_name === "Eu" ? "text-echurch-100" : "text-gray-500"
+                                  }`}
+                              >
+                                {msg.sent_at}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    <div ref={messagesEndRef} />
-                  </div>
+                        ))}
+                      <div ref={messagesEndRef} />
+                    </div>
+                  )}
 
                   {/* Message input */}
                   <div className="p-4 border-t bg-gray-50">

@@ -6,7 +6,7 @@ import { useSafeArea } from "@/hooks/useSafeArea";
 import { MobileBottomNav } from "../sidebar/MobileBottomNav";
 import { MobileTopNav } from "../sidebar/MobileTopNav";
 
-export default function Layout({ children }: { children: ReactNode }) {
+export default function Layout({ children, disableMainPadding = false  }: { children: ReactNode, disableMainPadding?: boolean  }) {
   const isMobile = useIsMobile();
   const { getSafeAreaStyle, isLoading } = useSafeArea();
 
@@ -36,7 +36,11 @@ export default function Layout({ children }: { children: ReactNode }) {
           </header>
   
           {/* MAIN */}
-          <main className="flex-1 px-2 sm:px-4 py-4 lg:py-8 bg-echurch-50">
+          <main
+            className={`flex-1 overflow-hidden bg-echurch-50 ${
+              disableMainPadding ? "" : "px-2 sm:px-4 py-4 lg:py-8"
+            }`}
+          >                   
             {children}
           </main>
   

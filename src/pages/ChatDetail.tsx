@@ -1,19 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Send, MessageCircle, Image as ImageIcon, X } from "lucide-react";
+import { ArrowLeft, Send, MessageCircle, Image as ImageIcon, X, LoaderCircle } from "lucide-react";
 import { ChatWithMessages, Message } from "@/api/types";
 import { useAuth } from "@/context/AuthContext";
 import { chatService } from "@/api/services/chatService";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function ChatDetail() {
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState<ChatWithMessages | null>(null);
@@ -27,6 +28,7 @@ export default function ChatDetail() {
 
   // Load on mount
   useEffect(() => {
+    if(!isMobile) navigate("/chats");
     loadChat(false);
   }, []);
 
@@ -46,7 +48,7 @@ export default function ChatDetail() {
   }, [chat?.messages]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => {messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });}, 1000)
   };
 
   const loadChat = async (toShowLoading :boolean) => {
@@ -56,9 +58,10 @@ export default function ChatDetail() {
       setLoading(toShowLoading);
       // Get all chats and find the specific one
       const response = await chatService.getChatById(
-        Number(chatId)
+        Number(chatId),
+        user.id
       );
-      
+      console.log(response);
       if (!response) {
         toast({
           title: "Error",
@@ -135,7 +138,6 @@ export default function ChatDetail() {
       const tempImageUrl = imagePreview; // Use preview URL temporarily
       const newMessage: Message = {
         content: message.trim() || " ",
-        // image_path: "",
         image_path: tempImageUrl || undefined,
         sent_at: new Date().toISOString().replace('T', ' ').replace(/\.\d+Z$/, ''),
         user_name: user.name,
@@ -174,7 +176,7 @@ export default function ChatDetail() {
           const messages = [...prev.messages];
           const lastMessage = messages[messages.length - 1];
           if (lastMessage && lastMessage.sent_at === newMessage.sent_at) {
-            lastMessage.image_path = response.image_path;
+            lastMessage.image_path = response.image_url;
           }
           return { ...prev, messages };
         });
@@ -213,50 +215,39 @@ export default function ChatDetail() {
     }
   };
 
-  if (loading) {
+  if (loading || !chat) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <MessageCircle size={48} className="mx-auto mb-4 text-echurch-500 opacity-50" />
+          <LoaderCircle size={48} className="mx-auto mb-4 text-echurch-500 opacity-50" />
           <p className="text-echurch-600">Loading chat...</p>
         </div>
       </div>
     );
   }
 
-  if (!chat) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <MessageCircle size={48} className="mx-auto mb-4 text-echurch-500 opacity-50" />
-          <p className="text-echurch-600">Chat not found</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      {/* Header */}
-      <div className="bg-echurch-500 text-white px-4 py-3 flex items-center gap-3 shadow-md">
+   <div className="h-full flex flex-col bg-gray-50 overflow-hidden">
+      {/* Chat Header */}
+      <div className="bg-gray-50 px-4 py-3 flex items-center gap-3 shadow-md sticky top-0 ">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => navigate("/chats")}
-          className="text-white hover:bg-echurch-600"
+          className="hover:bg-echurch-600"
         >
           <ArrowLeft size={20} />
         </Button>
         <div className="flex-1">
           <h1 className="font-semibold text-lg">{chat.chat.name}</h1>
-          <p className="text-xs text-echurch-100">
+          <p className="text-xs text-echurch-500">
             {chat.chat.chatable_type === "S" ? "Escala" : "Área"}
           </p>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 overflow-y-auto space-y-3 p-4">
          {chat.messages.length === 0 ? (
            <div className="text-center text-echurch-500 mt-8">
              <MessageCircle size={48} className="mx-auto mb-4 opacity-50" />
@@ -292,7 +283,7 @@ export default function ChatDetail() {
                        onClick={() => window.open(msg.image_path, '_blank')}
                      />
                    )}
-                   {msg.content.trim() && (
+                   {msg.content?.trim() && (
                      <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
                    )}
                    <p
@@ -311,7 +302,7 @@ export default function ChatDetail() {
       </div>
 
       {/* Input */}
-       <div className="bg-white border-t px-4 py-3 shadow-lg">
+       <div className="bg-white border-t px-4 py-3 shadow-lg sticky bottom-0 z-30">
          {imagePreview && (
            <div className="mb-2 relative inline-block">
              <img 
@@ -329,7 +320,7 @@ export default function ChatDetail() {
              </Button>
            </div>
          )}
-         <div className="flex gap-2">
+         <div className="flex gap-2 w-full">
            <input
              ref={fileInputRef}
              type="file"
@@ -342,7 +333,7 @@ export default function ChatDetail() {
              size="icon"
              onClick={() => fileInputRef.current?.click()}
              disabled={sending || uploading}
-             className="border-echurch-200 hover:bg-echurch-50"
+             className="border-echurch-200 hover:bg-echurch-50 flex-shrink-0"
            >
              <ImageIcon size={18} className="text-echurch-500" />
            </Button>
@@ -357,7 +348,7 @@ export default function ChatDetail() {
            <Button
              onClick={sendMessage}
              disabled={sending || uploading || (!message.trim() && !selectedImage)}
-             className="bg-echurch-500 hover:bg-echurch-600 disabled:opacity-50"
+             className="bg-echurch-500 hover:bg-echurch-600 disabled:opacity-50 flex-shrink-0"
            >
              {sending || uploading ? (
                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />

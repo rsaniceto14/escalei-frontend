@@ -133,12 +133,14 @@ const App = () => (
                   </Layout>
                 </PrivateRoute>
               }
-            />
+              />
             <Route
               path="/chats/:chatId"
               element={
                 <PrivateRoute>
-                  <ChatDetail />
+                  <Layout disableMainPadding={true}>
+                    <ChatDetail />
+                  </Layout>
                 </PrivateRoute>
               }
             />
