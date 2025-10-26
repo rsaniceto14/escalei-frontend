@@ -38,7 +38,7 @@ export default function Layout({ children, disableMainPadding = false  }: { chil
           <main
             className={`flex-1 bg-echurch-50 ${
               disableMainPadding ? "" : "px-2 sm:px-4 py-4 lg:py-8"
-            }`}
+            } ${isMobile ? "pb-20" : ""}`}
           >                   
             {children}
           </main>

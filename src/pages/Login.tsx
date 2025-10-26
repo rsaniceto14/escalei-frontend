@@ -51,8 +51,8 @@ export default function Login() {
       navigate("/home");
 
     } catch (error: any) {
-      console.error(error)
-      setErro(error || "Erro ao autenticar.");
+      console.error(error.message)
+      setErro(error.message || "Erro ao autenticar.");
       setLoginStep('idle');
     } finally {
       setLoading(false);

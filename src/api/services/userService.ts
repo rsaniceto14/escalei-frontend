@@ -58,5 +58,16 @@ export const userService = {
   async toggleUserStatus(id: string): Promise<{ id: string; status: string }> {
     const response = await apiClient.patch<ApiResponse<{ id: string; status: string }>>(`/users/${id}/toggle-status`);
     return response.data.data;
+  },
+
+  async addUserToArea(userId: string, areaId: string): Promise<void> {
+    const response = await apiClient.post<ApiResponse<void>>(`/areas/${userId}/add-user`, {
+      area_id: parseInt(areaId)
+    });
+    return response.data.data;
+  },
+
+  async removeUserFromArea(userId: string, areaId: string): Promise<void> {
+    await apiClient.delete(`/areas/${userId}/remove-user/${areaId}`);
   }
 };

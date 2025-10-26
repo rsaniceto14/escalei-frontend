@@ -22,9 +22,9 @@ export const mainItems = [
 ];
 
 export const mobileItems = [
-  { title: "Início", url: "/home", icon: Home },
   { title: "Disponibilidade", url: "/availability", icon: Clock },
   { title: "Escalas", url: "/schedules", icon: Calendar },
+  { title: "Início", url: "/home", icon: Home },
   { title: "Chats", url: "/chats", icon: MessageCircle },
   { title: "Músicas", url: "/musics", icon: Music },
 ];
@@ -32,7 +32,6 @@ export const mobileItems = [
 
 export const configItems = [
   { title: "Perfil", url: "/profile", icon: User },
-  { title: "Configurações", url: "/settings", icon: Settings },
 ];
 
 export const adminItems = [

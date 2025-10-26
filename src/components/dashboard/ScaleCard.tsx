@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Clock, MapPin, CheckCircle, AlertCircle } from "lucide-react";
 import { ReactNode } from "react";
 import { formatDate } from "@/utils/dateUtils";
+import { Schedule } from "@/api";
 
 interface Scale {
   nome: string;
@@ -18,7 +19,7 @@ interface Scale {
 interface ScaleCardProps {
   title: string;
   icon: ReactNode;
-  scales: Scale[];
+  scales: Schedule[];
   variant: "confirmed" | "pending";
   emptyMessage: string;
   emptyDescription: string;
@@ -44,15 +45,11 @@ export function ScaleCard({ title, icon, scales, variant, emptyMessage, emptyDes
               className={`flex flex-col gap-3 p-4 rounded-lg ${bgColor}`}
             >
               <div className="space-y-1">
-                <div className="font-medium text-echurch-700">{esc.nome}</div>
+                <div className="font-medium text-echurch-700">{esc.name}</div>
                 <div className="flex flex-wrap items-center gap-2 text-sm text-echurch-600">
                   <div className="flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
-                    {formatDate(esc.data)}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {esc.horario}
+                    {esc.start_date}
                   </div>
                   <div className="flex items-center gap-1">
                     <MapPin className="w-3 h-3" />
@@ -62,7 +59,7 @@ export function ScaleCard({ title, icon, scales, variant, emptyMessage, emptyDes
               </div>
               {variant === "confirmed" ? (
                 <Badge variant="secondary" className={badgeColor}>
-                  {esc.tipo}
+                  {esc.approved ? "Aprovada" : "Aguardando confirmação"}
                 </Badge>
               ) : (
                 <div className="flex flex-col sm:flex-row gap-2">

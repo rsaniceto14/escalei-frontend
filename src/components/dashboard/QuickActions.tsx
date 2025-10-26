@@ -1,29 +1,29 @@
 
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, Plus, Settings } from "lucide-react";
+import { Calendar, Clock, Music, User } from "lucide-react";
 
 export function QuickActions() {
   const actions = [
     {
       title: "Nova Escala",
-      icon: Plus,
+      icon: Calendar,
       path: "/schedules/create"
     },
     {
       title: "Disponibilidade", 
-      icon: Calendar,
+      icon: Clock,
       path: "/availability"
     },
     {
       title: "Músicas",
-      icon: "🎵",
+      icon: Music,
       path: "/musics"
     },
     {
-      title: "Configurações",
-      icon: Settings,
-      path: "/settings"
+      title: "Perfil",
+      icon: User,
+      path: "/profile"
     }
   ];
 

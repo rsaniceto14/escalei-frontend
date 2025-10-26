@@ -1,5 +1,6 @@
 import { useScales } from '@/hooks/useSchedules';
 import { ScalesHeader, ScalesTabs } from '@/components/schedules';
+import { Loader2 } from 'lucide-react';
 
 export default function Schedules() {
   const { escalasFiltradas, filtroAtivo, loading, setFiltroAtivo, handleConfirmParticipation } = useScales();
@@ -7,6 +8,7 @@ export default function Schedules() {
   if (loading) {
     return (
       <div className="flex items-center justify-center w-full h-screen">
+        <Loader2 className="w-6 h-6 animate-spin" />
         <div className="text-echurch-600">Carregando escalas...</div>
       </div>
     );
