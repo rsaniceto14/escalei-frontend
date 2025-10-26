@@ -7,14 +7,13 @@ import { ChatWithMessages, Message } from "@/api/types";
 import { useAuth } from "@/context/AuthContext";
 import { chatService } from "@/api/services/chatService";
 import { useToast } from "@/hooks/use-toast";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Capacitor } from "@capacitor/core";
 
 export default function ChatDetail() {
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const isMobile = useIsMobile();
   
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState<ChatWithMessages | null>(null);
@@ -28,7 +27,7 @@ export default function ChatDetail() {
 
   // Load on mount
   useEffect(() => {
-    if(!isMobile) navigate("/chats");
+    if(!Capacitor.isNativePlatform()) navigate("/chats");
     loadChat(false);
   }, []);
 
