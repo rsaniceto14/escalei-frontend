@@ -27,7 +27,6 @@ export default function ChatDetail() {
 
   // Load on mount
   useEffect(() => {
-    if(!Capacitor.isNativePlatform()) navigate("/chats");
     loadChat(false);
   }, []);
 
