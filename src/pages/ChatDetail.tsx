@@ -127,7 +127,7 @@ export default function ChatDetail() {
   };
 
   const sendMessage = async () => {
-    if ((!message.trim() && !selectedImage) || !chatId || sending) return;
+    if ((!message?.trim() && !selectedImage) || !chatId || sending) return;
 
     try {
       setSending(true);
@@ -135,7 +135,7 @@ export default function ChatDetail() {
       // Show message optimistically
       const tempImageUrl = imagePreview; // Use preview URL temporarily
       const newMessage: Message = {
-        content: message.trim() || " ",
+        content: message?.trim() || " ",
         image_path: tempImageUrl || undefined,
         sent_at: new Date().toISOString().replace('T', ' ').replace(/\.\d+Z$/, ''),
         user_name: user.name,
@@ -150,7 +150,7 @@ export default function ChatDetail() {
           : prev
       );
       
-      const messageContent = message.trim();
+      const messageContent = message?.trim();
       const imageFile = selectedImage;
       
       // Clear input immediately
@@ -345,7 +345,7 @@ export default function ChatDetail() {
            />
            <Button
              onClick={sendMessage}
-             disabled={sending || uploading || (!message.trim() && !selectedImage)}
+             disabled={sending || uploading || (!message?.trim() && !selectedImage)}
              className="bg-echurch-500 hover:bg-echurch-600 disabled:opacity-50 flex-shrink-0"
            >
              {sending || uploading ? (

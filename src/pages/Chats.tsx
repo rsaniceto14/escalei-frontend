@@ -152,7 +152,7 @@ export default function Chats() {
   };
 
   const sendMessage = async () => {
-    if ((!message.trim() && !selectedImage) || !activeChat || sending) return;
+    if ((!message?.trim() && !selectedImage) || !activeChat || sending) return;
 
     try {
       setSending(true);
@@ -160,7 +160,7 @@ export default function Chats() {
       // Show message optimistically
       const tempImageUrl = imagePreview; // Use preview URL temporarily
       const newMessage = {
-        content: message.trim() || " ",
+        content: message?.trim() || " ",
         image_path: tempImageUrl || undefined,
         sent_at: new Date().toISOString(),
         user_name: user.name,
@@ -179,7 +179,7 @@ export default function Chats() {
         })
       );
 
-      const messageContent = message.trim();
+      const messageContent = message?.trim();
       const imageFile = selectedImage;
 
       // Clear input immediately
