@@ -217,7 +217,7 @@ export default function ChatDetail() {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <LoaderCircle size={48} className="mx-auto mb-4 text-echurch-500 opacity-50" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-echurch-600 mx-auto mb-4"></div>
           <p className="text-echurch-600">Loading chat...</p>
         </div>
       </div>
@@ -225,14 +225,14 @@ export default function ChatDetail() {
   }
 
   return (
-   <div className="h-full flex flex-col bg-gray-50 overflow-hidden">
-      {/* Chat Header */}
-      <div className="bg-gray-50 px-4 py-3 flex items-center gap-3 shadow-md sticky top-0 ">
+    <div className="h-[86dvh] flex flex-col bg-gray-50 overflow-hidden">
+    
+      {/* Header sticky */}
+      <div className="bg-white px-4 py-3 flex items-center gap-3 shadow-md sticky top-0 z-50">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => navigate("/chats")}
-          className="hover:bg-echurch-600"
         >
           <ArrowLeft size={20} />
         </Button>
@@ -244,18 +244,17 @@ export default function ChatDetail() {
         </div>
       </div>
 
-      {/* Messages */}
+      {/* Messages: único lugar que pode scrollar */}
       <div className="flex-1 overflow-y-auto space-y-3 p-4">
-         {chat.messages.length === 0 ? (
-           <div className="text-center text-echurch-500 mt-8">
-             <MessageCircle size={48} className="mx-auto mb-4 opacity-50" />
-             <p className="text-lg font-medium">Não há mensagens nesse bate papo</p>
-             <p className="text-sm">Inicie a conversa!</p>
-           </div>
+        {chat.messages.length === 0 ? (
+          <div className="text-center text-echurch-500 mt-8">
+            <MessageCircle size={48} className="mx-auto mb-4 opacity-50" />
+            <p className="text-lg font-medium">Não há mensagens nesse bate papo</p>
+            <p className="text-sm">Inicie a conversa!</p>
+          </div>
         ) : (
           chat.messages.map((msg, idx) => {
             const isMyMessage = msg.user_name === user.name || msg.user_name === "Eu";
-            
             return (
               <div
                 key={idx}
@@ -269,28 +268,28 @@ export default function ChatDetail() {
                   }`}
                 >
                   {!isMyMessage && (
-                    <p className="text-xs font-semibold mb-1 opacity-75">
-                      {msg.user_name}
-                    </p>
+                    <p className="text-xs font-semibold mb-1 opacity-75">{msg.user_name}</p>
                   )}
-                   {msg.image_path && (
-                     <img 
-                       src={msg.image_path} 
-                       alt="Message attachment" 
-                       className="max-w-full rounded-lg mb-2 cursor-pointer hover:opacity-90"
-                       onClick={() => window.open(msg.image_path, '_blank')}
-                     />
-                   )}
-                   {msg.content?.trim() && (
-                     <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
-                   )}
-                   <p
-                     className={`text-xs mt-1 ${
-                       isMyMessage ? "text-echurch-100" : "text-gray-500"
-                     }`}
-                   >
-                     {msg.sent_at}
-                   </p>
+                  {msg.image_path && (
+                    <img
+                      src={msg.image_path}
+                      alt=""
+                      className="max-w-full rounded-lg mb-2 cursor-pointer hover:opacity-90"
+                      onClick={() => window.open(msg.image_path, "_blank")}
+                    />
+                  )}
+
+                  {msg.content?.trim() && (
+                    <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                  )}
+
+                  <p
+                    className={`text-xs mt-1 ${
+                      isMyMessage ? "text-echurch-100" : "text-gray-500"
+                    }`}
+                  >
+                    {msg.sent_at}
+                  </p>
                 </div>
               </div>
             );
@@ -299,63 +298,57 @@ export default function ChatDetail() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-       <div className="bg-white border-t px-4 py-3 shadow-lg sticky bottom-0 z-30">
-         {imagePreview && (
-           <div className="mb-2 relative inline-block">
-             <img 
-               src={imagePreview} 
-               alt="Preview" 
-               className="max-h-24 rounded-lg"
-             />
-             <Button
-               size="icon"
-               variant="destructive"
-               className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-               onClick={clearImage}
-             >
-               <X size={14} />
-             </Button>
-           </div>
-         )}
-         <div className="flex gap-2 w-full">
-           <input
-             ref={fileInputRef}
-             type="file"
-             accept="image/*"
-             onChange={handleImageSelect}
-             className="hidden"
-           />
-           <Button
-             variant="outline"
-             size="icon"
-             onClick={() => fileInputRef.current?.click()}
-             disabled={sending || uploading}
-             className="border-echurch-200 hover:bg-echurch-50 flex-shrink-0"
-           >
-             <ImageIcon size={18} className="text-echurch-500" />
-           </Button>
-           <Input
-             placeholder="Type your message..."
-             value={message}
-             onChange={(e) => setMessage(e.target.value)}
-             onKeyPress={handleKeyPress}
-             disabled={sending || uploading}
-             className="flex-1 border-echurch-200 focus:border-echurch-500"
-           />
-           <Button
-             onClick={sendMessage}
-             disabled={sending || uploading || (!message?.trim() && !selectedImage)}
-             className="bg-echurch-500 hover:bg-echurch-600 disabled:opacity-50 flex-shrink-0"
-           >
-             {sending || uploading ? (
-               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-             ) : (
-               <Send size={18} />
-             )}
-           </Button>
-         </div>
-       </div>
+      {/* Input sticky */}
+      <div className="bg-white border-t px-4 py-3 shadow-t-xl sticky bottom-0 z-50">
+        {imagePreview && (
+          <div className="mb-2 relative inline-block">
+            <img src={imagePreview} className="max-h-24 rounded-lg" />
+            <Button
+              size="icon"
+              variant="destructive"
+              className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+              onClick={clearImage}
+            >
+              <X size={14} />
+            </Button>
+          </div>
+        )}
+
+        <div className="flex gap-2 w-full">
+          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={sending || uploading}
+            className="border-echurch-200 hover:bg-echurch-50"
+          >
+            <ImageIcon size={18} className="text-echurch-500" />
+          </Button>
+
+          <Input
+            placeholder="Digite sua mensagem..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            disabled={sending || uploading}
+            className="flex-1 border-echurch-200 focus:border-echurch-500"
+          />
+
+          <Button
+            onClick={sendMessage}
+            disabled={sending || uploading || (!message?.trim() && !selectedImage)}
+            className="bg-echurch-500 hover:bg-echurch-600 disabled:opacity-50"
+          >
+            {sending || uploading ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+            ) : (
+              <Send size={18} />
+            )}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

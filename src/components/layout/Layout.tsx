@@ -22,9 +22,8 @@ export default function Layout({ children, disableMainPadding = false  }: { chil
     );
   }
 
-  return (
-    <SidebarProvider>
-      {isMobile ? (
+  return isMobile ? 
+       (
         // ================= MOBILE =================
         <div className="w-full h-screen flex flex-col bg-echurch-50">
           {/* HEADER */}
@@ -37,7 +36,7 @@ export default function Layout({ children, disableMainPadding = false  }: { chil
   
           {/* MAIN */}
           <main
-            className={`flex-1 overflow-hidden bg-echurch-50 ${
+            className={`flex-1 bg-echurch-50 ${
               disableMainPadding ? "" : "px-2 sm:px-4 py-4 lg:py-8"
             }`}
           >                   
@@ -56,28 +55,29 @@ export default function Layout({ children, disableMainPadding = false  }: { chil
         </div>
       ) : (
         // ================= DESKTOP =================
-        <div className="min-h-screen flex w-full bg-echurch-50">
-          {/* Sidebar */}
-          <AppSidebar  />
-  
-          <div className="flex-1 flex flex-col">
-            {/* HEADER */}
-            <header
-              className="flex items-center justify-between p-4 bg-white bg-opacity-95 shadow-sm border-b"
-            > 
-              <div className="flex items-center gap-2">
-                <SidebarTrigger />
-              </div>
-            </header>
-  
-            {/* MAIN */}
-            <main className="flex-1 px-2 sm:px-4 lg:px-12 py-4 lg:py-8 bg-echurch-50">
-              {children}
-            </main>
-            
+        <SidebarProvider>
+
+          <div className="min-h-screen flex w-full bg-echurch-50">
+            {/* Sidebar */}
+            <AppSidebar  />
+    
+            <div className="flex-1 flex flex-col">
+              {/* HEADER */}
+              <header
+                className="flex items-center justify-between p-4 bg-white bg-opacity-95 shadow-sm border-b"
+              > 
+                <div className="flex items-center gap-2">
+                  <SidebarTrigger />
+                </div>
+              </header>
+    
+              {/* MAIN */}
+              <main className="flex-1 px-2 sm:px-4 lg:px-12 py-4 lg:py-8 bg-echurch-50">
+                {children}
+              </main>
+              
+            </div>
           </div>
-        </div>
-      )}
-    </SidebarProvider>
-  );
+        </SidebarProvider>
+      );
 }
