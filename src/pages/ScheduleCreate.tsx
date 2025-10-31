@@ -95,7 +95,7 @@ export default function ScheduleCreate() {
     }
 
     // Chama o handleSubmit do hook com o callback de sucesso
-    await handleSubmit(user.id, () => {
+    await handleSubmit(Number(user.id), () => {
       navigate('/schedules');
     });
   }

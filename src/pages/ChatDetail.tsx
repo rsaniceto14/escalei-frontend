@@ -57,7 +57,7 @@ export default function ChatDetail() {
       // Get all chats and find the specific one
       const response = await chatService.getChatById(
         Number(chatId),
-        user.id
+        Number(user.id)
       );
       console.log(response);
       if (!response) {

@@ -9,8 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { musicService, type Song, type CreateSongData } from "@/api/services/musicService";
-import { spotifyService, type SpotifyTrack } from "@/api/services/spotifyService";
+import { musicService } from "@/api/services/musicService";
+import { spotifyService } from "@/api/services/spotifyService";
+import { Song, CreateSongData, SpotifyTrack } from "@/api/types";
 
 type Arquivo = {
   nome: string;

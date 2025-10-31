@@ -5,10 +5,14 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useSafeArea } from "@/hooks/useSafeArea";
 import { MobileBottomNav } from "../sidebar/MobileBottomNav";
 import { MobileTopNav } from "../sidebar/MobileTopNav";
+import { Greeting } from "../common/Greeting";
+import { useLocation } from "react-router-dom";
 
 export default function Layout({ children, disableMainPadding = false  }: { children: ReactNode, disableMainPadding?: boolean  }) {
   const isMobile = useIsMobile();
   const { getSafeAreaStyle, isLoading } = useSafeArea();
+  const location = useLocation();
+  const isHomePage = location.pathname === "/";
 
   // Show loading state while safe area is being initialized
   if (isLoading) {
@@ -69,6 +73,11 @@ export default function Layout({ children, disableMainPadding = false  }: { chil
                 <div className="flex items-center gap-2">
                   <SidebarTrigger />
                 </div>
+                {isHomePage && (
+                  <div className="flex-1 ml-6">
+                    <Greeting />
+                  </div>
+                )}
               </header>
     
               {/* MAIN */}

@@ -1,7 +1,6 @@
 
 import { CheckCircle, AlertCircle } from "lucide-react";
-import { Greeting } from "@/components/common/Greeting";
-import { WelcomeSection } from "@/components/dashboard/WelcomeSection";
+import { StatementSection } from "@/components/dashboard/StatementSection";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { ScaleCard } from "@/components/dashboard/ScaleCard";
 import { ActionButtons } from "@/components/dashboard/ActionButtons";
@@ -12,13 +11,8 @@ export default function Index() {
 
   return (
     <div className="space-y-8">
-      {/* Greeting apenas para esta página */}
-      <div className="mb-2">
-        <Greeting />
-      </div>
-
-      {/* Welcome Section */}
-      <WelcomeSection />
+      {/* Statement Section */}
+      <StatementSection />
 
       {/* Quick Actions */}
       <QuickActions />
