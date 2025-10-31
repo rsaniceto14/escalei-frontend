@@ -34,8 +34,8 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     toast({
-        title: "Erro",
-        description: error.response.data.error,
+        title: error.response.data.error.code,
+        description: error.response.data.error.message,
         variant: "destructive",
       });
     return Promise.reject(error.response.data.error);
