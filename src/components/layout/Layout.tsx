@@ -74,11 +74,9 @@ export default function Layout({ children, disableMainPadding = false  }: { chil
                 <div className="flex items-center gap-2">
                   <SidebarTrigger />
                 </div>
-                {isHomePage && (
-                  <div className="flex-1 ml-6">
-                    <Greeting />
-                  </div>
-                )}
+                <div className="flex-1 ml-6">
+                  <Greeting />
+                </div>
               </header>
     
               {/* MAIN */}
