@@ -6,9 +6,9 @@ import { Calendar, Clock, Music, User } from "lucide-react";
 export function QuickActions() {
   const actions = [
     {
-      title: "Nova Escala",
+      title: "Ver Escalas",
       icon: Calendar,
-      path: "/schedules/create"
+      path: "/schedules"
     },
     {
       title: "Disponibilidade", 

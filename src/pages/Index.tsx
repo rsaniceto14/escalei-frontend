@@ -3,7 +3,6 @@ import { CheckCircle, AlertCircle } from "lucide-react";
 import { Comunicados } from "@/components/dashboard/Comunicados";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { ScaleCard } from "@/components/dashboard/ScaleCard";
-import { ActionButtons } from "@/components/dashboard/ActionButtons";
 import { useScalesData } from "@/hooks/useScalesData";
 
 export default function Index() {
@@ -37,9 +36,6 @@ export default function Index() {
           emptyDescription="Você está em dia com suas escalas"
         />
       </div>
-
-      {/* Action Buttons */}
-      <ActionButtons />
     </div>
   );
 }
