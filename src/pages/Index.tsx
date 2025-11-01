@@ -1,6 +1,6 @@
 
 import { CheckCircle, AlertCircle } from "lucide-react";
-import { Comunicados } from "@/components/dashboard/Comunicados";
+import { Handouts } from "@/components/dashboard/Handouts";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { ScaleCard } from "@/components/dashboard/ScaleCard";
 import { useScalesData } from "@/hooks/useScalesData";
@@ -10,8 +10,8 @@ export default function Index() {
 
   return (
     <div className="space-y-8">
-      {/* Comunicados Section */}
-      <Comunicados />
+      {/* Handouts Section */}
+      <Handouts />
 
       {/* Quick Actions */}
       <QuickActions />

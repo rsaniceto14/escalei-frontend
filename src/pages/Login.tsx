@@ -34,7 +34,7 @@ export default function Login() {
 
     try {
       let res = await authService.login({ email, password: senha });
-      console.log(res)
+
       // Use context login method
       login(res.data.access_token, {
         id: res.data.user.id,
