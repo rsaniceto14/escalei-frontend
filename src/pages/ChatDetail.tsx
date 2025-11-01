@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { chatService } from "@/api/services/chatService";
 import { useToast } from "@/hooks/use-toast";
 import { Capacitor } from "@capacitor/core";
+import { useSafeArea } from "@/hooks/useSafeArea";
 
 export default function ChatDetail() {
   const { chatId } = useParams<{ chatId: string }>();
@@ -24,6 +25,7 @@ export default function ChatDetail() {
   const [uploading, setUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { safeAreaInsets } = useSafeArea();
 
   // Load on mount
   useEffect(() => {
@@ -225,10 +227,13 @@ export default function ChatDetail() {
   }
 
   return (
-    <div className="h-[86dvh] flex flex-col bg-gray-50 overflow-hidden">
+    <div className="h-full flex flex-col bg-gray-50">
     
-      {/* Header sticky */}
-      <div className="bg-white px-4 py-3 flex items-center gap-3 shadow-md sticky top-0 z-50">
+      {/* Header */}
+      <div 
+        className="bg-white px-4 py-3 flex items-center gap-3 shadow-md flex-shrink-0"
+        style={{ paddingTop: `calc(12px + ${safeAreaInsets.top}px)` }}
+      >
         <Button
           variant="ghost"
           size="icon"
@@ -244,7 +249,7 @@ export default function ChatDetail() {
         </div>
       </div>
 
-      {/* Messages: único lugar que pode scrollar */}
+      {/* Messages - scrollable area */}
       <div className="flex-1 overflow-y-auto space-y-3 p-4">
         {chat.messages.length === 0 ? (
           <div className="text-center text-echurch-500 mt-8">
@@ -298,8 +303,11 @@ export default function ChatDetail() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input sticky */}
-      <div className="bg-white border-t px-4 py-3 shadow-t-xl sticky bottom-0 z-50">
+      {/* Input - fixed at bottom with spacing for MobileBottomNav */}
+      <div 
+        className="bg-white border-t px-4 py-3 shadow-t-xl flex-shrink-0"
+        style={{ marginBottom: `${72 + safeAreaInsets.bottom}px` }}
+      >
         {imagePreview && (
           <div className="mb-2 relative inline-block">
             <img src={imagePreview} className="max-h-24 rounded-lg" />

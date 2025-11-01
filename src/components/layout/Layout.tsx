@@ -13,6 +13,7 @@ export default function Layout({ children, disableMainPadding = false  }: { chil
   const { getSafeAreaStyle, isLoading } = useSafeArea();
   const location = useLocation();
   const isHomePage = location.pathname === "/";
+  const isChatDetail = location.pathname.startsWith('/chats/') && location.pathname !== '/chats';
 
   // Show loading state while safe area is being initialized
   if (isLoading) {
@@ -42,8 +43,8 @@ export default function Layout({ children, disableMainPadding = false  }: { chil
           <main
             className={`flex-1 bg-echurch-50 ${
               disableMainPadding ? "" : "px-2 sm:px-4 py-4 lg:py-8"
-            } ${isMobile ? "pb-20" : ""}`}
-          >                   
+            } ${isMobile && !isChatDetail ? "pb-20" : ""} ${isChatDetail ? "overflow-hidden" : ""}`}
+          >
             {children}
           </main>
   
