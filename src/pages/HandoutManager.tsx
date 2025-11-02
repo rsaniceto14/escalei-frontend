@@ -55,7 +55,7 @@ export const HandoutManager: React.FC = () => {
     const fetchHandouts = async () => {
         try {
             setLoading(true);
-            const data = await handoutService.getActive();
+            const data = await handoutService.getAll();
             setHandouts(data);
         } catch {
             setError("Erro ao carregar comunicados.");
