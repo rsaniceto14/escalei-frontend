@@ -68,7 +68,15 @@ export const HandoutManager: React.FC = () => {
         e.preventDefault();
         setSubmitting(true);
         try {
-            await handoutService.create(formData);
+            // Prepare data - exclude area_id if it's 0 (all areas)
+            const submitData = { ...formData };
+            if (submitData.area_id === 0) {
+                delete submitData.area_id;
+            }
+            
+            await handoutService.create(submitData);
+            
+            // Reset form data
             setFormData({
                 title: "",
                 description: "",
@@ -80,6 +88,13 @@ export const HandoutManager: React.FC = () => {
                 link_url: "",
                 activate: false,
             });
+            
+            // Reset date/time state
+            setStartDate(undefined);
+            setEndDate(undefined);
+            setStartTime('');
+            setEndTime('');
+            
             fetchHandouts();
         } catch (err: any) {
             alert("Erro ao criar comunicado.");
