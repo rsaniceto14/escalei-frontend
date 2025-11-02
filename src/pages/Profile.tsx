@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { User, Loader2 } from "lucide-react";
+import { User, Loader2, MessageSquareWarning } from "lucide-react";
 import { toast } from "sonner";
 import { userService } from "@/api/services/userService";
 import { areaService } from "@/api/services/areaService";
@@ -106,7 +106,10 @@ export default function Profile() {
             className="w-full"
             size="lg"
             onClick={() => { navigate("/handouts") }}
-          >Gerenciar comunicados</Button>
+          >
+            <MessageSquareWarning className="w-5 h-5" />
+            Gerenciar comunicados
+          </Button>
           )}
 
           <PermissionsCard 

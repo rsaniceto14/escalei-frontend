@@ -19,7 +19,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ExternalLink, CalendarIcon } from "lucide-react";
+import { ArrowLeft, ExternalLink, CalendarIcon, MessageSquareWarning } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { areaService } from "@/api";
@@ -188,6 +188,7 @@ export const HandoutManager: React.FC = () => {
                     className="pl-0"
                 >
                     <ArrowLeft size={80} />
+                    <MessageSquareWarning className="w-6 h-6" />
                     <CardTitle>Gerenciar Comunicados</CardTitle>
                 </Button>
             </div>
