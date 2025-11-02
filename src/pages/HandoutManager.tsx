@@ -28,6 +28,8 @@ export const HandoutManager: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const [userAreas, setUserAreas] = useState<any[]>([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6;
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState<any>({
@@ -276,41 +278,102 @@ export const HandoutManager: React.FC = () => {
                 </CardContent>
             </Card>
 
-            <div className="space-y-3">
-                {handouts.map((h) => (
-                    <Card key={h.id}>
-                        <CardHeader>
-                            <CardTitle>{h.title}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                            <p>{h.description}</p>
-                            <p className="text-sm text-muted-foreground">
-                                Status: {h.status} | Prioridade: {h.priority}
-                            </p>
-                            {h.link_url && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="p-1 h-7"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        window.open(h.link_url, "_blank");
-                                    }}
-                                    title={h.link_name}
-                                    >
-                                    <ExternalLink className="w-4 h-4" />
-                                </Button>
-                            )}
-                            <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => handleDelete(h.id)}
-                            >
-                                Deletar
-                            </Button>
-                        </CardContent>
-                    </Card>
-                ))}
+            <div className="space-y-6">
+                <h3 className="text-lg font-semibold">Comunicados Criados</h3>
+                
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {handouts
+                        .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                        .map((h) => (
+                            <Card key={h.id} className="overflow-hidden">
+                                {h.image_url && (
+                                    <div className="h-40 bg-muted">
+                                        <img
+                                            src={h.image_url}
+                                            alt={h.title}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                )}
+                                <CardHeader className="pb-3">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <CardTitle className="text-base line-clamp-2">{h.title}</CardTitle>
+                                        {h.priority === "high" && (
+                                            <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded-full whitespace-nowrap">
+                                                Alta
+                                            </span>
+                                        )}
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="space-y-3">
+                                    <p className="text-sm text-muted-foreground line-clamp-3">
+                                        {h.description}
+                                    </p>
+                                    
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                        <span className="px-2 py-1 bg-muted rounded">
+                                            {h.status === "A" ? "Ativo" : h.status === "P" ? "Pendente" : "Inativo"}
+                                        </span>
+                                        {h.start_date && (
+                                            <span>Início: {new Date(h.start_date).toLocaleDateString()}</span>
+                                        )}
+                                    </div>
+
+                                    <div className="flex items-center gap-2 pt-2">
+                                        {h.link_url && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => window.open(h.link_url, "_blank")}
+                                                className="flex-1"
+                                            >
+                                                <ExternalLink className="w-4 h-4 mr-1" />
+                                                {h.link_name || "Link"}
+                                            </Button>
+                                        )}
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={() => handleDelete(h.id)}
+                                            className={h.link_url ? "" : "flex-1"}
+                                        >
+                                            Deletar
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                </div>
+
+                {handouts.length > itemsPerPage && (
+                    <div className="flex justify-center gap-2 pt-4">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                        >
+                            Anterior
+                        </Button>
+                        <span className="px-4 py-2 text-sm">
+                            Página {currentPage} de {Math.ceil(handouts.length / itemsPerPage)}
+                        </span>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(p => Math.min(Math.ceil(handouts.length / itemsPerPage), p + 1))}
+                            disabled={currentPage >= Math.ceil(handouts.length / itemsPerPage)}
+                        >
+                            Próxima
+                        </Button>
+                    </div>
+                )}
+
+                {handouts.length === 0 && (
+                    <p className="text-center text-muted-foreground py-8">
+                        Nenhum comunicado criado ainda.
+                    </p>
+                )}
             </div>
         </div>
     );

@@ -36,7 +36,7 @@ export function AppSidebar() {
       return user.permissions.read_area;
     }
     if (item.url === "/handouts") {
-      return user.permissions.manage_handout;
+      return user.permissions.manage_handouts;
     }
     return true;
   });
