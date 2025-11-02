@@ -74,7 +74,10 @@ export function Handouts() {
                   >
                     {/* Optional Image */}
                     {comunicado.image_url && (
-                      <div className="w-full md:w-1/3  md:h-64">
+                      <div 
+                        className="w-full md:w-1/3 md:h-64 cursor-pointer transition-transform hover:scale-[1.02]"
+                        onClick={() => window.open(comunicado.image_url, "_blank")}
+                      >
                         <img
                           src={comunicado.image_url}
                           alt={comunicado.title}

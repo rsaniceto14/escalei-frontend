@@ -8,6 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardTitle, CardHeader } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { TimePicker } from "@/components/ui/time-picker";
 import {
     Select,
     SelectContent,
@@ -16,10 +19,10 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ExternalLink } from "lucide-react";
-import { set } from "date-fns";
+import { ArrowLeft, ExternalLink, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { areaService } from "@/api";
-import { Area } from "recharts";
 
 export const HandoutManager: React.FC = () => {
     const { user } = useAuth();
@@ -31,6 +34,10 @@ export const HandoutManager: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 6;
     const navigate = useNavigate();
+    const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+    const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+    const [startTime, setStartTime] = useState('');
+    const [endTime, setEndTime] = useState('');
 
     const [formData, setFormData] = useState<any>({
         title: "",
@@ -97,6 +104,53 @@ export const HandoutManager: React.FC = () => {
         setUserAreas(data);
     };
 
+    const handleStartDateChange = (date: Date | undefined) => {
+        setStartDate(date);
+        if (date && startTime) {
+            const [hours, minutes] = startTime.split(':');
+            const combinedDateTime = new Date(date);
+            combinedDateTime.setHours(parseInt(hours), parseInt(minutes));
+            setFormData({ ...formData, start_date: combinedDateTime.toISOString() });
+        } else if (date) {
+            const combinedDateTime = new Date(date);
+            combinedDateTime.setHours(0, 0, 0);
+            setFormData({ ...formData, start_date: combinedDateTime.toISOString() });
+        }
+    };
+
+    const handleEndDateChange = (date: Date | undefined) => {
+        setEndDate(date);
+        if (date && endTime) {
+            const [hours, minutes] = endTime.split(':');
+            const combinedDateTime = new Date(date);
+            combinedDateTime.setHours(parseInt(hours), parseInt(minutes));
+            setFormData({ ...formData, end_date: combinedDateTime.toISOString() });
+        } else if (date) {
+            const combinedDateTime = new Date(date);
+            combinedDateTime.setHours(23, 59, 59);
+            setFormData({ ...formData, end_date: combinedDateTime.toISOString() });
+        }
+    };
+
+    const handleStartTimeChange = (time: string) => {
+        setStartTime(time);
+        if (startDate && time) {
+            const [hours, minutes] = time.split(':');
+            const combinedDateTime = new Date(startDate);
+            combinedDateTime.setHours(parseInt(hours), parseInt(minutes));
+            setFormData({ ...formData, start_date: combinedDateTime.toISOString() });
+        }
+    };
+
+    const handleEndTimeChange = (time: string) => {
+        setEndTime(time);
+        if (endDate && time) {
+            const [hours, minutes] = time.split(':');
+            const combinedDateTime = new Date(endDate);
+            combinedDateTime.setHours(parseInt(hours), parseInt(minutes));
+            setFormData({ ...formData, end_date: combinedDateTime.toISOString() });
+        }
+    };
 
     useEffect(() => {
         fetchData();
@@ -207,28 +261,68 @@ export const HandoutManager: React.FC = () => {
                         </div>
 
                         <div className="grid md:grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="start_date">Data de Início</Label>
-                                <Input
-                                    id="start_date"
-                                    type="date"
-                                    value={formData.start_date}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, start_date: e.target.value })
-                                    }
-                                    disabled={formData.activate}
-                                />
+                            <div className="space-y-2">
+                                <Label htmlFor="start_date">Data e Hora de Início</Label>
+                                <div className="flex gap-3 items-start">
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                className={`flex-1 justify-start text-left font-normal ${!startDate ? 'text-muted-foreground' : ''}`}
+                                                disabled={formData.activate}
+                                            >
+                                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                                {startDate ? format(startDate, 'dd/MM/yyyy', { locale: ptBR }) : 'Selecionar data'}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0" align="start">
+                                            <Calendar
+                                                mode="single"
+                                                selected={startDate}
+                                                onSelect={handleStartDateChange}
+                                                disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0)) || formData.activate}
+                                                initialFocus
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                    <TimePicker
+                                        value={startTime}
+                                        onChange={handleStartTimeChange}
+                                        disabled={formData.activate}
+                                    />
+                                </div>
                             </div>
-                            <div>
-                                <Label htmlFor="end_date">Data de Término</Label>
-                                <Input
-                                    id="end_date"
-                                    type="date"
-                                    value={formData.end_date}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, end_date: e.target.value })
-                                    }
-                                />
+                            <div className="space-y-2">
+                                <Label htmlFor="end_date">Data e Hora de Término</Label>
+                                <div className="flex gap-3 items-start">
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                className={`flex-1 justify-start text-left font-normal ${!endDate ? 'text-muted-foreground' : ''}`}
+                                            >
+                                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                                {endDate ? format(endDate, 'dd/MM/yyyy', { locale: ptBR }) : 'Selecionar data'}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0" align="start">
+                                            <Calendar
+                                                mode="single"
+                                                selected={endDate}
+                                                onSelect={handleEndDateChange}
+                                                disabled={(date) => {
+                                                    const today = new Date(new Date().setHours(0, 0, 0, 0));
+                                                    return date < today || (startDate && date < startDate);
+                                                }}
+                                                initialFocus
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                    <TimePicker
+                                        value={endTime}
+                                        onChange={handleEndTimeChange}
+                                    />
+                                </div>
                             </div>
                         </div>
 
