@@ -10,52 +10,11 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { handoutService } from "@/api/services/handoutService";
+import { Handout } from "@/api/handout";
 
-// 🧱 Mock data
-const comunicados = [
-  {
-    id: 1,
-    title: "Ensaio Geral - Domingo",
-    desc: "Ensaio geral marcado para domingo às 15h. Presença obrigatória para todos os músicos.",
-    publish_date: "2025-10-29T15:00:00Z",
-    priority: "high",
-    link_name: "Ver detalhes",
-    link_url: "/ensaio",
-    image_url:
-      "https://media.istockphoto.com/id/814423752/photo/eye-of-model-with-colorful-art-make-up-close-up.jpg?s=612x612&w=0&k=20&c=l15OdMWjgCKycMMShP8UK94ELVlEGvt7GmB_esHWPYE=",
-  },
-  {
-    id: 2,
-    title: "Nova Música Adicionada",
-    desc: "A música 'Rompendo em Fé' foi adicionada ao repertório deste mês.",
-    publish_date: "2025-10-30T10:00:00Z",
-    priority: "normal",
-    link_name: "Ouvir música",
-    link_url: "/repertorio",
-  },
-  {
-    id: 3,
-    title: "Atualização de Horários",
-    desc: "Os horários das escalas foram atualizados. Verifique sua disponibilidade.",
-    publish_date: "2025-10-27T09:00:00Z",
-    priority: "normal",
-    link_name: "Ver escalas",
-    link_url: "/escalas",
-  },
-  {
-    id: 4,
-    title: "Culto Especial - Sábado",
-    desc: "Culto especial no sábado às 19h. Chegar 30 minutos antes.",
-    publish_date: "2025-10-31T10:00:00Z",
-    priority: "high",
-    link_name: "Mais informações",
-    link_url: "/eventos",
-    image_url:
-      "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800",
-  },
-];
-
-// 🕓 Helper to calculate relative time
+// Helper to calculate relative time
 function timeAgo(dateString: string) {
   const date = new Date(dateString);
   const now = new Date();
@@ -69,6 +28,24 @@ function timeAgo(dateString: string) {
 }
 
 export function Handouts() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [comunicados, setComunicados] = useState<Handout[]>([]);
+
+  useEffect(() => {
+    const handouts = async () => {
+      setIsLoading(true); 
+      try {
+        const data = await handoutService.getActive();
+        setComunicados(data);
+      } catch (error) {
+        console.error("Erro ao carregar comunicados:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    handouts();
+  }, []);
+ 
   return (
     <Card>
       <CardHeader>
@@ -95,18 +72,18 @@ export function Handouts() {
                         : "bg-white border-gray-200"
                     }`}
                   >
-                    {/* 🖼️ Optional Image */}
+                    {/* Optional Image */}
                     {comunicado.image_url && (
-                      <div className="w-full md:w-1/3">
+                      <div className="w-full md:w-1/3  md:h-64">
                         <img
                           src={comunicado.image_url}
                           alt={comunicado.title}
-                          className="rounded-md object-cover w-full h-40 md:h-full"
+                          className="rounded-md object-contain w-full h-40 md:h-full bg-gray-100"
                         />
                       </div>
                     )}
 
-                    {/* 🧾 Text Section */}
+                    {/* Text Section */}
                     <div className="flex flex-col justify-between w-full md:w-2/3">
                       <div>
                         <div className="flex items-start justify-between mb-2">
@@ -115,7 +92,7 @@ export function Handouts() {
                               {comunicado.title}
                             </h4>
                             <p className="text-xs text-muted-foreground">
-                              {timeAgo(comunicado.publish_date)}
+                              {timeAgo(comunicado.start_date)}
                             </p>
                           </div>
 
@@ -136,7 +113,7 @@ export function Handouts() {
                         </div>
 
                         <p className="text-sm text-muted-foreground">
-                          {comunicado.desc}
+                          {comunicado.description}
                         </p>
                       </div>
                     </div>
@@ -145,7 +122,7 @@ export function Handouts() {
               ))}
             </CarouselContent>
 
-            {/* ✅ Carousel navigation below content */}
+            {/* Carousel navigation below content */}
             <div className="flex justify-center gap-2 mt-4">
               <CarouselPrevious className="static translate-y-0 relative left-0" />
               <CarouselNext className="static translate-y-0 relative right-0" />

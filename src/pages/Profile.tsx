@@ -5,22 +5,21 @@ import { toast } from "sonner";
 import { userService } from "@/api/services/userService";
 import { areaService } from "@/api/services/areaService";
 import { UserProfile, Area } from "@/api/types";
-import { useAuth } from "@/context/AuthContext";
 import { UserInfoCard } from "@/components/profile/UserInfoCard";
 import { ChurchInfoCard } from "@/components/profile/ChurchInfoCard";
 import { PermissionsCard } from "@/components/profile/PermissionsCard";
 import { AdminSection } from "@/components/profile/AdminSection";
-import { PasswordResetCard } from "@/components/profile/PasswordResetCard";
 import { AccountActionsCard } from "@/components/profile/AccountActionsCard";
 import { StatusCard } from "@/components/profile/StatusCard";
 import { AdditionalInfoCard } from "@/components/profile/AdditionalInfoCard";
+import { useNavigate } from "react-router-dom";
 
 export default function Profile() {
-  const { user: authUser } = useAuth();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [areas, setAreas] = useState<Area[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchUserProfile();
@@ -102,6 +101,14 @@ export default function Profile() {
           
           <ChurchInfoCard user={user} />
           
+          { user.permissions.manage_handouts && (
+          <Button
+            className="w-full"
+            size="lg"
+            onClick={() => { navigate("/handouts") }}
+          >Gerenciar comunicados</Button>
+          )}
+
           <PermissionsCard 
             user={user} 
             onUserUpdate={handleUserUpdate}
@@ -110,11 +117,6 @@ export default function Profile() {
           {/* Admin Section - Only visible on mobile or for admin users */}
           <div className="lg:hidden">
             <AdminSection />
-          </div>
-          
-          {/* Password Reset - Mobile only */}
-          <div className="lg:hidden">
-            <PasswordResetCard />
           </div>
           
           {/* Account Actions - Mobile only */}
@@ -127,7 +129,6 @@ export default function Profile() {
         <div className="hidden lg:block space-y-6 min-w-0">
           <StatusCard user={user} />
           <AdditionalInfoCard user={user} />
-          <PasswordResetCard />
           <AccountActionsCard />
         </div>
       </div>

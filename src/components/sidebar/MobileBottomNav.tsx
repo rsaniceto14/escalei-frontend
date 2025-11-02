@@ -3,7 +3,7 @@ import { mobileItems } from "./navigation";
 
 export function MobileBottomNav() {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t z-50 flex justify-around py-3">
+    <nav className="bottom-0 left-0 right-0 bg-white border-t z-50 flex justify-around py-3">
       {mobileItems.map((item) => (
         <NavLink
           key={item.title}

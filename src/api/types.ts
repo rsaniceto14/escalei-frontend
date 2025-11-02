@@ -257,6 +257,7 @@ export interface UserProfile {
     update_chat: boolean;
     delete_chat: boolean;
     manage_users: boolean;
+    manage_handouts: boolean;
     manage_church_settings: boolean;
     manage_app_settings: boolean;
   };

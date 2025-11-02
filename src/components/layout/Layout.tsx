@@ -12,7 +12,6 @@ export default function Layout({ children, disableMainPadding = false  }: { chil
   const isMobile = useIsMobile();
   const { getSafeAreaStyle, isLoading } = useSafeArea();
   const location = useLocation();
-  const isHomePage = location.pathname === "/";
   const isChatDetail = location.pathname.startsWith('/chats/') && location.pathname !== '/chats';
 
   // Show loading state while safe area is being initialized

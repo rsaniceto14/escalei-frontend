@@ -8,6 +8,7 @@ import { Shield, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { permissionService } from "@/api/services/permissionService";
 import { UserProfile } from "@/api/types";
+import { Badge } from "../ui/badge";
 
 interface PermissionsCardProps {
   user: UserProfile;
@@ -114,12 +115,10 @@ export function PermissionsCard({ user, onUserUpdate }: PermissionsCardProps) {
             <Button variant="ghost" className="w-full justify-between p-0 h-auto">
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 <Shield className="w-5 h-5 flex-shrink-0" />
-                <div className="min-w-0">
-                  <CardTitle className="text-base">Permissões do Sistema</CardTitle>
-                  <div className="text-sm font-normal text-echurch-600">
-                    {activePermissions}/{totalPermissions} ativas
-                  </div>
-                </div>
+                <CardTitle className="text-base">Permissões do Sistema</CardTitle>
+                <Badge className="bg-yellow-100 text-red-800 text-xs">
+                  {activePermissions}/{totalPermissions} ativas
+                </Badge>
               </div>
               {isOpen ? (
                 <ChevronDown className="w-4 h-4 flex-shrink-0" />

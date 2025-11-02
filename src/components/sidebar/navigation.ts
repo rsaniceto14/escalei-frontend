@@ -6,10 +6,9 @@ import {
   MessageCircle,
   Music,
   User,
-  Settings,
   Shield,
   Mail,
-  Map,
+  MessageSquareWarning,
 } from "lucide-react";
 
 export const mainItems = [
@@ -35,5 +34,6 @@ export const configItems = [
 ];
 
 export const adminItems = [
+  { title: "Comunicados", url: "/handouts", icon: MessageSquareWarning },
   { title: "Administração", url: "/admin", icon: Shield },
 ];

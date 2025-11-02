@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import Layout from "./components/layout/Layout";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -29,147 +29,162 @@ import Admin from "./pages/Admin";
 import ScheduleDetails from "./pages/ScheduleDetails";
 import { AuthProvider } from "./context/AuthContext";
 import PrivateRoute from "./components/route/privateRoute";
+import { HandoutManager } from "./pages/HandoutManager";
+import { useAppListener } from "./hooks/useAppListener";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register-member" element={<RegisterMember />} />
-            <Route path="/register-church" element={<RegisterChurch />} />
-            <Route path="/request-reset" element={<PasswordRecover />} />
-            <Route path="/password-reset/:token" element={<PasswordReset />} />
-            
-            {/* Setup routes */}
-            <Route path="/church-setup" element={<ChurchSetup />} />
-           <Route path="/setup/areas" element={<AreasSetup />} />
-           <Route path="/setup/invites" element={<InvitesSetup />} />
-           <Route path="/setup/schedules" element={<SchedulesSetup />} />
-           <Route path="/setup/music" element={<MusicSetup />} />
-           <Route
-             path="/invites"
-             element={
-               <PrivateRoute>
-                 <Layout>
-                   <Invites />
-                 </Layout>
-               </PrivateRoute>
-             }
-           />
-            <Route
-              path="/home"
-              element={
-                <PrivateRoute>
-                  <Layout>
-                    <Index />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <PrivateRoute>
-                  <Layout>
-                    <Profile />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/schedules"
-              element={
-                <PrivateRoute>
-                  <Layout>
-                    <Schedules />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/schedules/:id"
-              element={
-                <PrivateRoute>
-                  <Layout>
-                    <ScheduleDetails />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/availability"
-              element={
-                <PrivateRoute>
-                  <Layout>
-                    <Availability />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/chats"
-              element={
-                <PrivateRoute>
-                  <Layout>
-                    <Chats />
-                  </Layout>
-                </PrivateRoute>
-              }
+const App = () => {
+  useAppListener(useNavigate());
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <AuthProvider>
+
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register-member" element={<RegisterMember />} />
+              <Route path="/register-church" element={<RegisterChurch />} />
+              <Route path="/request-reset" element={<PasswordRecover />} />
+              <Route path="/password-reset/:token" element={<PasswordReset />} />
+
+              {/* Setup routes */}
+              <Route path="/church-setup" element={<ChurchSetup />} />
+              <Route path="/setup/areas" element={<AreasSetup />} />
+              <Route path="/setup/invites" element={<InvitesSetup />} />
+              <Route path="/setup/schedules" element={<SchedulesSetup />} />
+              <Route path="/setup/music" element={<MusicSetup />} />
+              <Route
+                path="/invites"
+                element={
+                  <PrivateRoute>
+                    <Layout>
+                      <Invites />
+                    </Layout>
+                  </PrivateRoute>
+                }
               />
-            <Route
-              path="/chats/:chatId"
-              element={
-                <PrivateRoute>
-                  <Layout disableMainPadding={true}>
-                    <ChatDetail />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/musics"
-              element={
-                <PrivateRoute>
-                  <Layout>
-                    <Musics />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/schedules/create"
-              element={
-                <PrivateRoute>
-                  <Layout>
-                    <ScheduleCreate />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/admin"
-              element={
-                <PrivateRoute>
-                  <Layout>
-                    <Admin />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            {/* catch-all */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+              <Route
+                path="/home"
+                element={
+                  <PrivateRoute>
+                    <Layout>
+                      <Index />
+                    </Layout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <PrivateRoute>
+                    <Layout>
+                      <Profile />
+                    </Layout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/schedules"
+                element={
+                  <PrivateRoute>
+                    <Layout>
+                      <Schedules />
+                    </Layout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/schedules/:id"
+                element={
+                  <PrivateRoute>
+                    <Layout>
+                      <ScheduleDetails />
+                    </Layout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/availability"
+                element={
+                  <PrivateRoute>
+                    <Layout>
+                      <Availability />
+                    </Layout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/chats"
+                element={
+                  <PrivateRoute>
+                    <Layout>
+                      <Chats />
+                    </Layout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/chats/:chatId"
+                element={
+                  <PrivateRoute>
+                    <Layout disableMainPadding={true}>
+                      <ChatDetail />
+                    </Layout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/musics"
+                element={
+                  <PrivateRoute>
+                    <Layout>
+                      <Musics />
+                    </Layout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/schedules/create"
+                element={
+                  <PrivateRoute>
+                    <Layout>
+                      <ScheduleCreate />
+                    </Layout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/handouts"
+                element={
+                  <PrivateRoute>
+                    <Layout>
+                      <HandoutManager />
+                    </Layout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <PrivateRoute>
+                    <Layout>
+                      <Admin />
+                    </Layout>
+                  </PrivateRoute>
+                }
+              />
+              {/* catch-all */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  )
+};
 
 export default App;

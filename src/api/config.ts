@@ -33,6 +33,17 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error.response.status === 401) {
+      // Handle unauthorized access, e.g., redirect to login
+      window.location.href = '/login';
+      toast({
+          title: "Sessão expirada",
+          description: "Por favor, faça login novamente.",
+          variant: "destructive",
+        });
+      return;
+    }
+
     toast({
         title: error.response.data.error.code,
         description: error.response.data.error.message,
