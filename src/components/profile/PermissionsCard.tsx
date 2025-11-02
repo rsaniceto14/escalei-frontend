@@ -68,6 +68,7 @@ export function PermissionsCard({ user, onUserUpdate }: PermissionsCardProps) {
     {
       title: "Administração",
       permissions: [
+        { key: "manage_handouts", label: "Gerenciar comunicados" },
         { key: "manage_users", label: "Gerenciar Usuários" },
         { key: "manage_church_settings", label: "Configurações da Igreja" },
         { key: "manage_app_settings", label: "Configurações do Sistema" }

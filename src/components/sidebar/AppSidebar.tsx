@@ -31,7 +31,15 @@ export function AppSidebar() {
   const isAdmin = user.permissions.manage_users;
 
   // Filter main items based on permissions
-  const filteredMainItems = mainItems;
+  const filteredMainItems = mainItems.filter(item => {
+    if (item.url === "/areas") {
+      return user.permissions.read_area;
+    }
+    if (item.url === "/handouts") {
+      return user.permissions.manage_handout;
+    }
+    return true;
+  });
 
   const getNavCls = ({ isActive }: { isActive: boolean }) => {
     return `group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-echurch-100 hover:text-echurch-700 data-[active=true]:bg-echurch-100 data-[active=true]:text-echurch-700 ${
