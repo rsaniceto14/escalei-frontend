@@ -1,4 +1,4 @@
-# Escalei Management System
+# Escalei Management App
 
 A comprehensive church management application built with React, TypeScript, and modern web technologies. The app includes features for scale management, user availability tracking, and administrative functions.
 
