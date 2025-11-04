@@ -31,12 +31,14 @@ export default function Layout({ children, disableMainPadding = false  }: { chil
         // ================= MOBILE =================
         <div className="w-full h-screen flex flex-col bg-echurch-50">
           {/* HEADER */}
-          <header 
-            className="flex items-center px-4 py-2 bg-white shadow-sm border-b sticky top-0 z-30"
-            style={{ paddingTop: getSafeAreaStyle().paddingTop }}
-          > 
-            <MobileTopNav />
-          </header>
+          {!isChatDetail && (
+            <header 
+              className="flex items-center px-4 py-2 bg-white shadow-sm border-b sticky top-0 z-30"
+              style={{ paddingTop: getSafeAreaStyle().paddingTop }}
+            > 
+              <MobileTopNav />
+            </header>
+          )}
   
           {/* MAIN */}
           <main
@@ -48,14 +50,16 @@ export default function Layout({ children, disableMainPadding = false  }: { chil
           </main>
   
           {/* FOOTER MOBILE */}
-          <footer
-              className="bg-white border-t text-center sticky bottom-0 z-50"
-              style={{
-                paddingBottom: getSafeAreaStyle().paddingBottom,
-              }}
-            >
-            <MobileBottomNav />
-          </footer>
+          {!isChatDetail && (
+            <footer
+                className="bg-white border-t text-center sticky bottom-0 z-50"
+                style={{
+                  paddingBottom: getSafeAreaStyle().paddingBottom,
+                }}
+              >
+              <MobileBottomNav />
+            </footer>
+          )}
         </div>
       ) : (
         // ================= DESKTOP =================

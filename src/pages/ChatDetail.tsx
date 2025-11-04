@@ -305,8 +305,7 @@ export default function ChatDetail() {
 
       {/* Input - fixed at bottom with spacing for MobileBottomNav */}
       <div 
-        className="bg-white border-t px-4 py-3 shadow-t-xl flex-shrink-0"
-        style={{ marginBottom: `${72 + safeAreaInsets.bottom}px` }}
+        className="bg-white border-t px-4 py-3 shadow-t-xl flex-shrink-0 sticky bottom-0"
       >
         {imagePreview && (
           <div className="mb-2 relative inline-block">
