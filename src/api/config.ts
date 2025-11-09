@@ -5,7 +5,7 @@ import axios from 'axios';
 // export const API_BASE_URL = 'http://localhost:8000/api/v1'; //This only works for web
 // export const API_BASE_URL = 'http://192.168.164.18:8000/api/v1'; //This only works for Mobile
 // export const API_BASE_URL = 'https://e-church-backend.onrender.com/api/v1'; //To prod ;)
-// export const API_BASE_URL = 'https://accused-orca-startup-4-our-ef8e7c14.koyeb.app/api/v1'; //To prod ;)
+export const API_BASE_URL = 'https://accused-orca-startup-4-our-ef8e7c14.koyeb.app/api/v1'; //To prod ;)
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
