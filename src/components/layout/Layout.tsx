@@ -29,7 +29,7 @@ export default function Layout({ children, disableMainPadding = false  }: { chil
   return isMobile ? 
        (
         // ================= MOBILE =================
-        <div className="w-full h-screen flex flex-col bg-echurch-50 overflow-hidden">
+  <div className="w-full min-h-screen h-[100dvh] flex flex-col bg-echurch-50 overflow-hidden">
           {/* HEADER */}
           {!isChatDetail && (
             <header 
@@ -42,7 +42,7 @@ export default function Layout({ children, disableMainPadding = false  }: { chil
   
           {/* MAIN */}
           <main
-            className={`flex-1 bg-echurch-50 min-w-0 ${
+            className={`flex-1 min-h-0 bg-echurch-50 min-w-0 ${
               disableMainPadding ? "" : "px-2 sm:px-4 py-4 lg:py-8"
             } ${isMobile && !isChatDetail ? "pb-20" : ""} ${isChatDetail ? "overflow-hidden" : "overflow-y-auto"}`}
           >
