@@ -9,7 +9,7 @@ export default function Index() {
   const { escalasParticipa = [], escalasPendentes = [], loading, error } = useScalesData();
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 min-w-0 w-full">
       {/* Handouts Section */}
       <Handouts />
 

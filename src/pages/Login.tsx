@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -9,8 +9,10 @@ import { LoginTransition } from "@/components/common/LoginTransition";
 import { Eye, EyeOff, ArrowRight, MapPin } from "lucide-react";
 import { authService } from "../api/services/authService";
 import { useAuth } from "../context/AuthContext";
+import { toast } from "@/hooks/use-toast";
 
 export default function Login() {
+  const param = useSearchParams();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
@@ -20,6 +22,16 @@ export default function Login() {
 
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  useEffect(() => {
+    if (param[0].get("sessionExpired")) {
+      toast({
+        title: "Sessão expirada",
+        description: "Por favor, faça login novamente.",
+        variant: "destructive",
+      });
+    }
+  }, [param]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();

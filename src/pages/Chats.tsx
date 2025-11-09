@@ -36,7 +36,7 @@ export default function Chats() {
 
   const loadChats = async () => {
     try {
-      const response = await chatService.getChatsForUser(Number(user.id), user.areas.map((area: Area) => { return area.id }));
+      const response = await chatService.getChatsForUser(Number(user.id));
 
       // Convert messages object to array if needed
       const normalizedChats = response.map((chat: ChatWithMessages) => ({
@@ -167,17 +167,8 @@ export default function Chats() {
       };
 
       // Add to chat optimistically
-      setChats(prev =>
-        prev.map(chat => {
-          if (chat.chat.id === activeChat) {
-            return {
-              ...chat,
-              messages: [...chat.messages, newMessage]
-            };
-          }
-          return chat;
-        })
-      );
+      setActiveMessages(prev => [...prev, newMessage]);
+      scrollToBottom(true);
 
       const messageContent = message?.trim();
       const imageFile = selectedImage;
@@ -197,18 +188,12 @@ export default function Chats() {
 
       // Update the message with real image_path from server
       if (response.image_path) {
-        setChats(prev =>
-          prev.map(chat => {
-            if (chat.chat.id === activeChat) {
-              const messages = [...chat.messages];
-              const lastMessage = messages[messages.length - 1];
-              if (lastMessage && lastMessage.sent_at === newMessage.sent_at) {
-                lastMessage.image_path = response.image_path;
-                lastMessage.image_path = response.image_path;
-              }
-              return { ...chat, messages };
+        setActiveMessages(prev =>
+          prev.map(msg => {
+            if (msg.sent_at === newMessage.sent_at) {
+              return { ...msg, image_path: response.image_path };
             }
-            return chat;
+            return msg;
           })
         );
       }
@@ -241,7 +226,11 @@ export default function Chats() {
     }
   };
 
-  const scrollToBottom = () => {
+  const scrollToBottom = (immediately: boolean) => {
+    if (immediately) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+      return;
+    }
     setTimeout(() => {messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });}, 1500)
   };
 
@@ -287,7 +276,7 @@ export default function Chats() {
               <div className="flex items-center gap-2">
                 <h3 className="font-medium text-echurch-700">{chat.chat.name}</h3>
               </div>
-              <p className="text-sm text-echurch-600 truncate">
+              <p className="text-sm text-echurch-600 lineClamp2">
                 {(chat.messages[chat.messages.length - 1]?.content) ? chat.messages[chat.messages.length - 1]?.content : (chat.messages[chat.messages.length - 1]?.image_path ? "Photo" : "Sem mensagens ainda...")}
               </p>
             </div>

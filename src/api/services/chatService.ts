@@ -10,8 +10,8 @@ export interface SendMessageRequest {
 }
 
 export const chatService = {
-  async getChatsForUser(user_id: number, areas): Promise<any> {
-    const response = await apiClient.post<ApiResponse<ChatWithMessages>>("/chats/user/", {user_id, areas});
+  async getChatsForUser(user_id: number): Promise<any> {
+    const response = await apiClient.post<ApiResponse<ChatWithMessages>>("/chats/user/", {user_id});
     return response.data.data;
   },
 

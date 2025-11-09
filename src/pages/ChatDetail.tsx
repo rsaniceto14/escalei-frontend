@@ -42,10 +42,6 @@ export default function ChatDetail() {
     return () => clearInterval(interval);
   }, [chatId]);
 
-  useEffect(() => {
-    // Auto scroll to bottom when messages change
-    scrollToBottom();
-  }, [chat?.messages]);
 
   const scrollToBottom = () => {
     setTimeout(() => {messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });}, 1000)
@@ -142,6 +138,7 @@ export default function ChatDetail() {
         sent_at: new Date().toISOString().replace('T', ' ').replace(/\.\d+Z$/, ''),
         user_name: user.name,
       };
+      scrollToBottom();
 
       setChat(prev =>
         prev
@@ -169,7 +166,6 @@ export default function ChatDetail() {
       } as any);
 
       // Update the message with real image_url from server
-      console.log('updating')
       if (response.image_url) {
         setChat(prev => {
           if (!prev) return prev;

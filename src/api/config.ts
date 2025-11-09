@@ -5,7 +5,7 @@ import axios from 'axios';
 // export const API_BASE_URL = 'http://localhost:8000/api/v1'; //This only works for web
 // export const API_BASE_URL = 'http://192.168.164.18:8000/api/v1'; //This only works for Mobile
 // export const API_BASE_URL = 'https://e-church-backend.onrender.com/api/v1'; //To prod ;)
-export const API_BASE_URL = 'https://accused-orca-startup-4-our-ef8e7c14.koyeb.app/api/v1'; //To prod ;)
+// export const API_BASE_URL = 'https://accused-orca-startup-4-our-ef8e7c14.koyeb.app/api/v1'; //To prod ;)
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -33,14 +33,18 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (!error.response) {
+      toast({
+        title: "Network Error",
+        description: "Por favor, verifique sua conexão com a internet.",
+        variant: "destructive",
+      });
+      return Promise.reject(new Error("Erro de conexão de rede"));
+    }
+
     if (error.response.status === 401) {
       // Handle unauthorized access, e.g., redirect to login
-      window.location.href = '/login';
-      toast({
-          title: "Sessão expirada",
-          description: "Por favor, faça login novamente.",
-          variant: "destructive",
-        });
+      window.location.href = '/login?sessionExpired=true';
       return;
     }
 

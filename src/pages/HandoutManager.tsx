@@ -32,7 +32,7 @@ export const HandoutManager: React.FC = () => {
     const [submitting, setSubmitting] = useState(false);
     const [userAreas, setUserAreas] = useState<any[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 6;
+    const itemsPerPage = 9;
     const navigate = useNavigate();
     const [startDate, setStartDate] = useState<Date | undefined>(undefined);
     const [endDate, setEndDate] = useState<Date | undefined>(undefined);

@@ -29,7 +29,7 @@ export default function Layout({ children, disableMainPadding = false  }: { chil
   return isMobile ? 
        (
         // ================= MOBILE =================
-        <div className="w-full h-screen flex flex-col bg-echurch-50">
+        <div className="w-full h-screen flex flex-col bg-echurch-50 overflow-hidden">
           {/* HEADER */}
           {!isChatDetail && (
             <header 
@@ -42,9 +42,9 @@ export default function Layout({ children, disableMainPadding = false  }: { chil
   
           {/* MAIN */}
           <main
-            className={`flex-1 bg-echurch-50 ${
+            className={`flex-1 bg-echurch-50 min-w-0 ${
               disableMainPadding ? "" : "px-2 sm:px-4 py-4 lg:py-8"
-            } ${isMobile && !isChatDetail ? "pb-20" : ""} ${isChatDetail ? "overflow-hidden" : ""}`}
+            } ${isMobile && !isChatDetail ? "pb-20" : ""} ${isChatDetail ? "overflow-hidden" : "overflow-y-auto"}`}
           >
             {children}
           </main>
@@ -65,11 +65,11 @@ export default function Layout({ children, disableMainPadding = false  }: { chil
         // ================= DESKTOP =================
         <SidebarProvider>
 
-          <div className="min-h-screen flex w-full bg-echurch-50">
+          <div className="h-screen flex w-full overflow-hidden bg-echurch-50">
             {/* Sidebar */}
             <AppSidebar  />
     
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
               {/* HEADER */}
               <header
                 className="flex items-center justify-between p-4 bg-white bg-opacity-95 shadow-sm border-b"
@@ -83,7 +83,7 @@ export default function Layout({ children, disableMainPadding = false  }: { chil
               </header>
     
               {/* MAIN */}
-              <main className="flex-1 px-2 sm:px-4 lg:px-12 py-4 lg:py-8 bg-echurch-50">
+              <main className="flex-1 px-2 sm:px-4 lg:px-12 py-4 lg:py-8 bg-echurch-50 overflow-y-auto min-h-0 min-w-0">
                 {children}
               </main>
               

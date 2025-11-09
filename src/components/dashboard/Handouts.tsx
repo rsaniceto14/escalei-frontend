@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { handoutService } from "@/api/services/handoutService";
 import { Handout } from "@/api/handout";
+import ImageModal from "../ui/ImageModal";
 
 // Helper to calculate relative time
 function timeAgo(dateString: string) {
@@ -29,6 +30,8 @@ function timeAgo(dateString: string) {
 
 export function Handouts() {
   const [isLoading, setIsLoading] = useState(false);
+  const [showImage, setShowImage] = useState(false);
+  const [selectedHandout, setSelectedHandout] = useState(null);
   const [comunicados, setComunicados] = useState<Handout[]>([]);
 
   useEffect(() => {
@@ -61,12 +64,12 @@ export function Handouts() {
             Nenhum comunicado no momento
           </p>
         ) : (
-          <Carousel className="w-full">
+          <Carousel className="w-full overflow-hidden">
             <CarouselContent>
               {comunicados.map((comunicado) => (
                 <CarouselItem key={comunicado.id}>
                   <div
-                    className={`flex flex-col md:flex-row items-stretch gap-3 p-4 rounded-lg border shadow-sm transition-all duration-200 ${
+                    className={`flex flex-col md:flex-row items-between gap-3 p-4 rounded-lg border shadow-sm transition-all duration-200 max-h-[400px] md:max-h-[400px] min-w-0 ${
                       comunicado.priority === "high"
                         ? "bg-orange-50 border-orange-200"
                         : "bg-white border-gray-200"
@@ -75,22 +78,25 @@ export function Handouts() {
                     {/* Optional Image */}
                     {comunicado.image_url && (
                       <div 
-                        className="w-full md:w-1/3 md:h-64 cursor-pointer transition-transform hover:scale-[1.02]"
-                        onClick={() => window.open(comunicado.image_url, "_blank")}
+                        className="w-full md:w-1/3 md:h-64 cursor-pointer transition-transform hover:scale-[1.02] overflow-hidden flex-shrink-0"
+                        onClick={() => {
+                          setShowImage(true)
+                          setSelectedHandout(comunicado.id)
+                        }}
                       >
                         <img
                           src={comunicado.image_url}
                           alt={comunicado.title}
-                          className="rounded-md object-contain w-full h-40 md:h-full bg-gray-100"
+                          className="rounded-md object-contain w-full h-40 md:h-full max-h-full bg-gray-100"
                         />
                       </div>
                     )}
 
                     {/* Text Section */}
-                    <div className="flex flex-col justify-between w-full md:w-2/3">
-                      <div>
+                    <div className="flex flex-col justify-between w-full md:w-9/10">
+                      <div className=" min-w-0">
                         <div className="flex items-start justify-between mb-2">
-                          <div>
+                          <div className=" min-w-0">
                             <h4 className="font-semibold text-sm text-foreground">
                               {comunicado.title}
                             </h4>
@@ -103,7 +109,7 @@ export function Handouts() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="p-1 h-7"
+                              className="p-1 h-7 flex-shrink-0"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 window.open(comunicado.link_url, "_blank");
@@ -115,7 +121,7 @@ export function Handouts() {
                           )}
                         </div>
 
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-muted-foreground whitespace-normal break-words">
                           {comunicado.description}
                         </p>
                       </div>
@@ -133,6 +139,14 @@ export function Handouts() {
           </Carousel>
         )}
       </CardContent>
+      { showImage && (
+        <ImageModal
+          image_url={comunicados.filter(h => h.id === selectedHandout)[0]?.image_url || ""}
+          title={comunicados.filter(h => h.id === selectedHandout)[0]?.title || "Imagem do Comunicado"}
+          visible={showImage}
+          onClose={() => setShowImage(false)}
+        />
+      )}
     </Card>
   );
 }
