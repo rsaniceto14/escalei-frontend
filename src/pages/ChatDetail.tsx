@@ -9,18 +9,20 @@ import { chatService } from "@/api/services/chatService";
 import { useToast } from "@/hooks/use-toast";
 import { Capacitor } from "@capacitor/core";
 import { useSafeArea } from "@/hooks/useSafeArea";
+import ImageModal from "@/components/ui/imageModal";
 
 export default function ChatDetail() {
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  
+
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState<ChatWithMessages | null>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [showImage, setShowImage] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -29,7 +31,9 @@ export default function ChatDetail() {
 
   // Load on mount
   useEffect(() => {
-    loadChat(false);
+    const load = async () => { await loadChat(false); };
+    load();
+    scrollToBottom();
   }, []);
 
   // Pooling to get real time messages
@@ -44,12 +48,12 @@ export default function ChatDetail() {
 
 
   const scrollToBottom = () => {
-    setTimeout(() => {messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });}, 1000)
+    setTimeout(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, 1000)
   };
 
-  const loadChat = async (toShowLoading :boolean) => {
+  const loadChat = async (toShowLoading: boolean) => {
     if (!chatId) return;
-    
+
     try {
       setLoading(toShowLoading);
       // Get all chats and find the specific one
@@ -67,7 +71,7 @@ export default function ChatDetail() {
         navigate("/chats");
         return;
       }
-      
+
       setChat(response);
     } catch (err) {
       console.error("Error loading chat", err);
@@ -107,7 +111,7 @@ export default function ChatDetail() {
     }
 
     setSelectedImage(file);
-    
+
     // Create preview
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -129,7 +133,7 @@ export default function ChatDetail() {
 
     try {
       setSending(true);
-      
+
       // Show message optimistically
       const tempImageUrl = imagePreview; // Use preview URL temporarily
       const newMessage: Message = {
@@ -143,19 +147,19 @@ export default function ChatDetail() {
       setChat(prev =>
         prev
           ? {
-              ...prev,
-              messages: [...prev.messages, newMessage],
-            }
+            ...prev,
+            messages: [...prev.messages, newMessage],
+          }
           : prev
       );
-      
+
       const messageContent = message?.trim();
       const imageFile = selectedImage;
-      
+
       // Clear input immediately
       setMessage("");
       clearImage();
-      
+
       // Send to API with file
       const response = await chatService.sendMessage({
         content: messageContent || " ", // Send space if only image
@@ -177,10 +181,10 @@ export default function ChatDetail() {
           return { ...prev, messages };
         });
       }
-      
+
     } catch (err: any) {
       console.error("Error sending message", err);
-      
+
       console.log('removing by error')
 
       // Remove optimistic message on error
@@ -191,9 +195,9 @@ export default function ChatDetail() {
           messages: prev.messages.slice(0, -1)
         };
       });
-      
+
       const errorMessage = err.response?.data?.message || "Could not send message.";
-      
+
       toast({
         title: "Error",
         description: errorMessage,
@@ -224,9 +228,8 @@ export default function ChatDetail() {
 
   return (
     <div className="h-full flex flex-col bg-gray-50">
-    
       {/* Header */}
-      <div 
+      <div
         className="bg-white px-4 py-3 flex items-center gap-3 shadow-md flex-shrink-0"
         style={{ paddingTop: `calc(12px + ${safeAreaInsets.top}px)` }}
       >
@@ -262,11 +265,10 @@ export default function ChatDetail() {
                 className={`flex ${isMyMessage ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[75%] px-4 py-2 rounded-lg ${
-                    isMyMessage
+                  className={`max-w-[75%] px-4 py-2 rounded-lg ${isMyMessage
                       ? "bg-echurch-500 text-white rounded-br-none"
                       : "bg-white text-gray-900 rounded-bl-none shadow-sm"
-                  }`}
+                    }`}
                 >
                   {!isMyMessage && (
                     <p className="text-xs font-semibold mb-1 opacity-75">{msg.user_name}</p>
@@ -276,7 +278,7 @@ export default function ChatDetail() {
                       src={msg.image_path}
                       alt=""
                       className="max-w-full rounded-lg mb-2 cursor-pointer hover:opacity-90"
-                      onClick={() => window.open(msg.image_path, "_blank")}
+                      onClick={() => setShowImage(msg.image_path)}
                     />
                   )}
 
@@ -285,9 +287,8 @@ export default function ChatDetail() {
                   )}
 
                   <p
-                    className={`text-xs mt-1 ${
-                      isMyMessage ? "text-echurch-100" : "text-gray-500"
-                    }`}
+                    className={`text-xs mt-1 ${isMyMessage ? "text-echurch-100" : "text-gray-500"
+                      }`}
                   >
                     {msg.sent_at}
                   </p>
@@ -300,9 +301,7 @@ export default function ChatDetail() {
       </div>
 
       {/* Input - fixed at bottom with spacing for MobileBottomNav */}
-      <div 
-        className="bg-white border-t px-4 py-3 shadow-t-xl flex-shrink-0 sticky bottom-0"
-      >
+      <div className="bg-white border-t px-4 py-3 shadow-t-xl flex-shrink-0 sticky bottom-0">
         {imagePreview && (
           <div className="mb-2 relative inline-block">
             <img src={imagePreview} className="max-h-24 rounded-lg" />
@@ -317,41 +316,63 @@ export default function ChatDetail() {
           </div>
         )}
 
-        <div className="flex gap-2 w-full">
-          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
-
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={sending || uploading}
-            className="border-echurch-200 hover:bg-echurch-50"
-          >
-            <ImageIcon size={18} className="text-echurch-500" />
-          </Button>
-
-          <Input
-            placeholder="Digite sua mensagem..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            disabled={sending || uploading}
-            className="flex-1 border-echurch-200 focus:border-echurch-500"
-          />
-
-          <Button
-            onClick={sendMessage}
-            disabled={sending || uploading || (!message?.trim() && !selectedImage)}
-            className="bg-echurch-500 hover:bg-echurch-600 disabled:opacity-50"
-          >
-            {sending || uploading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-            ) : (
-              <Send size={18} />
-            )}
-          </Button>
+        <div className="flex items-end w-full gap-2">
+          <div className="relative flex-1 items-center">
+            {/* Hidden File Input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageSelect}
+              className="hidden"
+            />
+            {/* Textarea */}
+            <textarea
+              placeholder="Digite sua mensagem..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDownCapture={() => handleKeyPress}
+              disabled={sending || uploading}
+              rows={1}
+              className="w-full resize-none overflow-y-auto rounded-md border border-gray-200 bg-white pr-20 pl-3 py-2 text-sm focus-visible:ring-offset-2 disabled:opacity-60"
+              style={{
+                minHeight: '40px',
+                maxHeight: '6em',
+              }}
+            />
+            {/* Image + Send buttons inside the input on the right */}
+            <div className="absolute right-3 top-1/3 -translate-y-[25%] flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={sending || uploading}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <ImageIcon size={22} />
+              </button>
+              <button
+                type="button"
+                onClick={sendMessage}
+                disabled={sending || uploading || (!message?.trim() && !selectedImage)}
+                className="text-echurch-500 hover:text-echurch-700"
+              >
+                {sending || uploading ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600" />
+                ) : (
+                  <Send size={22} />
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
+      {showImage && (
+        <ImageModal
+          image_url={showImage}
+          title="Imagem"
+          onClose={() => setShowImage(null)}
+        />
+      )}
     </div>
   );
 }

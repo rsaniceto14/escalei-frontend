@@ -13,13 +13,13 @@ export default function ImageModal({
   title,
   onClose,
 }: {
-  visible: boolean;
+  visible?: boolean;
   image_url: string;
   title: string;
   onClose: () => void;
 }) {
   return (
-    <Dialog open={visible} onOpenChange={onClose}>
+    <Dialog open={visible ?? true} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
