@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { handoutService } from "@/api/services/handoutService";
 import { Handout } from "@/api/handout";
-import ImageModal from "../ui/ImageModal";
+import ImageModal from "../ui/imageModal";
 
 // Helper to calculate relative time
 function timeAgo(dateString: string) {
