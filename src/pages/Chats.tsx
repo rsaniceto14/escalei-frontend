@@ -226,7 +226,7 @@ export default function Chats() {
     }
   };
 
-  const scrollToBottom = (immediately: boolean) => {
+  const scrollToBottom = (immediately?: boolean) => {
     if (immediately) {
       messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
       return;
