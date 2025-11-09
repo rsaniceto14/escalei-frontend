@@ -188,10 +188,5 @@ src/
 
 Deploy your application using your preferred hosting service.
 
-### Custom Domain
-
-Navigate to Project → Settings → Domains and click Connect Domain.
-
-Configure your custom domain through your hosting provider.
 
 
