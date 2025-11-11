@@ -149,11 +149,6 @@ The Capacitor configuration is located in `capacitor.config.ts`:
 - **App Name**: `escalei`
 - **Hot Reload**: Enabled for development
 
-## How to Edit This Code
-
-### Using Your Preferred IDE
-
-Clone this repo and start developing. All changes will be reflected in the application.
 
 ### GitHub Codespaces
 
