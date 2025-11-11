@@ -11,6 +11,7 @@ import { Logo } from "@/components/common/Logo";
 import { ArrowLeft, ArrowRight, Plus, Edit, Trash2, Settings, Loader2, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { areaService, Area } from "@/api";
+import { useAuth } from "@/context/AuthContext";
 
 export default function AreasSetup() {
   const [areas, setAreas] = useState<Area[]>([]);
@@ -24,8 +25,17 @@ export default function AreasSetup() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { toast } = useToast();
+  const { token } = useAuth();
 
   const handleSaveArea = async () => {
+    if (!token) {
+      toast({
+        title: "Não autenticado",
+        description: "Você precisa estar logado para criar áreas.",
+        variant: "destructive"
+      });
+      return;
+    }
     if (!newArea.name.trim()) {
       toast({
         title: "Nome obrigatório",

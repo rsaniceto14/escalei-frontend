@@ -48,11 +48,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const login = (newToken: string, userData: User) => {
-    setToken(newToken);
+    // Ensure token is always a string
+    const tokenString = typeof newToken === 'string' ? newToken : String(newToken);
+    
+    setToken(tokenString);
     setUser(userData);
     
-    // Store in localStorage
-    localStorage.setItem("jwt", newToken);
+    // Store in localStorage as string
+    localStorage.setItem("jwt", tokenString);
     localStorage.setItem("user_id", userData.id);
     localStorage.setItem("user_name", userData.name);
     localStorage.setItem("user_email", userData.email);

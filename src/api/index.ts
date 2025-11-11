@@ -10,6 +10,7 @@ export { spotifyService } from './services/spotifyService';
 export { chatService } from './services/chatService';
 export { churchService } from './services/churchService';
 export { permissionService } from './services/permissionService';
+export { inviteService } from './services/inviteService';
 
 // Export API configuration
 export { apiClient, API_BASE_URL } from './config';

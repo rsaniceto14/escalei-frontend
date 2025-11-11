@@ -10,9 +10,11 @@ import { ArrowLeft, ArrowRight, Plus, Loader2, CheckCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast";
 import { inviteService, areaService } from "@/api";
 import { AreaWithRoles } from "@/api/services/areaService";
+import { useAuth } from "@/context/AuthContext";
 
 export default function InvitesSetup() {
   const { toast } = useToast();
+  const { token } = useAuth();
   const [areasWithRoles, setAreasWithRoles] = useState<AreaWithRoles[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -25,10 +27,21 @@ export default function InvitesSetup() {
   });
 
   useEffect(() => {
-    loadAreasWithRoles();
-  }, []);
+    if (token) {
+      loadAreasWithRoles();
+    }
+  }, [token]);
 
   const loadAreasWithRoles = async () => {
+    if (!token) {
+      toast({
+        title: "Não autenticado",
+        description: "Você precisa estar logado para carregar áreas.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const data = await areaService.getAreasWithRoles();
@@ -45,6 +58,15 @@ export default function InvitesSetup() {
   };
 
   const handleSendInvite = async () => {
+    if (!token) {
+      toast({
+        title: "Não autenticado",
+        description: "Você precisa estar logado para enviar convites.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!newInvite.email.trim()) {
       toast({
         title: "Email obrigatório",

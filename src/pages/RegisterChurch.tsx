@@ -88,8 +88,13 @@ export default function RegisterChurch() {
     try {
       const response = await authService.registerChurch(formData);
       
+      // Ensure access_token is a string, not an object
+      const token = typeof response.data.access_token === 'string' 
+        ? response.data.access_token 
+        : String(response.data.access_token);
+      
       // Store user data and church_id in AuthContext
-      login(response.data.access_token, {
+      login(token, {
         id: response.data.user.id,
         name: response.data.user.name,
         email: response.data.user.email,
@@ -104,7 +109,7 @@ export default function RegisterChurch() {
         description: "Igreja cadastrada com sucesso!",
       });
       
-      navigate("/home");
+      navigate("/church-setup");
     } catch (error: any) {
       toast({
         title: "Erro",
