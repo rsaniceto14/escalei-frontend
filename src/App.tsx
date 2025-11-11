@@ -50,10 +50,31 @@ const App = () => {
               <Route path="/request-reset" element={<PasswordRecover />} />
               <Route path="/password-reset/:token" element={<PasswordReset />} />
 
-              {/* Setup routes */}
-              <Route path="/church-setup" element={<ChurchSetup />} />
-              <Route path="/setup/areas" element={<AreasSetup />} />
-              <Route path="/setup/invites" element={<InvitesSetup />} />
+              {/* Setup routes - require authentication */}
+              <Route
+                path="/church-setup"
+                element={
+                  <PrivateRoute>
+                    <ChurchSetup />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/setup/areas"
+                element={
+                  <PrivateRoute>
+                    <AreasSetup />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/setup/invites"
+                element={
+                  <PrivateRoute>
+                    <InvitesSetup />
+                  </PrivateRoute>
+                }
+              />
               <Route
                 path="/invites"
                 element={

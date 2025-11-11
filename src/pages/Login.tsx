@@ -47,8 +47,13 @@ export default function Login() {
     try {
       let res = await authService.login({ email, password: senha });
 
+      // Ensure access_token is a string, not an object
+      const token = typeof res.data.access_token === 'string' 
+        ? res.data.access_token 
+        : String(res.data.access_token);
+      
       // Use context login method
-      login(res.data.access_token, {
+      login(token, {
         id: res.data.user.id,
         name: res.data.user.name,
         email: res.data.user.email,
