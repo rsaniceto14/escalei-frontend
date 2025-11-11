@@ -177,11 +177,7 @@ src/
 └── utils/             # Utility functions
 ```
 
-## Deployment
 
-### Web Deployment
-
-Deploy your application using your preferred hosting service.
 
 
 
