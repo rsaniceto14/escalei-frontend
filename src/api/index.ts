@@ -2,6 +2,7 @@
 export { authService } from './services/authService';
 export { scheduleService } from './services/scheduleService';
 export { userService } from './services/userService';
+export { userRoleService } from './services/userRoleService';
 export { availabilityService } from './services/availabilityService';
 export { areaService } from './services/areaService';
 export { musicService } from './services/musicService';

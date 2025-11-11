@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -16,9 +16,14 @@ import {
   UserCheck, UserX, Save, X, ChevronDown, ChevronUp,
   Search, ChevronLeft, ChevronRight
 } from "lucide-react";
-import { areaService, Area, userService, User } from "@/api";
+import { areaService, Area, userService, User, userRoleService } from "@/api";
+import { AreaWithRoles } from "@/api/services/areaService";
+import { Role, UserRole } from "@/api/types";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
+import { AreaDetailsDialog } from "@/components/admin/AreaDetailsDialog";
+import { UserEditDialog } from "@/components/admin/UserEditDialog";
+import { AreaManagementDialog } from "@/components/admin/AreaManagementDialog";
 
 interface AdminSectionProps {
   className?: string;
@@ -38,8 +43,8 @@ export function AdminSection({ className }: AdminSectionProps) {
   const [activeTab, setActiveTab] = useState("areas");
   
   // Areas state
-  const [areas, setAreas] = useState<Area[]>([]);
-  const [filteredAreas, setFilteredAreas] = useState<Area[]>([]);
+  const [areas, setAreas] = useState<AreaWithRoles[]>([]);
+  const [filteredAreas, setFilteredAreas] = useState<AreaWithRoles[]>([]);
   const [areasSearchQuery, setAreasSearchQuery] = useState("");
   const [areasCurrentPage, setAreasCurrentPage] = useState(1);
   const [areasPerPage] = useState(6);
@@ -60,26 +65,20 @@ export function AdminSection({ className }: AdminSectionProps) {
   const [novaAreaDescription, setNovaAreaDescription] = useState("");
   const [showNovaAreaDialog, setShowNovaAreaDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedArea, setSelectedArea] = useState<Area | null>(null);
-  const [areaUsers, setAreaUsers] = useState<any[]>([]);
+  const [selectedArea, setSelectedArea] = useState<AreaWithRoles | null>(null);
   const [showAreaManagementDialog, setShowAreaManagementDialog] = useState(false);
-  const [isLoadingAreaUsers, setIsLoadingAreaUsers] = useState(false);
-  const [isSwitchingUser, setIsSwitchingUser] = useState<number | null>(null);
   
   // Area details states
   const [showAreaDetailsDialog, setShowAreaDetailsDialog] = useState(false);
-  const [editingArea, setEditingArea] = useState<Area | null>(null);
-  const [editAreaData, setEditAreaData] = useState({ name: '', description: '' });
-  const [isUpdatingArea, setIsUpdatingArea] = useState(false);
+  const [editingArea, setEditingArea] = useState<AreaWithRoles | null>(null);
 
   // User management states
   const [showUserEditDialog, setShowUserEditDialog] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [editUserData, setEditUserData] = useState({ name: '', email: '', birthday: '' });
-  const [isUpdatingUser, setIsUpdatingUser] = useState(false);
   const [isTogglingStatus, setIsTogglingStatus] = useState<string | null>(null);
-  const [userAreas, setUserAreas] = useState<any[]>([]);
-  const [isLoadingUserAreas, setIsLoadingUserAreas] = useState(false);
+
+  // Area roles state (for creation)
+  const [roles, setRoles] = useState<Array<{ name: string; description: string }>>([]);
 
   // Check permissions
   const canCreateArea = user?.permissions?.create_area || false;
@@ -125,7 +124,7 @@ export function AdminSection({ className }: AdminSectionProps) {
   const loadAreas = async () => {
     setIsLoadingAreas(true);
     try {
-      const areasData = await areaService.getAll();
+      const areasData = await areaService.getAreasWithRoles();
       setAreas(areasData);
     } catch (error: any) {
       toast({
@@ -143,12 +142,14 @@ export function AdminSection({ className }: AdminSectionProps) {
     try {
       const usersData = await userService.getUsersByChurch();
       setUsuarios(usersData);
+      return usersData;
     } catch (error: any) {
       toast({
         title: "Erro ao carregar usuários",
         description: error.message || "Não foi possível carregar os usuários",
         variant: "destructive"
       });
+      return [];
     } finally {
       setIsLoadingUsers(false);
     }
@@ -175,17 +176,21 @@ export function AdminSection({ className }: AdminSectionProps) {
 
     setIsSubmitting(true);
     try {
-      const newArea = await areaService.create({
+      const areaData = {
         name: novaArea.trim(),
-        description: novaAreaDescription.trim()
-      });
-      setAreas(prev => [...prev, newArea]);
+        description: novaAreaDescription.trim(),
+        roles: roles.length > 0 ? roles : undefined,
+      };
+      await areaService.create(areaData);
+      // Reload areas to get the new area with roles
+      await loadAreas();
       setNovaArea("");
       setNovaAreaDescription("");
+      setRoles([]);
       setShowNovaAreaDialog(false);
       toast({
         title: "Área criada!",
-        description: `A área ${novaArea} foi criada com sucesso.`,
+        description: `A área ${novaArea} foi criada${roles.length > 0 ? ` com ${roles.length} função(ões)` : ''} com sucesso.`,
       });
     } catch (error: any) {
       toast({
@@ -198,54 +203,28 @@ export function AdminSection({ className }: AdminSectionProps) {
     }
   };
 
-  const handleManageArea = async (area: Area) => {
+  const addRole = () => {
+    setRoles([...roles, { name: '', description: '' }]);
+  };
+
+  const removeRole = (index: number) => {
+    setRoles(roles.filter((_, i) => i !== index));
+  };
+
+  const updateRole = (index: number, field: 'name' | 'description', value: string) => {
+    const updatedRoles = [...roles];
+    updatedRoles[index] = { ...updatedRoles[index], [field]: value };
+    setRoles(updatedRoles);
+  };
+
+  const handleManageArea = (area: AreaWithRoles) => {
     setSelectedArea(area);
     setShowAreaManagementDialog(true);
-    setIsLoadingAreaUsers(true);
-    
-    try {
-      const users = await areaService.getUsers(Number(area.id));
-      setAreaUsers(users);
-    } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: error.message || "Não foi possível carregar os usuários da área",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoadingAreaUsers(false);
-    }
   };
 
-  const handleSwitchUserArea = async (userId: number, newAreaId: number) => {
-    if (!selectedArea) return;
-    
-    setIsSwitchingUser(userId);
+  const handleDeleteArea = async (area: AreaWithRoles) => {
     try {
-      await areaService.switchUserArea(Number(selectedArea.id), userId, newAreaId);
-      
-      // Refresh the users list
-      const users = await areaService.getUsers(Number(selectedArea.id));
-      setAreaUsers(users);
-      
-      toast({
-        title: "Usuário movido!",
-        description: "Usuário foi movido para a nova área com sucesso.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: error.message || "Não foi possível mover o usuário",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSwitchingUser(null);
-    }
-  };
-
-  const handleDeleteArea = async (area: Area) => {
-    try {
-      await areaService.delete(Number(area.id));
+      await areaService.delete(area.id);
       setAreas(prev => prev.filter(a => a.id !== area.id));
       toast({
         title: "Área excluída!",
@@ -260,48 +239,9 @@ export function AdminSection({ className }: AdminSectionProps) {
     }
   };
 
-  const handleViewAreaDetails = (area: Area) => {
+  const handleViewAreaDetails = (area: AreaWithRoles) => {
     setEditingArea(area);
-    setEditAreaData({
-      name: area.name,
-      description: area.description || ''
-    });
     setShowAreaDetailsDialog(true);
-  };
-
-  const handleUpdateArea = async () => {
-    if (!editingArea || !editAreaData.name.trim()) {
-      toast({
-        title: "Nome obrigatório",
-        description: "O nome da área é obrigatório.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsUpdatingArea(true);
-    try {
-      const updatedArea = await areaService.update(Number(editingArea.id), editAreaData);
-      
-      // Update the areas list
-      setAreas(prev => prev.map(area => 
-        area.id === editingArea.id ? updatedArea : area
-      ));
-      
-      setShowAreaDetailsDialog(false);
-      toast({
-        title: "Área atualizada!",
-        description: `A área ${updatedArea.name} foi atualizada com sucesso.`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: error.message || "Não foi possível atualizar a área",
-        variant: "destructive"
-      });
-    } finally {
-      setIsUpdatingArea(false);
-    }
   };
 
   const getStatusColor = (status: string) => {
@@ -324,108 +264,7 @@ export function AdminSection({ className }: AdminSectionProps) {
 
   const handleEditUser = (user: User) => {
     setEditingUser(user);
-    setEditUserData({
-      name: user.name,
-      email: user.email,
-      birthday: user.birthday || ''
-    });
-    setUserAreas(user.areas || []);
     setShowUserEditDialog(true);
-  };
-
-  const handleAddUserToArea = async (areaId: number) => {
-    if (!editingUser) return;
-    
-    try {
-      // Find the area to get its name
-      const area = areas.find(a => parseInt(a.id) === areaId);
-      if (!area) return;
-      
-      // Add user to area using backend API
-      await userService.addUserToArea(editingUser.id, area.id);
-      
-      // Update local state
-      const newUserArea = {
-        id: area.id,
-        name: area.name,
-        description: area.description
-      };
-      
-      setUserAreas(prev => [...prev, newUserArea]);
-      
-      toast({
-        title: "Usuário adicionado!",
-        description: `${editingUser.name} foi adicionado à área ${area.name}.`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: error.message || "Não foi possível adicionar usuário à área",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleRemoveUserFromArea = async (areaId: number) => {
-    if (!editingUser) return;
-    
-    try {
-      // Find the area to get its name
-      const area = areas.find(a => parseInt(a.id) === areaId);
-      if (!area) return;
-      
-      // Remove user from area using backend API
-      await userService.removeUserFromArea(editingUser.id, area.id);
-      
-      // Update local state
-      setUserAreas(prev => prev.filter(ua => parseInt(ua.id) !== areaId));
-      
-      toast({
-        title: "Usuário removido!",
-        description: `${editingUser.name} foi removido da área ${area.name}.`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: error.message || "Não foi possível remover usuário da área",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleUpdateUser = async () => {
-    if (!editingUser || !editUserData.name.trim() || !editUserData.email.trim()) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Nome e email são obrigatórios.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsUpdatingUser(true);
-    try {
-      const updatedUser = await userService.updateUserById(editingUser.id, editUserData);
-      
-      // Update the users list
-      setUsuarios(prev => prev.map(user => 
-        user.id === editingUser.id ? updatedUser : user
-      ));
-      
-      setShowUserEditDialog(false);
-      toast({
-        title: "Usuário atualizado!",
-        description: `O usuário ${updatedUser.name} foi atualizado com sucesso.`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: error.message || "Não foi possível atualizar o usuário",
-        variant: "destructive"
-      });
-    } finally {
-      setIsUpdatingUser(false);
-    }
   };
 
   const handleToggleUserStatus = async (userId: string) => {
@@ -463,6 +302,14 @@ export function AdminSection({ className }: AdminSectionProps) {
   const usersStartIndex = (usersCurrentPage - 1) * usersPerPage;
   const usersEndIndex = usersStartIndex + usersPerPage;
   const usersCurrentData = filteredUsuarios.slice(usersStartIndex, usersEndIndex);
+
+  // Helper function to get initials (only TWO)
+  const getInitials = (name: string) => {
+    const parts = name.trim().split(' ').filter(p => p.length > 0);
+    if (parts.length === 0) return '??';
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
 
   // Don't render if user is not admin
   if (!isAdmin) {
@@ -526,7 +373,7 @@ export function AdminSection({ className }: AdminSectionProps) {
                           Nova
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-sm sm:max-w-md mx-auto">
+                      <DialogContent className="max-w-sm sm:max-w-md mx-auto max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                           <DialogTitle>Criar Nova Área</DialogTitle>
                         </DialogHeader>
@@ -548,6 +395,54 @@ export function AdminSection({ className }: AdminSectionProps) {
                               rows={3}
                             />
                           </div>
+                          
+                          {/* Roles Section */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <label className="text-sm font-medium">Funções (opcional)</label>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={addRole}
+                              >
+                                <Plus className="w-4 h-4 mr-1" />
+                                Adicionar
+                              </Button>
+                            </div>
+                            {roles.length > 0 && (
+                              <div className="space-y-2 border rounded-md p-3">
+                                {roles.map((role, index) => (
+                                  <div key={index} className="space-y-2 p-2 bg-gray-50 rounded">
+                                    <div className="flex items-center justify-between">
+                                      <Label className="text-sm">Função {index + 1}</Label>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => removeRole(index)}
+                                        className="h-6 w-6 p-0 text-red-600"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                    <Input
+                                      placeholder="Nome da função"
+                                      value={role.name}
+                                      onChange={(e) => updateRole(index, 'name', e.target.value)}
+                                    />
+                                    <Textarea
+                                      placeholder="Descrição (opcional)"
+                                      value={role.description}
+                                      onChange={(e) => updateRole(index, 'description', e.target.value)}
+                                      rows={2}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          
                           <div className="flex gap-2">
                             <Button 
                               onClick={adicionarArea} 
@@ -557,7 +452,16 @@ export function AdminSection({ className }: AdminSectionProps) {
                               {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                               Criar Área
                             </Button>
-                            <Button variant="outline" onClick={() => setShowNovaAreaDialog(false)} className="flex-1">
+                            <Button 
+                              variant="outline" 
+                              onClick={() => {
+                                setShowNovaAreaDialog(false);
+                                setNovaArea("");
+                                setNovaAreaDescription("");
+                                setRoles([]);
+                              }} 
+                              className="flex-1"
+                            >
                               Cancelar
                             </Button>
                           </div>
@@ -593,32 +497,18 @@ export function AdminSection({ className }: AdminSectionProps) {
                   {areasCurrentData.map(area => (
                     <Card key={area.id} className="hover:shadow-md transition-shadow">
                       <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-echurch-700 truncate">{area.name}</h4>
-                            {area.description && (
-                              <p className="text-sm text-gray-600 truncate">{area.description}</p>
-                            )}
-                          </div>
-                          <div className="flex gap-1">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleViewAreaDetails(area)}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleManageArea(area)}
-                            >
-                              <UserPlus className="w-4 h-4" />
-                            </Button>
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-echurch-700 truncate">{area.name}</h4>
+                              {area.description && (
+                                <p className="text-sm text-gray-600 truncate">{area.description}</p>
+                              )}
+                            </div>
                             {canDeleteArea && (
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                  <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                                  <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 flex-shrink-0">
                                     <Trash2 className="w-4 h-4" />
                                   </Button>
                                 </AlertDialogTrigger>
@@ -641,6 +531,28 @@ export function AdminSection({ className }: AdminSectionProps) {
                                 </AlertDialogContent>
                               </AlertDialog>
                             )}
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="flex-1 min-w-[100px] text-xs sm:text-sm"
+                              onClick={() => handleViewAreaDetails(area)}
+                            >
+                              <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                              <span className="hidden sm:inline">Ver Detalhes</span>
+                              <span className="sm:hidden">Ver</span>
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="flex-1 min-w-[100px] text-xs sm:text-sm"
+                              onClick={() => handleManageArea(area)}
+                            >
+                              <UserPlus className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                              <span className="hidden sm:inline">Gerenciar</span>
+                              <span className="sm:hidden">Ger.</span>
+                            </Button>
                           </div>
                         </div>
                       </CardContent>
@@ -715,47 +627,68 @@ export function AdminSection({ className }: AdminSectionProps) {
                   {usersCurrentData.map(usuario => (
                     <Card key={usuario.id} className="w-full">
                       <CardContent className="p-3">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-start justify-between gap-3">
                           <div className="flex items-center gap-3 min-w-0 flex-1">
                             <Avatar className="flex-shrink-0">
+                              {usuario.photo_url ? (
+                                <AvatarImage src={usuario.photo_url} alt={usuario.name} />
+                              ) : null}
                               <AvatarFallback className="bg-echurch-200 text-echurch-700 text-sm">
-                                {usuario.name.split(' ').map(n => n[0]).join('')}
+                                {getInitials(usuario.name)}
                               </AvatarFallback>
                             </Avatar>
                             <div className="min-w-0 flex-1">
                               <h4 className="font-medium text-echurch-700 text-sm truncate">{usuario.name}</h4>
                               <p className="text-xs text-echurch-600 truncate">{usuario.email}</p>
-                              <div className="flex items-center gap-1 mt-1">
-                                <Badge className={`text-xs ${getStatusColor(usuario.status)}`}>
-                                  {getStatusText(usuario.status)}
-                                </Badge>
-                              </div>
+                              {usuario.areas && usuario.areas.length > 0 && (
+                                <div className="mt-1">
+                                  <span className="text-xs text-gray-500">Áreas: </span>
+                                  <span className="text-xs text-echurch-600">
+                                    {usuario.areas.map(area => area.name).join(', ')}
+                                  </span>
+                                </div>
+                              )}
+                              {usuario.roles && usuario.roles.length > 0 && (
+                                <div className="mt-1">
+                                  <span className="text-xs text-gray-500">Funções: </span>
+                                  <span className="text-xs text-echurch-600">
+                                    {usuario.roles.map(role => role.name).join(', ')}
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           </div>
-                          <div className="flex gap-1">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleEditUser(usuario)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Edit className="w-3 h-3" />
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleToggleUserStatus(usuario.id)}
-                              disabled={isTogglingStatus === usuario.id || usuario.status === 'WA'}
-                              className={`h-8 w-8 p-0 ${usuario.status === 'A' ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700'}`}
-                            >
-                              {isTogglingStatus === usuario.id ? (
-                                <Loader2 className="w-3 h-3 animate-spin" />
-                              ) : usuario.status === 'A' ? (
-                                <UserX className="w-3 h-3" />
-                              ) : (
-                                <UserCheck className="w-3 h-3" />
-                              )}
-                            </Button>
+                          <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                            {/* Status badge in top right */}
+                            <Badge className={`text-xs ${getStatusColor(usuario.status)}`}>
+                              {getStatusText(usuario.status)}
+                            </Badge>
+                            {/* Buttons */}
+                            <div className="flex gap-1">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleEditUser(usuario)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Edit className="w-3 h-3" />
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleToggleUserStatus(usuario.id)}
+                                disabled={isTogglingStatus === usuario.id || usuario.status === 'WA'}
+                                className={`h-8 w-8 p-0 ${usuario.status === 'A' ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700'}`}
+                              >
+                                {isTogglingStatus === usuario.id ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : usuario.status === 'A' ? (
+                                  <UserX className="w-3 h-3" />
+                                ) : (
+                                  <UserCheck className="w-3 h-3" />
+                                )}
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </CardContent>
@@ -796,252 +729,32 @@ export function AdminSection({ className }: AdminSectionProps) {
       )}
 
       {/* Area Management Dialog */}
-      <Dialog open={showAreaManagementDialog} onOpenChange={setShowAreaManagementDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto mx-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Settings className="w-5 h-5" />
-              Gerenciar Área: {selectedArea?.name}
-            </DialogTitle>
-          </DialogHeader>
-          
-          {isLoadingAreaUsers ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin" />
-              <span className="ml-2">Carregando usuários...</span>
-            </div>
-          ) : areaUsers.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8">
-              <Users className="w-8 h-8 text-gray-400 mb-2" />
-              <p className="text-gray-500 text-center">
-                Nenhum usuário encontrado nesta área.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="grid gap-4">
-                {areaUsers.map((areaUser) => (
-                  <Card key={areaUser.id}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <Avatar>
-                            <AvatarFallback className="bg-echurch-200 text-echurch-700">
-                              {areaUser.name.split(' ').map((n: string) => n[0]).join('')}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <h3 className="font-medium text-echurch-700">{areaUser.name}</h3>
-                            <p className="text-sm text-echurch-600">{areaUser.email}</p>
-                            <Badge className={getStatusColor(areaUser.status)}>
-                              {areaUser.status}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Select 
-                            onValueChange={(newAreaId) => handleSwitchUserArea(areaUser.id, parseInt(newAreaId))}
-                            disabled={isSwitchingUser === areaUser.id}
-                          >
-                            <SelectTrigger className="w-32 sm:w-48">
-                              <SelectValue placeholder="Mover..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {areas
-                                .filter(area => area.id !== selectedArea?.id)
-                                .map((area) => (
-                                  <SelectItem key={area.id} value={area.id.toString()}>
-                                    {area.name}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                          {isSwitchingUser === areaUser.id && (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <AreaManagementDialog
+        area={selectedArea}
+        open={showAreaManagementDialog}
+        onOpenChange={setShowAreaManagementDialog}
+        areas={areas}
+        onUserMoved={loadAreas}
+      />
 
       {/* Area Details Dialog */}
-      <Dialog open={showAreaDetailsDialog} onOpenChange={setShowAreaDetailsDialog}>
-        <DialogContent className="max-w-sm sm:max-w-md mx-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Settings className="w-5 h-5" />
-              Detalhes da Área: {editingArea?.name}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="area-name">Nome da Área</Label>
-              <Input
-                id="area-name"
-                value={editAreaData.name}
-                onChange={(e) => setEditAreaData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Nome da área"
-                disabled={isUpdatingArea}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="area-description">Descrição</Label>
-              <Textarea
-                id="area-description"
-                value={editAreaData.description}
-                onChange={(e) => setEditAreaData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Descrição da área (opcional)"
-                rows={4}
-                disabled={isUpdatingArea}
-              />
-            </div>
-            
-            <div className="flex gap-2">
-              <Button 
-                onClick={handleUpdateArea}
-                className="flex-1 bg-echurch-500 hover:bg-echurch-600"
-                disabled={isUpdatingArea || !canUpdateArea}
-              >
-                {isUpdatingArea && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Salvar Alterações
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowAreaDetailsDialog(false)}
-                className="flex-1"
-                disabled={isUpdatingArea}
-              >
-                Cancelar
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <AreaDetailsDialog
+        area={editingArea}
+        open={showAreaDetailsDialog}
+        onOpenChange={setShowAreaDetailsDialog}
+        onAreaUpdated={loadAreas}
+        canUpdateArea={canUpdateArea}
+      />
 
       {/* User Edit Dialog */}
-      <Dialog open={showUserEditDialog} onOpenChange={setShowUserEditDialog}>
-        <DialogContent className="max-w-sm sm:max-w-md mx-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Edit className="w-5 h-5" />
-              Editar Usuário: {editingUser?.name}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="user-name">Nome Completo</Label>
-              <Input
-                id="user-name"
-                value={editUserData.name}
-                onChange={(e) => setEditUserData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Nome completo do usuário"
-                disabled={isUpdatingUser}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="user-email">Email</Label>
-              <Input
-                id="user-email"
-                type="email"
-                value={editUserData.email}
-                onChange={(e) => setEditUserData(prev => ({ ...prev, email: e.target.value }))}
-                placeholder="email@exemplo.com"
-                disabled={isUpdatingUser}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="user-birthday">Data de Nascimento</Label>
-              <Input
-                id="user-birthday"
-                type="date"
-                value={editUserData.birthday}
-                onChange={(e) => setEditUserData(prev => ({ ...prev, birthday: e.target.value }))}
-                disabled={isUpdatingUser}
-              />
-            </div>
-
-            {/* User Areas Section */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-base font-medium">Áreas do Usuário</Label>
-                <Select onValueChange={(value) => handleAddUserToArea(parseInt(value))}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Adicionar área" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {areas
-                      .filter(area => !userAreas.some(ua => parseInt(ua.id) === parseInt(area.id)))
-                      .map(area => (
-                        <SelectItem key={area.id} value={area.id}>
-                          {area.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              {userAreas.length > 0 ? (
-                <div className="space-y-2">
-                  {userAreas.map(userArea => (
-                    <div key={userArea.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-sm">{userArea.name}</p>
-                        {userArea.description && (
-                          <p className="text-xs text-gray-600">{userArea.description}</p>
-                        )}
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleRemoveUserFromArea(parseInt(userArea.id))}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-4 text-gray-500 text-sm">
-                  Usuário não está associado a nenhuma área
-                </div>
-              )}
-            </div>
-            
-            <div className="flex gap-2">
-              <Button 
-                onClick={handleUpdateUser}
-                className="flex-1 bg-echurch-500 hover:bg-echurch-600"
-                disabled={isUpdatingUser}
-              >
-                {isUpdatingUser && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                <Save className="w-4 h-4 mr-2" />
-                Salvar Alterações
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowUserEditDialog(false)}
-                className="flex-1"
-                disabled={isUpdatingUser}
-              >
-                <X className="w-4 h-4 mr-2" />
-                Cancelar
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <UserEditDialog
+        user={editingUser}
+        open={showUserEditDialog}
+        onOpenChange={setShowUserEditDialog}
+        onUserUpdated={loadUsers}
+        areas={areas}
+        canManageUsers={user?.permissions?.manage_users || false}
+      />
     </Card>
   );
 }

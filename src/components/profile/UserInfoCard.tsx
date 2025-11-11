@@ -10,7 +10,9 @@ import { User, Edit, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { storageService } from "@/api/services/storageService";
 import { userService } from "@/api/services/userService";
-import { UserProfile, Area } from "@/api/types";
+import { userRoleService } from "@/api/services/userRoleService";
+import { areaService } from "@/api/services/areaService";
+import { UserProfile, Area, UserRole, AreaWithRoles } from "@/api/types";
 import { ImagePicker } from "@/components/common/ImagePicker";
 
 interface UserInfoCardProps {
@@ -26,6 +28,9 @@ export function UserInfoCard({ user, onUserUpdate, onRefreshProfile, areas }: Us
   const [editUserData, setEditUserData] = useState({ name: '', email: '', birthday: '' });
   const [isUpdatingUser, setIsUpdatingUser] = useState(false);
   const [userAreas, setUserAreas] = useState<any[]>([]);
+  const [userRoles, setUserRoles] = useState<UserRole[]>([]);
+  const [areasWithRoles, setAreasWithRoles] = useState<AreaWithRoles[]>([]);
+  const [isLoadingRoles, setIsLoadingRoles] = useState(false);
 
   const handlePhotoUpload = async (file: File) => {
     if (!user?.id) {
@@ -69,13 +74,25 @@ export function UserInfoCard({ user, onUserUpdate, onRefreshProfile, areas }: Us
     return date.toLocaleDateString("pt-BR");
   };
 
-  const handleEditUser = () => {
+  const handleEditUser = async () => {
     setEditUserData({
       name: user.name,
       email: user.email,
       birthday: user.birthday || ''
     });
     setUserAreas(user.areas || []);
+    setUserRoles(user.roles || []);
+    
+    // Load areas with roles for role assignment
+    if (user.permissions?.manage_users) {
+      try {
+        const areasData = await areaService.getAreasWithRoles();
+        setAreasWithRoles(areasData);
+      } catch (error) {
+        console.error('Error loading areas with roles:', error);
+      }
+    }
+    
     setShowEditDialog(true);
   };
 
@@ -118,6 +135,52 @@ export function UserInfoCard({ user, onUserUpdate, onRefreshProfile, areas }: Us
       toast.success(`Você foi removido da área ${area.name}.`);
     } catch (error: any) {
       toast.error(error.message || "Não foi possível remover usuário da área");
+    }
+  };
+
+  const handleAttachRole = async (roleId: number) => {
+    try {
+      setIsLoadingRoles(true);
+      await userRoleService.attachRole(user.id, roleId);
+      
+      // Reload user roles
+      const updatedRoles = await userRoleService.getUserRoles(user.id);
+      setUserRoles(updatedRoles);
+      
+      // Update user object
+      onUserUpdate({
+        ...user,
+        roles: updatedRoles,
+      });
+      
+      toast.success('Função atribuída com sucesso!');
+    } catch (error: any) {
+      toast.error(error.message || "Não foi possível atribuir função");
+    } finally {
+      setIsLoadingRoles(false);
+    }
+  };
+
+  const handleDetachRole = async (roleId: number) => {
+    try {
+      setIsLoadingRoles(true);
+      await userRoleService.detachRole(user.id, roleId);
+      
+      // Reload user roles
+      const updatedRoles = await userRoleService.getUserRoles(user.id);
+      setUserRoles(updatedRoles);
+      
+      // Update user object
+      onUserUpdate({
+        ...user,
+        roles: updatedRoles,
+      });
+      
+      toast.success('Função removida com sucesso!');
+    } catch (error: any) {
+      toast.error(error.message || "Não foi possível remover função");
+    } finally {
+      setIsLoadingRoles(false);
     }
   };
 
@@ -212,6 +275,20 @@ export function UserInfoCard({ user, onUserUpdate, onRefreshProfile, areas }: Us
                     {user.areas.map((area) => (
                       <span key={area.id} className="px-2 py-1 bg-echurch-500 text-white text-sm rounded">
                         {area.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {user.roles && user.roles.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-echurch-600">Funções</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {user.roles.map((role) => (
+                      <span key={role.id} className="px-2 py-1 bg-echurch-600 text-white text-sm rounded flex items-center gap-1">
+                        <span>{role.name}</span>
+                        <span className="text-xs opacity-75">(Prioridade {role.priority})</span>
                       </span>
                     ))}
                   </div>
@@ -317,6 +394,87 @@ export function UserInfoCard({ user, onUserUpdate, onRefreshProfile, areas }: Us
                 ) : (
                   <div className="text-center py-4 text-gray-500 text-sm">
                     Você não está associado a nenhuma área
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* User Roles Section - Only show if user has permission to manage users */}
+            {user.permissions?.manage_users && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-medium">Suas Funções</Label>
+                  <Select 
+                    onValueChange={(value) => handleAttachRole(parseInt(value))}
+                    disabled={isLoadingRoles}
+                  >
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="Adicionar função" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(() => {
+                        const availableRoles = areasWithRoles
+                          .filter(area => userAreas.some(ua => parseInt(ua.id) === area.id))
+                          .flatMap(area => 
+                            area.roles
+                              .filter(role => !userRoles.some(ur => ur.id === role.id))
+                              .map(role => ({ ...role, areaName: area.name }))
+                          );
+                        
+                        if (availableRoles.length === 0) {
+                          return (
+                            <div className="p-4 text-sm text-gray-500 text-center">
+                              {userAreas.length === 0 
+                                ? "Adicione-se a uma área primeiro"
+                                : "Nenhuma função disponível nas suas áreas"
+                              }
+                            </div>
+                          );
+                        }
+                        
+                        return availableRoles.map(role => (
+                          <SelectItem key={role.id} value={role.id.toString()}>
+                            {role.name} ({role.areaName})
+                          </SelectItem>
+                        ));
+                      })()}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {userRoles.length > 0 ? (
+                  <div className="space-y-2">
+                    {userRoles.map(userRole => {
+                      const area = areasWithRoles.find(a => a.roles.some(r => r.id === userRole.id));
+                      return (
+                        <div key={userRole.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div>
+                            <p className="font-medium text-sm">{userRole.name}</p>
+                            <div className="flex items-center gap-2 text-xs text-gray-600">
+                              {area && <span>{area.name}</span>}
+                              <span>•</span>
+                              <span>Prioridade {userRole.priority}</span>
+                            </div>
+                            {userRole.description && (
+                              <p className="text-xs text-gray-600 mt-1">{userRole.description}</p>
+                            )}
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDetachRole(userRole.id)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            disabled={isLoadingRoles}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-gray-500 text-sm">
+                    Você não possui funções atribuídas
                   </div>
                 )}
               </div>

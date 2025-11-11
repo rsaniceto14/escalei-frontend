@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { User, Loader2, MessageSquareWarning } from "lucide-react";
+import { User, Loader2, MessageSquareWarning, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { userService } from "@/api/services/userService";
 import { areaService } from "@/api/services/areaService";
@@ -8,11 +8,11 @@ import { UserProfile, Area } from "@/api/types";
 import { UserInfoCard } from "@/components/profile/UserInfoCard";
 import { ChurchInfoCard } from "@/components/profile/ChurchInfoCard";
 import { PermissionsCard } from "@/components/profile/PermissionsCard";
-import { AdminSection } from "@/components/profile/AdminSection";
 import { AccountActionsCard } from "@/components/profile/AccountActionsCard";
 import { StatusCard } from "@/components/profile/StatusCard";
 import { AdditionalInfoCard } from "@/components/profile/AdditionalInfoCard";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Profile() {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -20,6 +20,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchUserProfile();
@@ -112,15 +113,21 @@ export default function Profile() {
           </Button>
           )}
 
+          { (user.permissions.manage_users && isMobile) && (
+          <Button
+            className="w-full"
+            size="lg"
+            onClick={() => { navigate("/admin") }}
+          >
+            <Shield className="w-5 h-5" />
+            Administração
+          </Button>
+          )}
+
           <PermissionsCard 
             user={user} 
             onUserUpdate={handleUserUpdate}
           />
-          
-          {/* Admin Section - Only visible on mobile or for admin users */}
-          <div className="lg:hidden">
-            <AdminSection />
-          </div>
           
           {/* Account Actions - Mobile only */}
           <div className="lg:hidden">

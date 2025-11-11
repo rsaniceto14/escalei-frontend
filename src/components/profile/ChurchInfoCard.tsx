@@ -35,27 +35,27 @@ export function ChurchInfoCard({ user }: ChurchInfoCardProps) {
               <div className="space-y-1">
                 {user.church.street && user.church.number && (
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">📍</span>
+                    <span className="font-medium">Logradouro:</span>
                     <span>{user.church.street}, Nº {user.church.number}</span>
                     {user.church.complement && <span>- {user.church.complement}</span>}
                   </div>
                 )}
-                {user.church.quarter && (
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">🏘️</span>
-                    <span>{user.church.quarter}</span>
-                  </div>
-                )}
                 {user.church.city && user.church.state && (
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">🏙️</span>
+                    <span className="font-medium">Cidade:</span>
                     <span>{user.church.city} - {user.church.state}</span>
+                  </div>
+                )}
+                {user.church.quarter && (
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">Bairro:</span>
+                    <span>{user.church.quarter}</span>
                   </div>
                 )}
                 {user.church.cep && (
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">📮</span>
-                    <span>CEP: {user.church.cep}</span>
+                    <span className="font-medium">CEP:</span>
+                    <span>{user.church.cep}</span>
                   </div>
                 )}
                 {!user.church.street && !user.church.quarter && !user.church.city && !user.church.cep && (
@@ -69,4 +69,6 @@ export function ChurchInfoCard({ user }: ChurchInfoCardProps) {
     </Card>
   );
 }
+
+
 

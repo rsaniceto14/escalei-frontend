@@ -1,5 +1,5 @@
 import { apiClient } from '../config';
-import { Area, ApiResponse } from '../types';
+import { Area, ApiResponse, Role } from '../types';
 
 export interface AreaWithRoles {
   id: number;
@@ -40,7 +40,7 @@ export const areaService = {
     }
   },
 
-  async create(data: { name: string; description?: string }): Promise<Area> {
+  async create(data: { name: string; description?: string; roles?: Array<{ name: string; description?: string }> }): Promise<Area> {
     try {
       const response = await apiClient.post<ApiResponse<Area>>('/areas', data);
       return response.data.data;
@@ -80,6 +80,23 @@ export const areaService = {
       await apiClient.put(`/areas/${areaId}/users/${userId}/switch`, {
         new_area_id: newAreaId
       });
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  async getRoles(areaId: number): Promise<Role[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<Role[]>>(`/areas/${areaId}/roles`);
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  async updateRoles(areaId: number, roles: Array<{ id?: number; name: string; description?: string }>): Promise<void> {
+    try {
+      await apiClient.put(`/areas/${areaId}/roles`, { roles });
     } catch (error) {
       throw error;
     }

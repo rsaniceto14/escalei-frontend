@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Logo } from "@/components/common/Logo";
-import { Users, Calendar, Music, ArrowRight, CheckCircle } from "lucide-react";
+import { Users, ArrowRight, CheckCircle } from "lucide-react";
 
 export default function ChurchSetup() {
   return (
@@ -19,7 +19,7 @@ export default function ChurchSetup() {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 gap-6">
             {/* Areas and Functions */}
             <Card className="border-2 border-dashed border-echurch-200 hover:border-echurch-300 transition-colors">
               <CardContent className="p-6 text-center">
@@ -65,52 +65,6 @@ export default function ChurchSetup() {
                 </Button>
               </CardContent>
             </Card>
-
-            {/* Schedules */}
-            <Card className="border-2 border-dashed border-echurch-200 hover:border-echurch-300 transition-colors">
-              <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-echurch-100 to-echurch-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Calendar className="w-8 h-8 text-echurch-600" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">Escalas</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Configure escalas de trabalho e eventos
-                </p>
-                <Button 
-                  asChild 
-                  variant="outline" 
-                  className="w-full border-echurch-200 hover:bg-echurch-50"
-                >
-                  <Link to="/setup/schedules">
-                    Configurar
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Music */}
-            <Card className="border-2 border-dashed border-echurch-200 hover:border-echurch-300 transition-colors md:col-span-3">
-              <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-echurch-100 to-echurch-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Music className="w-8 h-8 text-echurch-600" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">Músicas</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Adicione o repertório musical da sua igreja
-                </p>
-                <Button 
-                  asChild 
-                  variant="outline" 
-                  className="border-echurch-200 hover:bg-echurch-50"
-                >
-                  <Link to="/setup/music">
-                    Configurar
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t">
@@ -118,9 +72,9 @@ export default function ChurchSetup() {
               asChild 
               className="flex-1 h-12 bg-gradient-to-r from-echurch-500 to-echurch-600 hover:from-echurch-600 hover:to-echurch-700"
             >
-              <Link to="/login">
+              <Link to="/home">
                 <CheckCircle className="w-5 h-5 mr-2" />
-                Finalizar e Fazer Login
+                Finalizar Configuração
               </Link>
             </Button>
             
@@ -129,7 +83,7 @@ export default function ChurchSetup() {
               variant="outline" 
               className="sm:w-auto border-echurch-200 hover:bg-echurch-50"
             >
-              <Link to="/login">
+              <Link to="/home">
                 Pular Configurações
               </Link>
             </Button>

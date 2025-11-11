@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Logo } from "@/components/common/Logo";
-import { ArrowLeft, ArrowRight, Plus, Edit, Trash2, Settings, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Plus, Edit, Trash2, Settings, Loader2, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { areaService, Area } from "@/api";
 
@@ -20,31 +20,10 @@ export default function AreasSetup() {
     name: '',
     description: '',
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [roles, setRoles] = useState<Array<{ name: string; description: string }>>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { toast } = useToast();
-
-  // Load areas on component mount
-  useEffect(() => {
-    loadAreas();
-  }, []);
-
-  const loadAreas = async () => {
-    setIsLoading(true);
-    try {
-      const areasData = await areaService.getAll();
-      setAreas(areasData);
-    } catch (error: any) {
-      toast({
-        title: "Erro ao carregar áreas",
-        description: error.message || "Não foi possível carregar as áreas",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleSaveArea = async () => {
     if (!newArea.name.trim()) {
@@ -69,16 +48,21 @@ export default function AreasSetup() {
           description: `A área ${newArea.name} foi atualizada.`,
         });
       } else {
-        // Create new area
-        const createdArea = await areaService.create(newArea);
+        // Create new area with roles
+        const areaData = {
+          ...newArea,
+          roles: roles.length > 0 ? roles : undefined,
+        };
+        const createdArea = await areaService.create(areaData);
         setAreas(prev => [...prev, createdArea]);
         toast({
           title: "Área criada!",
-          description: `A área ${newArea.name} foi criada.`,
+          description: `A área ${newArea.name} foi criada${roles.length > 0 ? ` com ${roles.length} função(ões)` : ''}.`,
         });
       }
 
       setNewArea({ name: '', description: '' });
+      setRoles([]);
       setEditingArea(null);
       setIsAreaDialogOpen(false);
     } catch (error: any) {
@@ -98,7 +82,22 @@ export default function AreasSetup() {
       name: area.name,
       description: area.description || '',
     });
+    setRoles([]);
     setIsAreaDialogOpen(true);
+  };
+
+  const addRole = () => {
+    setRoles([...roles, { name: '', description: '' }]);
+  };
+
+  const removeRole = (index: number) => {
+    setRoles(roles.filter((_, i) => i !== index));
+  };
+
+  const updateRole = (index: number, field: 'name' | 'description', value: string) => {
+    const updatedRoles = [...roles];
+    updatedRoles[index] = { ...updatedRoles[index], [field]: value };
+    setRoles(updatedRoles);
   };
 
   const handleDeleteArea = async (areaId: string) => {
@@ -121,6 +120,7 @@ export default function AreasSetup() {
 
   const handleCancel = () => {
     setNewArea({ name: '', description: '' });
+    setRoles([]);
     setEditingArea(null);
     setIsAreaDialogOpen(false);
   };
@@ -152,7 +152,7 @@ export default function AreasSetup() {
                   Nova Área
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
+              <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>
                     {editingArea ? 'Editar Área' : 'Nova Área'}
@@ -178,6 +178,55 @@ export default function AreasSetup() {
                       rows={3}
                     />
                   </div>
+                  
+                  {!editingArea && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label>Funções (opcional)</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={addRole}
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          Adicionar Função
+                        </Button>
+                      </div>
+                      {roles.length > 0 && (
+                        <div className="space-y-2 border rounded-md p-3">
+                          {roles.map((role, index) => (
+                            <div key={index} className="space-y-2 p-2 bg-gray-50 rounded">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-sm">Função {index + 1}</Label>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeRole(index)}
+                                  className="h-6 w-6 p-0 text-red-600"
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </div>
+                              <Input
+                                placeholder="Nome da função"
+                                value={role.name}
+                                onChange={(e) => updateRole(index, 'name', e.target.value)}
+                              />
+                              <Textarea
+                                placeholder="Descrição (opcional)"
+                                value={role.description}
+                                onChange={(e) => updateRole(index, 'description', e.target.value)}
+                                rows={2}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
                   <div className="flex gap-2 pt-4">
                     <Button 
                       onClick={handleSaveArea} 
@@ -196,12 +245,7 @@ export default function AreasSetup() {
             </Dialog>
           </div>
 
-          {isLoading ? (
-            <div className="flex items-center justify-center h-32">
-              <Loader2 className="w-6 h-6 animate-spin" />
-              <span className="ml-2">Carregando áreas...</span>
-            </div>
-          ) : areas.length === 0 ? (
+          {areas.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Settings className="w-12 h-12 text-gray-400 mb-4" />

@@ -32,3 +32,5 @@ export function AdditionalInfoCard({ user, className }: AdditionalInfoCardProps)
   );
 }
 
+
+

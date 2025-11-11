@@ -104,7 +104,7 @@ export default function RegisterChurch() {
         description: "Igreja cadastrada com sucesso!",
       });
       
-      navigate("/church-setup");
+      navigate("/home");
     } catch (error: any) {
       toast({
         title: "Erro",
