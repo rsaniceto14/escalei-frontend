@@ -16,6 +16,7 @@ export interface User {
     name: string;
     description: string;
   }>;
+  roles?: Array<UserRole>;
 }
 
 export enum UserScheduleStatus {
@@ -211,6 +212,13 @@ export interface Role {
   updated_at?: string;
 }
 
+export interface UserRole {
+  id: number;
+  name: string;
+  description?: string;
+  area_id: number;
+  priority: number;
+}
 
 export interface UserProfile {
   id: string;
@@ -235,6 +243,13 @@ export interface UserProfile {
     id: string;
     name: string;
     description: string;
+  }>;
+  roles?: Array<{
+    id: number;
+    name: string;
+    description?: string;
+    area_id: number;
+    priority: number;
   }>;
   permissions: {
     create_scale: boolean;
