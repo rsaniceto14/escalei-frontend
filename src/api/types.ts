@@ -24,6 +24,13 @@ export enum UserScheduleStatus {
   Swap_requested = 'Troca Solicitada',
 }
 
+export enum ScheduleStatus {
+  Draft = 'R',
+  Active = 'A',
+  Complete = 'C',
+  Deleted = 'D',
+}
+
 export enum ScheduleType {
   Louvor = 'Louvor',
   Geral = 'Geral',
@@ -44,11 +51,12 @@ export interface Schedule {
   observation?: string;
   type: ScheduleType;
   approved?: boolean;
+  status?: ScheduleStatus | null;
   user_creator: number;
   created_at?: string;
   updated_at?: string;
   // Campos dinâmicos adicionados pelo backend quando busca com relacionamento de UserSchedule
-  status?: UserScheduleStatus | null;
+  userStatus?: UserScheduleStatus | null;
   minhaEscala?: boolean;
 }
 
@@ -82,6 +90,7 @@ export interface AvailableUserSchedule {
   photo_path: string | null;
   birthday: string | null;
   areas: [{ id: string; name: string }];
+  roles?: Array<{ id: number; name: string; area_id: number }>;
 }
 
 export interface UserScheduleDetail {
@@ -92,6 +101,7 @@ export interface UserScheduleDetail {
   birthday: string | null;
   statusSchedule: UserScheduleStatus | null;
   area: string;
+  role?: string | null;
 }
 
 export interface Availability {

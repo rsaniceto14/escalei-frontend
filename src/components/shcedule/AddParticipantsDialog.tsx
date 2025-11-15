@@ -1,17 +1,21 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2 } from 'lucide-react';
 import { AvailableUserSchedule } from '@/api';
+import { areaService } from '@/api/services/areaService';
+import { Role } from '@/api/types';
 
 interface AddParticipantsDialogProps {
   isOpen: boolean;
   availableUsers: AvailableUserSchedule[];
-  onAdd: (selectedUsers: string[], selectedArea: string) => void;
+  onAdd: (selectedUsers: string[], selectedArea: string, selectedRole: string) => void;
   onCancel: () => void;
+  isLoading?: boolean;
 }
 
 export const AddParticipantsDialog: React.FC<AddParticipantsDialogProps> = ({
@@ -19,9 +23,13 @@ export const AddParticipantsDialog: React.FC<AddParticipantsDialogProps> = ({
   availableUsers,
   onAdd,
   onCancel,
+  isLoading = false,
 }) => {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [selectedArea, setSelectedArea] = useState<string>('');
+  const [selectedRole, setSelectedRole] = useState<string>('');
+  const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
+  const [loadingRoles, setLoadingRoles] = useState(false);
 
   // Get unique areas from available users
   const uniqueAreas = useMemo(
@@ -29,16 +37,69 @@ export const AddParticipantsDialog: React.FC<AddParticipantsDialogProps> = ({
     [availableUsers],
   );
 
-  // Filter users based on selected area
-  const filteredUsers = useMemo(
-    () =>
-      selectedArea ? availableUsers.filter(user => user.areas?.some(a => a.name === selectedArea)) : availableUsers,
-    [availableUsers, selectedArea],
-  );
+  // Filter users based on selected area and role
+  const filteredUsers = useMemo(() => {
+    if (!selectedArea) return [];
+    
+    let users = availableUsers.filter(user => user.areas?.some(a => a.name === selectedArea));
+    
+    // If role is selected, filter users who have that role in the selected area
+    if (selectedRole) {
+      const roleId = parseInt(selectedRole);
+      const selectedAreaObj = availableUsers
+        .flatMap(user => user.areas || [])
+        .find(a => a.name === selectedArea);
+      const areaId = selectedAreaObj ? parseInt(selectedAreaObj.id) : null;
+      
+      if (areaId) {
+        users = users.filter(user => 
+          user.roles?.some(role => role.id === roleId && role.area_id === areaId)
+        );
+      }
+    }
+    
+    return users;
+  }, [availableUsers, selectedArea, selectedRole]);
+
+  // Fetch roles when area is selected
+  useEffect(() => {
+    const fetchRoles = async () => {
+      if (!selectedArea) {
+        setAvailableRoles([]);
+        setSelectedRole('');
+        return;
+      }
+
+      setLoadingRoles(true);
+      try {
+        const area = availableUsers
+          .flatMap(user => user.areas || [])
+          .find(a => a.name === selectedArea);
+        
+        if (area) {
+          const roles = await areaService.getRoles(parseInt(area.id));
+          setAvailableRoles(roles);
+        }
+      } catch (error) {
+        console.error('Error fetching roles:', error);
+        setAvailableRoles([]);
+      } finally {
+        setLoadingRoles(false);
+      }
+    };
+
+    fetchRoles();
+  }, [selectedArea, availableUsers]);
 
   const handleAreaChange = (value: string) => {
     setSelectedUsers([]);
     setSelectedArea(value);
+    setSelectedRole('');
+  };
+
+  const handleRoleChange = (value: string) => {
+    setSelectedUsers([]);
+    setSelectedRole(value);
   };
 
   const handleUserClick = (userId: string) => {
@@ -58,15 +119,18 @@ export const AddParticipantsDialog: React.FC<AddParticipantsDialogProps> = ({
   };
 
   const handleAdd = () => {
-    onAdd(selectedUsers, selectedArea);
+    if (!selectedRole) return;
+    onAdd(selectedUsers, selectedArea, selectedRole);
     setSelectedUsers([]);
     setSelectedArea('');
+    setSelectedRole('');
   };
 
   const handleCancel = () => {
     onCancel();
     setSelectedUsers([]);
     setSelectedArea('');
+    setSelectedRole('');
   };
 
   if (!isOpen) return null;
@@ -99,6 +163,35 @@ export const AddParticipantsDialog: React.FC<AddParticipantsDialogProps> = ({
                     </SelectContent>
                   </Select>
                 </div>
+                
+                {selectedArea && (
+                  <div>
+                    <label className="text-sm font-medium text-echurch-700">Selecionar Função *</label>
+                    <Select 
+                      value={selectedRole} 
+                      onValueChange={handleRoleChange}
+                      disabled={loadingRoles}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={loadingRoles ? "Carregando..." : "Selecione a função"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableRoles.length === 0 ? (
+                          <div className="p-4 text-sm text-gray-500 text-center">
+                            {loadingRoles ? "Carregando funções..." : "Nenhuma função disponível para esta área"}
+                          </div>
+                        ) : (
+                          availableRoles.map(role => (
+                            <SelectItem key={role.id} value={role.id.toString()}>
+                              {role.name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                
                 <div className="flex items-center gap-2">
                   {selectedUsers.length > 0 && (
                     <Badge variant="secondary" className="text-xs">
@@ -106,14 +199,15 @@ export const AddParticipantsDialog: React.FC<AddParticipantsDialogProps> = ({
                       {selectedUsers.length > 1 ? 's' : ''}
                     </Badge>
                   )}
-                  <Button variant="ghost" size="sm" onClick={handleSelectAll} className="text-xs h-6 px-2 ml-auto">
-                    {selectedArea &&
-                      (selectedUsers.length === filteredUsers.length ? 'Desmarcar Todos' : 'Selecionar Todos')}
-                  </Button>
+                  {selectedArea && selectedRole && (
+                    <Button variant="ghost" size="sm" onClick={handleSelectAll} className="text-xs h-6 px-2 ml-auto">
+                      {selectedUsers.length === filteredUsers.length ? 'Desmarcar Todos' : 'Selecionar Todos'}
+                    </Button>
+                  )}
                 </div>
               </div>
               <div className="space-y-3 max-h-60 overflow-y-auto">
-                {selectedArea &&
+                {selectedArea && selectedRole && filteredUsers.length > 0 ? (
                   filteredUsers.map(user => (
                     <div
                       key={user.id}
@@ -145,7 +239,16 @@ export const AddParticipantsDialog: React.FC<AddParticipantsDialogProps> = ({
                         className="pointer-events-none"
                       />
                     </div>
-                  ))}
+                  ))
+                ) : selectedArea && selectedRole ? (
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    Nenhum usuário disponível com esta função na área selecionada.
+                  </p>
+                ) : selectedArea ? (
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    Selecione uma função para ver os usuários disponíveis.
+                  </p>
+                ) : null}
               </div>
             </>
           )}
@@ -153,11 +256,18 @@ export const AddParticipantsDialog: React.FC<AddParticipantsDialogProps> = ({
             <Button
               onClick={handleAdd}
               className="flex-1 bg-echurch-500 hover:bg-echurch-600"
-              disabled={filteredUsers.length === 0 || selectedUsers.length === 0}
+              disabled={!selectedArea || !selectedRole || filteredUsers.length === 0 || selectedUsers.length === 0 || isLoading}
             >
-              Adicionar
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Adicionando...
+                </>
+              ) : (
+                'Adicionar'
+              )}
             </Button>
-            <Button variant="outline" onClick={handleCancel} className="flex-1">
+            <Button variant="outline" onClick={handleCancel} className="flex-1" disabled={isLoading}>
               Cancelar
             </Button>
           </div>

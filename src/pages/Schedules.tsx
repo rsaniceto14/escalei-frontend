@@ -1,9 +1,20 @@
-import { useScales } from '@/hooks/useSchedules';
+import { useScales, FiltroAtivo } from '@/hooks/useSchedules';
 import { ScalesHeader, ScalesTabs } from '@/components/schedules';
 import { Loader2 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { useEffect } from 'react';
 
 export default function Schedules() {
+  const { user } = useAuth();
+  const hasCreateSchedulePermission = user?.permissions?.create_scale ?? false;
   const { escalasFiltradas, filtroAtivo, loading, setFiltroAtivo, handleConfirmParticipation } = useScales();
+
+  // Se o usuário não tem permissão, garantir que está na aba "Minhas"
+  useEffect(() => {
+    if (!hasCreateSchedulePermission && filtroAtivo === FiltroAtivo.Todas) {
+      setFiltroAtivo(FiltroAtivo.Minhas);
+    }
+  }, [hasCreateSchedulePermission, filtroAtivo, setFiltroAtivo]);
 
   if (loading) {
     return (
