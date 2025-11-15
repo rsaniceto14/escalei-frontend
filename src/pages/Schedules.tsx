@@ -1,6 +1,5 @@
 import { useScales, FiltroAtivo } from '@/hooks/useSchedules';
 import { ScalesHeader, ScalesTabs } from '@/components/schedules';
-import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useEffect } from 'react';
 
@@ -16,24 +15,16 @@ export default function Schedules() {
     }
   }, [hasCreateSchedulePermission, filtroAtivo, setFiltroAtivo]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center w-full h-screen">
-        <Loader2 className="w-6 h-6 animate-spin" />
-        <div className="text-echurch-600">Carregando escalas...</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col w-full min-h-screen">
+    <div className="flex flex-col w-full min-h-screen min-w-0 overflow-x-hidden">
       <ScalesHeader />
 
-      <div className="flex-1">
+      <div className="flex-1 min-w-0 mt-8">
         <ScalesTabs
           filtroAtivo={filtroAtivo}
           onFiltroChange={setFiltroAtivo}
           escalasFiltradas={escalasFiltradas}
+          loading={loading}
           onConfirmParticipation={handleConfirmParticipation}
         />
       </div>
