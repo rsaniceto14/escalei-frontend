@@ -5,10 +5,9 @@ import { ScaleCard } from './ScaleCard';
 interface ScalesListProps {
   escalas: Schedule[];
   isMyScales?: boolean;
-  onConfirmParticipation?: (escalaId: number) => void;
 }
 
-export const ScalesList: React.FC<ScalesListProps> = ({ escalas, isMyScales = false, onConfirmParticipation }) => {
+export const ScalesList: React.FC<ScalesListProps> = ({ escalas, isMyScales = false }) => {
   return (
     <div className="grid gap-4">
       {escalas.map(escala => (
@@ -16,7 +15,6 @@ export const ScalesList: React.FC<ScalesListProps> = ({ escalas, isMyScales = fa
           key={escala.id}
           escala={escala}
           isMyScale={isMyScales}
-          onConfirmParticipation={onConfirmParticipation}
         />
       ))}
     </div>

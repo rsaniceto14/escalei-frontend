@@ -16,7 +16,7 @@ export const chatService = {
   },
 
   async getChatById(chat_id :number, user_id :number): Promise<any> {
-    const response = await apiClient.post<ApiResponse<ChatWithMessages>>(`/chats/`, {chat_id, user_id});
+    const response = await apiClient.post<ApiResponse<ChatWithMessages>>(`/chats/by-id`, {chat_id, user_id});
     return response.data.data;
   },
 
