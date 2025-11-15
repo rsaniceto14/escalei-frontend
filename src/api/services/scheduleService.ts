@@ -60,4 +60,67 @@ export const scheduleService = {
       throw error;
     }
   },
+
+  /**
+   * Gerar escala automática
+   */
+  async generate(
+    scheduleId: number,
+    data: {
+      user_id: number;
+      areas: number[];
+      roles: Array<{ role_id: number; area_id: number; count: number }>;
+    }
+  ): Promise<{
+    schedule: Schedule;
+    statistics: Array<{
+      role_id: number;
+      area_id: number;
+      requested: number;
+      selected: number;
+      fulfilled: boolean;
+    }>;
+  }> {
+    try {
+      const response = await apiClient.post<ApiResponse<{
+        schedule_id: number;
+        selected_users: Array<{ id: number; name: string; email: string }>;
+        statistics: Array<{
+          role_id: number;
+          area_id: number;
+          requested: number;
+          selected: number;
+          fulfilled: boolean;
+        }>;
+      }>>(
+        `/schedules/${scheduleId}/generate`,
+        data
+      );
+      
+      // Buscar a escala atualizada
+      const schedule = await this.getById(scheduleId);
+      
+      return {
+        schedule,
+        statistics: response.data.data.statistics || []
+      };
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  /**
+   * Publicar escala
+   */
+  async publish(scheduleId: number, userId: number): Promise<Schedule> {
+    try {
+      const response = await apiClient.post<ApiResponse<Schedule>>(
+        `/schedules/${scheduleId}/publish`,
+        { user_id: userId }
+      );
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };

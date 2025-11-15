@@ -7,6 +7,11 @@ export const userScheduleService = {
     return response.data.data;
   },
 
+  async getMySchedules(): Promise<Schedule[]> {
+    const response = await apiClient.get<ApiResponse<Schedule[]>>(`/user-schedules/my-schedules`);
+    return response.data.data;
+  },
+
   async getScheduleByScheduleId(id: string): Promise<Schedule> {
     const response = await apiClient.get<ApiResponse<Schedule>>(`/user-schedules/show-schedule-by-schedule-id/${id}`);
     return response.data.data;
@@ -29,11 +34,12 @@ export const userScheduleService = {
     return response.data.data;
   },
 
-  async addUserToSchedule(scheduleId: string, userId: string, areaId: string): Promise<void> {
+  async addUserToSchedule(scheduleId: string, userId: string, areaId: string, roleId?: string): Promise<void> {
     await apiClient.post(`/user-schedules/add-user-in-schedule`, {
       schedule_id: scheduleId,
       user_id: userId,
       area_id: areaId,
+      role_id: roleId || null,
     });
   },
 
