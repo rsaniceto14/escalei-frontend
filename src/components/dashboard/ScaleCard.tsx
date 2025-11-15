@@ -1,33 +1,44 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin, CheckCircle, AlertCircle } from "lucide-react";
+import { Calendar, MapPin, History, RefreshCw, Eye, Loader2, ChevronRight } from "lucide-react";
 import { ReactNode } from "react";
-import { formatDate } from "@/utils/dateUtils";
+import { Link } from "react-router-dom";
 import { Schedule } from "@/api";
-
-interface Scale {
-  nome: string;
-  data: string;
-  horario: string;
-  local: string;
-  tipo: string;
-  status: string;
-}
 
 interface ScaleCardProps {
   title: string;
   icon: ReactNode;
   scales: Schedule[];
-  variant: "confirmed" | "pending";
+  variant: "past" | "swap";
   emptyMessage: string;
   emptyDescription: string;
+  onRequestSwap?: (escalaId: number) => void;
+  isRequestingSwap?: boolean;
+  requestingSwapId?: number | null;
+  maxItems?: number;
+  totalItems?: number;
+  showMoreLink?: string;
 }
 
-export function ScaleCard({ title, icon, scales, variant, emptyMessage, emptyDescription }: ScaleCardProps) {
-  const bgColor = variant === "confirmed" ? "bg-green-50 border-green-200" : "bg-yellow-50 border-yellow-200";
-  const badgeColor = variant === "confirmed" ? "bg-green-100 text-green-800" : "";
+export function ScaleCard({ 
+  title, 
+  icon, 
+  scales, 
+  variant, 
+  emptyMessage, 
+  emptyDescription,
+  onRequestSwap,
+  isRequestingSwap = false,
+  requestingSwapId = null,
+  maxItems = 3,
+  totalItems,
+  showMoreLink
+}: ScaleCardProps) {
+  const bgColor = variant === "past" ? "bg-gray-50 border-gray-200" : "bg-blue-50 border-blue-200";
+  
+  const displayedScales = scales.slice(0, maxItems);
+  const hasMore = totalItems !== undefined ? totalItems > maxItems : scales.length > maxItems;
 
   return (
     <Card className="animate-fade-in">
@@ -36,49 +47,87 @@ export function ScaleCard({ title, icon, scales, variant, emptyMessage, emptyDes
           {icon}
           {title}
         </CardTitle>
+        {scales.length > 0 && (
+          <p className="text-xs text-echurch-500 mt-1">
+            Mostrando as {displayedScales.length} escalas mais recentes
+          </p>
+        )}
       </CardHeader>
       <CardContent className="space-y-3">
-        {scales.length > 0 ? (
-          scales.map((esc, i) => (
-            <div
-              key={i}
-              className={`flex flex-col gap-3 p-4 rounded-lg ${bgColor}`}
-            >
-              <div className="space-y-1">
-                <div className="font-medium text-echurch-700">{esc.name}</div>
-                <div className="flex flex-wrap items-center gap-2 text-sm text-echurch-600">
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {esc.start_date}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MapPin className="w-3 h-3" />
-                    {esc.local}
+        {displayedScales.length > 0 ? (
+          <>
+            {displayedScales.map((esc, i) => (
+              <div
+                key={esc.id || i}
+                className={`flex flex-col gap-3 p-4 rounded-lg ${bgColor}`}
+              >
+                <div className="space-y-1">
+                  <div className="font-medium text-echurch-700">{esc.name}</div>
+                  <div className="flex flex-wrap items-center gap-2 text-sm text-echurch-600">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {esc.start_date}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      {esc.local}
+                    </div>
                   </div>
                 </div>
+                {variant === "past" ? (
+                  <Link to={`/schedules/${esc.id}`} state={{ escala: esc }}>
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Eye className="w-3 h-3 mr-1" />
+                      Ver Detalhes
+                    </Button>
+                  </Link>
+                ) : (
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    {onRequestSwap && esc.id && (
+                      <Button 
+                        size="sm" 
+                        className="bg-orange-500 hover:bg-orange-600 flex-1 !h-10 sm:!h-9 py-2.5 sm:py-0"
+                        onClick={() => onRequestSwap(esc.id!)}
+                        disabled={isRequestingSwap && requestingSwapId === esc.id}
+                      >
+                        {isRequestingSwap && requestingSwapId === esc.id ? (
+                          <>
+                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                            Solicitando...
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="w-3 h-3 mr-1" />
+                            Solicitar Troca
+                          </>
+                        )}
+                      </Button>
+                    )}
+                    <Link to={`/schedules/${esc.id}`} state={{ escala: esc }}>
+                      <Button variant="outline" size="sm" className="flex-1 w-full sm:w-auto">
+                        <Eye className="w-3 h-3 mr-1" />
+                        Ver Detalhes
+                      </Button>
+                    </Link>
+                  </div>
+                )}
               </div>
-              {variant === "confirmed" ? (
-                <Badge variant="secondary" className={badgeColor}>
-                  {esc.approved ? "Aprovada" : "Aguardando confirmação"}
-                </Badge>
-              ) : (
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <Button size="sm" className="bg-echurch-500 hover:bg-echurch-600 flex-1">
-                    Confirmar Participação
-                  </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
-                    Ver Detalhes
-                  </Button>
-                </div>
-              )}
-            </div>
-          ))
+            ))}
+            {hasMore && showMoreLink && (
+              <Link to={showMoreLink}>
+                <Button variant="outline" className="w-full mt-2">
+                  Ver mais escalas
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            )}
+          </>
         ) : (
           <div className="text-center py-8 text-echurch-500">
-            {variant === "confirmed" ? (
-              <CheckCircle className="w-16 h-16 mx-auto mb-3 opacity-50" />
+            {variant === "past" ? (
+              <History className="w-16 h-16 mx-auto mb-3 opacity-50" />
             ) : (
-              <AlertCircle className="w-16 h-16 mx-auto mb-3 opacity-50" />
+              <Calendar className="w-16 h-16 mx-auto mb-3 opacity-50" />
             )}
             <p className="text-lg font-medium">{emptyMessage}</p>
             <p className="text-sm">{emptyDescription}</p>
