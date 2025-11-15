@@ -111,6 +111,16 @@ export interface ExceptionDate {
   isAvailable: boolean;
 }
 
+export interface Unavailability {
+  id?: number;
+  user_id: number;
+  weekday: number; // 0-6 (0=domingo, 6=sábado)
+  shift: 'manha' | 'tarde' | 'noite';
+  created_at?: string;
+  updated_at?: string;
+  user?: User;
+}
+
 export interface LoginRequest {
   email: string;
   password: string;

@@ -1,8 +1,17 @@
 import { useEffect } from "react";
-import { App } from "@capacitor/app";
 
-export  function useAppListener(navigate: (path: string|number) => void) {
+let App: any;
+try {
+  App = require("@capacitor/app").App;
+} catch (err) {
+  console.warn("Capacitor App plugin not available:", err);
+  App = {
+    addListener: () => {},
+    removeAllListeners: () => {}
+  };
+}
 
+export function useAppListener(navigate: (path: string | number) => void) {
   useEffect(() => {
     const handler = () => {
       if (window.history.length > 1) {

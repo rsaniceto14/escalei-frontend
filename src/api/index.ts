@@ -4,6 +4,7 @@ export { scheduleService } from './services/scheduleService';
 export { userService } from './services/userService';
 export { userRoleService } from './services/userRoleService';
 export { availabilityService } from './services/availabilityService';
+export { unavailabilityService } from './services/unavailabilityService';
 export { areaService } from './services/areaService';
 export { musicService } from './services/musicService';
 export { spotifyService } from './services/spotifyService';
