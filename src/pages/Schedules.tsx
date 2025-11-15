@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 export default function Schedules() {
   const { user } = useAuth();
   const hasCreateSchedulePermission = user?.permissions?.create_scale ?? false;
-  const { escalasFiltradas, filtroAtivo, loading, setFiltroAtivo, handleConfirmParticipation } = useScales();
+  const { escalasFiltradas, filtroAtivo, loading, setFiltroAtivo } = useScales();
 
   // Se o usuário não tem permissão, garantir que está na aba "Minhas"
   useEffect(() => {
@@ -25,7 +25,6 @@ export default function Schedules() {
           onFiltroChange={setFiltroAtivo}
           escalasFiltradas={escalasFiltradas}
           loading={loading}
-          onConfirmParticipation={handleConfirmParticipation}
         />
       </div>
     </div>

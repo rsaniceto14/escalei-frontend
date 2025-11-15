@@ -98,6 +98,7 @@ export interface UserScheduleDetail {
   name: string;
   email: string;
   photo_path: string | null;
+  photo_url?: string; // Signed URL for immediate use
   birthday: string | null;
   statusSchedule: UserScheduleStatus | null;
   area: string;
@@ -198,6 +199,7 @@ export interface Chat {
   id: string;
   name: string;
   chatable_type: string;
+  chatable_id: number;
   description: string;
 }
 

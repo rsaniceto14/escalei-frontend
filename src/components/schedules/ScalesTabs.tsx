@@ -12,7 +12,6 @@ interface ScalesTabsProps {
   onFiltroChange: (filtro: FiltroAtivo) => void;
   escalasFiltradas: Schedule[];
   loading?: boolean;
-  onConfirmParticipation?: (escalaId: number) => void;
 }
 
 export const ScalesTabs: React.FC<ScalesTabsProps> = ({
@@ -20,7 +19,6 @@ export const ScalesTabs: React.FC<ScalesTabsProps> = ({
   onFiltroChange,
   escalasFiltradas,
   loading = false,
-  onConfirmParticipation,
 }) => {
   const { user } = useAuth();
   const hasCreateSchedulePermission = user?.permissions?.create_scale ?? false;
@@ -52,7 +50,7 @@ export const ScalesTabs: React.FC<ScalesTabsProps> = ({
               <span className="ml-2 text-echurch-600">Carregando escalas...</span>
             </div>
           ) : escalasFiltradas.length > 0 ? (
-            <ScalesList escalas={escalasFiltradas} onConfirmParticipation={onConfirmParticipation} />
+            <ScalesList escalas={escalasFiltradas} />
           ) : (
             <EmptyState filtroAtivo={filtroAtivo} />
           )}
@@ -66,7 +64,7 @@ export const ScalesTabs: React.FC<ScalesTabsProps> = ({
             <span className="ml-2 text-echurch-600">Carregando escalas...</span>
           </div>
         ) : escalasFiltradas.length > 0 ? (
-          <ScalesList escalas={escalasFiltradas} isMyScales={true} onConfirmParticipation={onConfirmParticipation} />
+          <ScalesList escalas={escalasFiltradas} isMyScales={true} />
         ) : (
           <EmptyState filtroAtivo={filtroAtivo} />
         )}

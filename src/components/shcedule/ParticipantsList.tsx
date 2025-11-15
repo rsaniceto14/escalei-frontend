@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PlusCircle, Trash2 } from 'lucide-react';
 import { UserScheduleDetail } from '@/api';
@@ -94,6 +94,9 @@ export const ParticipantsList: React.FC<ParticipantsListProps> = ({
                   className="pointer-events-none"
                 />
                 <Avatar>
+                  {participante.photo_url ? (
+                    <AvatarImage src={participante.photo_url} alt={participante.name} />
+                  ) : null}
                   <AvatarFallback className="bg-echurch-200 text-echurch-700">
                     {participante.name
                       .split(' ')

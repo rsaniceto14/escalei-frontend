@@ -10,10 +10,9 @@ import { formatDateForList, getScheduleStatusColor, getScheduleStatusLabel, getT
 interface ScaleCardProps {
   escala: Schedule;
   isMyScale?: boolean;
-  onConfirmParticipation?: (escalaId: number) => void;
 }
 
-export const ScaleCard: React.FC<ScaleCardProps> = ({ escala, isMyScale = false, onConfirmParticipation }) => {
+export const ScaleCard: React.FC<ScaleCardProps> = ({ escala, isMyScale = false }) => {
   const { date: startDate, time: startTime } = formatDateForList(escala.start_date);
   const { date: endDate, time: endTime } = formatDateForList(escala.end_date);
 
@@ -60,15 +59,6 @@ export const ScaleCard: React.FC<ScaleCardProps> = ({ escala, isMyScale = false,
         <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 pt-2 border-t border-echurch-100 min-w-0">
           <div className="text-sm text-echurch-500 min-w-0">{/* Placeholder para informações adicionais */}</div>
           <div className="flex gap-2 flex-shrink-0">
-            {!escala.minhaEscala && onConfirmParticipation && (
-              <Button
-                size="sm"
-                className="bg-echurch-500 hover:bg-echurch-600 whitespace-nowrap"
-                onClick={() => onConfirmParticipation(escala.id)}
-              >
-                Confirmar Participação
-              </Button>
-            )}
             <Link to={`/schedules/${escala.id}`} state={{ escala }} className="flex-shrink-0">
               <Button variant="outline" size="sm" className="whitespace-nowrap">
                 <Eye className="w-4 h-4 mr-1" />

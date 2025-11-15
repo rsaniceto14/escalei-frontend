@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Send, MessageCircle, Image as ImageIcon, X, LoaderCircle } from "lucide-react";
+import { ArrowLeft, Send, MessageCircle, Image as ImageIcon, X, LoaderCircle, Calendar } from "lucide-react";
 import { ChatWithMessages, Message } from "@/api/types";
 import { useAuth } from "@/context/AuthContext";
 import { chatService } from "@/api/services/chatService";
@@ -246,6 +246,16 @@ export default function ChatDetail() {
             {chat.chat.chatable_type === "S" ? "Escala" : "Área"}
           </p>
         </div>
+        {chat.chat.chatable_type === "S" && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(`/schedules/${chat.chat.chatable_id}`)}
+            title="Ver escala"
+          >
+            <Calendar size={20} />
+          </Button>
+        )}
       </div>
 
       {/* Messages - scrollable area */}
