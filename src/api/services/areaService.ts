@@ -31,6 +31,15 @@ export const areaService = {
     }
   },
 
+  async getMyAreasWithRoles(): Promise<AreaWithRoles[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<AreaWithRoles[]>>('/my-areas-with-roles');
+      return response.data.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   async getById(id: number): Promise<Area> {
     try {
       const response = await apiClient.get<ApiResponse<Area>>(`/areas/${id}`);

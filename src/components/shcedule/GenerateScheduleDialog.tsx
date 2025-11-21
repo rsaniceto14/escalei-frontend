@@ -46,22 +46,17 @@ export const GenerateScheduleDialog: React.FC<GenerateScheduleDialogProps> = ({
   const fetchAreasWithRoles = async () => {
     try {
       setFetching(true);
-      const areas = await areaService.getAreasWithRoles();
+      const areas = await areaService.getMyAreasWithRoles();
       setAreasWithRoles(areas);
+      
+      // Auto-selecionar todas as áreas do usuário
+      if (areas.length > 0) {
+        setSelectedAreas(areas.map(area => area.id));
+      }
     } catch (error) {
       console.error('Error fetching areas with roles:', error);
     } finally {
       setFetching(false);
-    }
-  };
-
-  const handleAreaToggle = (areaId: number) => {
-    if (selectedAreas.includes(areaId)) {
-      setSelectedAreas(selectedAreas.filter(id => id !== areaId));
-      // Remove role requirements for this area
-      setRoleRequirements(roleRequirements.filter(req => req.area_id !== areaId));
-    } else {
-      setSelectedAreas([...selectedAreas, areaId]);
     }
   };
 
@@ -162,35 +157,9 @@ export const GenerateScheduleDialog: React.FC<GenerateScheduleDialogProps> = ({
               <Loader2 className="w-6 h-6 animate-spin text-echurch-500" />
             </div>
           ) : areasWithRoles.length === 0 ? (
-            <p className="text-sm text-echurch-600">Nenhuma área disponível.</p>
+            <p className="text-sm text-echurch-600">Você não está associado a nenhuma área.</p>
           ) : (
             <>
-              <div>
-                <Label className="text-sm font-medium text-echurch-700 mb-2 block">
-                  Selecione as Áreas
-                </Label>
-                <div className="space-y-2">
-                  {areasWithRoles.map(area => (
-                    <div
-                      key={area.id}
-                      className="flex items-center space-x-2 p-2 rounded border border-gray-200 hover:bg-gray-50"
-                    >
-                      <Checkbox
-                        id={`area-${area.id}`}
-                        checked={selectedAreas.includes(area.id)}
-                        onCheckedChange={() => handleAreaToggle(area.id)}
-                      />
-                      <label
-                        htmlFor={`area-${area.id}`}
-                        className="text-sm font-medium cursor-pointer flex-1"
-                      >
-                        {area.name}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
               {selectedAreas.length > 0 && (
                 <div className="space-y-4">
                   <Label className="text-sm font-medium text-echurch-700">
