@@ -26,3 +26,4 @@ dist-ssr
 
 builds/
 .env
+google-services.json

@@ -53,7 +53,7 @@ export default function Login() {
         : String(res.data.access_token);
       
       // Use context login method
-      login(token, {
+      await login(token, {
         id: res.data.user.id,
         name: res.data.user.name,
         email: res.data.user.email,

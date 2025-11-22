@@ -1,5 +1,6 @@
 import { Area, Permission } from "@/api";
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { pushNotificationService } from "@/services/pushNotificationService";
 
 interface User {
   id: string;
@@ -15,7 +16,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  login: (token: string, userData: User) => void;
+  login: (token: string, userData: User) => Promise<void>;
   logout: () => void;
 }
 
@@ -47,7 +48,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem("jwt"));
   const [isLoading, setIsLoading] = useState(false);
 
-  const login = (newToken: string, userData: User) => {
+  const login = async (newToken: string, userData: User) => {
     // Ensure token is always a string
     const tokenString = typeof newToken === 'string' ? newToken : String(newToken);
     
@@ -65,6 +66,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("church_id", userData.church_id);
     localStorage.setItem("user_permissions", JSON.stringify(userData.permissions));
     localStorage.setItem("user_areas", JSON.stringify(userData.areas));
+    
+    // Enviar FCM token se disponível
+    const fcmToken = pushNotificationService.getToken();
+    if (fcmToken) {
+      try {
+        await pushNotificationService.sendTokenToBackend(fcmToken);
+      } catch (error) {
+        console.error('Error sending FCM token on login:', error);
+      }
+    }
   };
 
   const logout = () => {
@@ -80,6 +91,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem("church_id");
     localStorage.removeItem("user_permissions");
     localStorage.removeItem("user_areas");
+    
+    // Limpar FCM token
+    pushNotificationService.clearToken();
   };
 
   return (

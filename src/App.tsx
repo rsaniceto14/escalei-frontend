@@ -29,11 +29,14 @@ import { AuthProvider } from "./context/AuthContext";
 import PrivateRoute from "./components/route/privateRoute";
 import { HandoutManager } from "./pages/HandoutManager";
 import { useAppListener } from "./hooks/useAppListener";
+import { usePushNotifications } from "./hooks/usePushNotifications";
 
 const queryClient = new QueryClient();
 
 const App = () => {
   useAppListener(useNavigate());
+  // Inicializar push notifications
+  usePushNotifications();
 
   return (
     <QueryClientProvider client={queryClient}>

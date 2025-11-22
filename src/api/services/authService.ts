@@ -1,10 +1,31 @@
 import { apiClient } from '../config';
 import { LoginRequest, LoginResponse, User, ApiResponse } from '../types';
+import { pushNotificationService } from '@/services/pushNotificationService';
 
 export const authService = {
-  async login(credentials: LoginRequest): Promise<any> {
+  async login(credentials: LoginRequest & { fcm_token?: string }): Promise<any> {
     try {
-      const response = await apiClient.post<ApiResponse<LoginResponse>>('/auth/login', credentials);
+      // Obter FCM token se disponível
+      const fcmToken = pushNotificationService.getToken() || localStorage.getItem('pending_fcm_token');
+      
+      // Incluir FCM token se disponível
+      const loginData = {
+        ...credentials,
+        ...(fcmToken && { fcm_token: fcmToken }),
+      };
+
+      const response = await apiClient.post<ApiResponse<LoginResponse>>('/v1/auth/login', loginData);
+      
+      // Após login bem-sucedido, tentar enviar token pendente se existir
+      const pendingToken = localStorage.getItem('pending_fcm_token');
+      if (pendingToken) {
+        try {
+          await pushNotificationService.sendTokenToBackend(pendingToken);
+        } catch (error) {
+          console.error('Error sending pending FCM token:', error);
+        }
+      }
+      
       return response.data;
     } catch (error) {
       throw error;
@@ -41,7 +62,20 @@ export const authService = {
   },
 
   async registerChurch(formData: any): Promise<any> {
-    const response = await apiClient.post<ApiResponse<LoginResponse>>('/auth/register-church', formData);
+    const response = await apiClient.post<ApiResponse<LoginResponse>>('/v1/auth/register-church', formData);
     return response.data;
+  },
+
+  /**
+   * Atualiza o FCM token do usuário
+   */
+  async updateFcmToken(fcmToken: string): Promise<void> {
+    try {
+      await apiClient.post<ApiResponse<void>>('/v1/users/fcm-token', {
+        fcm_token: fcmToken,
+      });
+    } catch (error) {
+      throw error;
+    }
   },
 };
